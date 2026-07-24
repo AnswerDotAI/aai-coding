@@ -21,6 +21,7 @@ dependencies = ["llmdojo>=0.0.1"]
 coding_patterns = "aai_coding.coding_patterns"
 write_prose = "aai_coding.write_prose"
 harness_docs = "aai_coding.harness_docs"
+looker = "aai_coding.looker"
 
 [project.scripts]
 aai-hook = "aai_coding.harness:main"
@@ -40,3 +41,7 @@ version = { attr = "aai_coding.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["aai_coding"]
+
+[tool.pytest.ini_options]
+markers = ["slow: needs live network services; deselected by default"]
+addopts = "-m 'not slow'"
