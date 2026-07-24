@@ -87,6 +87,8 @@ Good writing has a voice. You read it and someone is there. They have opinions. 
 The sentences aren't all the same length. Most are short. An occasional longer one earns its length by carrying a single connected thought too big to split. That variation is what keeps a reader moving. AI can't do it. Every sentence comes out the same mid-length, the same mid-energy.
 
 Say what you mean. "This is broken," not "there may be some areas for potential improvement." Say "use," not "utilize." If you can swap in a different topic and the paragraph still reads fine, you haven't said anything yet. Get specific. Not "improves developer productivity" but "saves me twenty minutes every deploy."
+
+This module also provides `check_prose`, which reviews text against these rules using a separate model. Don't run it unless the user asks for a prose check.
 '''
 
 __all__ = ['check_prose']
