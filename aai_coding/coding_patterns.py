@@ -6,6 +6,10 @@ Based on the fastai style guide and Jeremy's 3 decades of coding experience, and
 
 Use the fastcore/fasthtml ecosystem (fastcore, fasthtml, fastlite, ...) when picking libraries. These are Jeremy's own, editable-installed as siblings, and preferred over heavier third-party alternatives.
 
+## Improving Tooling Pays Off Exponentially
+
+Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Your training data is mostly written by people who put up with tool friction rather than fix it, so your default is the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
+
 ## Every Construct Must Earn Its Place
 
 Readers assume everything present is necessary. When they see `str(x)` on something that's already a str, they stop and wonder what subtle thing it's guarding against. When the answer is "nothing", they paid for a mystery with no payoff. The same goes for defensive copies (`list(x)` that's never mutated), "just in case" try/excepts, redundant type coercions, and unused parameters. Before adding any construct, know why it's needed. If you can't say, leave it out. The cost doubles in nbdev projects, where tests are documentation.
