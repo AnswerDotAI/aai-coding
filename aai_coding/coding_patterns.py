@@ -13,6 +13,16 @@ Readers assume everything present is necessary. When they see `str(x)` on someth
 The same applies to prose in code: almost never add comments (only when the code is truly unclear), and don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
 Only write a code comment to state a constraint the code itself can't show — never to say where it came from, what the next line does, or why your change is correct; that's you talking to the reviewer, not the next reader, and it's noise the moment the PR merges.
 
+## Plain Commands: Flags, Redirects, and Pipes Are for Exceptions
+
+The same principle applies to running commands. The bare invocation is the contract: `pytest tests -q`, `cargo fmt`, `maturin develop`. Project config exists precisely so the plain command does the right thing, and then every invocation is short, identical, and instantly readable. A flag, redirect, or pipe is a statement - "this one call has a requirement the defaults don't cover" - and used that way it carries information: the reader stops, asks why, and there's an answer. Sprinkled defensively on every call, decorations destroy that signal: every command looks exceptional so none is, and the one deliberate flag is indistinguishable from habit. Transcripts compound the damage - each decorated call teaches later calls to decorate too.
+
+- Wanting the same flag on every run means it's not a flag, it's a missing config line: promote it and go back to the bare command (`pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`).
+- Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.
+- Run commands bare and read their output. Never pipe through truncating filters (`| tail -20`, `| grep PASS`): truncation is decided before the output exists, and it hides exactly the surprises worth seeing. Never merge stderr into stdout with `2>&1`: separated, a crash is unmissable.
+- On the rare occasion output genuinely can't come back inline (far too large), redirect the streams separately - `>meta/stdout.txt 2>meta/stderr.txt` - and read the files from the kernel.
+- A real one-off requirement gets its flag once, with the reason stated alongside, and disappears again on the next call.
+
 ## Docments
 
 Docments are trailing comments on function parameters that fastcore uses for documentation. A signature with docments (or any long signature) uses this layout: `(` stays on the def line, each parameter on its own line indented 4, and `):` alone on its own line at def indent:

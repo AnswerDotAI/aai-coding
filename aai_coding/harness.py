@@ -9,11 +9,16 @@ __all__ = ['main']
 
 NO_TRUNCATE = ('Output pipe truncates below 20 lines. Drop the pipe or keep >=20: truncation is decided '
     'before the output exists, so keep enough to diagnose surprises.')
+NO_STDERR_MERGE = ('Do not merge stderr into stdout with 2>&1. Remove redirection entirely where possible - '
+    'the harness automatically pushes large outputs to external files when needed; use this form where '
+    'strictly needed: `>meta/stdout.txt 2>meta/stderr.txt`, reading the files with clikernel.')
 _TRUNC = re.compile(r'\|\s*(tail|head)\s+(-n\s*)?-?([1-9]|1[0-9])\b')
+_MERGE = re.compile(r'2>\s*&\s*1')
 
 
 def bash_guard_msg(cmd):
-    "The no-truncation objection when `cmd` pipes output through a sub-20-line head/tail, else None"
+    "The objection `cmd` earns - a sub-20-line head/tail pipe, or a 2>&1 stderr merge - else None"
+    if _MERGE.search(cmd): return NO_STDERR_MERGE
     return NO_TRUNCATE if _TRUNC.search(cmd) else None
 
 

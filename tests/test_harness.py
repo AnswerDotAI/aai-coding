@@ -12,6 +12,10 @@ def test_bash_guard():
     assert bash_guard_msg('pytest -q | tail -50') is None
     assert bash_guard_msg('head -3 file.txt') is None      # no pipe: a file slice, not output truncation
     assert bash_guard_msg('ls') is None
+    assert bash_guard_msg('pytest -q 2>&1 | tail -20')
+    assert bash_guard_msg('maturin develop 2>&1')
+    assert bash_guard_msg('foo 2> &1')
+    assert bash_guard_msg('pytest -q >meta/stdout.txt 2>meta/stderr.txt') is None
 
 
 def test_prompt_notices():
