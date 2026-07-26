@@ -36,7 +36,7 @@ The numbers below refer to the [bracketed] markers in both passages. Where a num
     - "When it comes to..." / "In the realm of..."
     - "One might argue that..." / "It could be suggested that..."
     - "A [comprehensive/holistic/nuanced] approach to..." -> "an approach to"
-    - "honest"/"honestly"/"to be honest" as a throat-clear ("the honest tradeoff", "honestly, it's fine"): in speech this flags a rare, significant admission; sprinkled everywhere it's noise. Delete it in nearly every case.
+    - "honest"/"honestly"/"to be honest" as a throat-clear ("the honest tradeoff", "honestly, it's fine"): in speech this flags a rare, significant admission. Sprinkled everywhere it's noise. Delete it in nearly every case.
     - "deliberately"/"intentionally"/"carefully"/"thoughtfully": adverbs about the author's mental state rather than the thing. In a design doc every recorded choice is already deliberate, and the explanation that follows does the work. Keep one only when the reader would otherwise suspect an accident and no explanation follows ("the file is deliberately empty").
 6. Hedging: the worst offender. "This approach may potentially help improve performance in some cases" means nothing. Say "this is faster" or say "we haven't benchmarked this yet". The original commits: "saves lives", "could double".
 7. Inflated diction: puffed-up words where plain ones exist: enhance/leverage for improve/use, plus seamlessly, fostering, pivotal, myriad, landscape, realm, empower, journey, tapestry, testament, navigate. The Banned Words lists below are the fuller reference.

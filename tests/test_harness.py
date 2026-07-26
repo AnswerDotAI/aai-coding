@@ -30,13 +30,16 @@ def test_prompt_notices():
     assert kinds('the btw case is prefix-only') == []
 
 
-def test_codex_prompt_submit(capsys):
-    from aai_coding.harness import codex_prompt_submit
-    codex_prompt_submit(dict(prompt='Is it done?'))
-    out = json.loads(capsys.readouterr().out)
-    ctx = out['hookSpecificOutput']['additionalContext']
-    assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
-    assert 'question' in ctx and 'Claude Code bug' not in ctx      # codex gets the harness-neutral wording
+def test_prompt_submit(capsys):
+    from aai_coding.harness import claude_prompt_submit, codex_prompt_submit
+    prompt = "BTW is the '# also activates the Message.to_parts/ai_output patches' still correct for llmsurgery?"
+    for f,has_bug in ((claude_prompt_submit,True), (codex_prompt_submit,False)):
+        f(dict(prompt=prompt))
+        out = json.loads(capsys.readouterr().out)
+        ctx = out['hookSpecificOutput']['additionalContext']
+        assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
+        assert 'question' in ctx and 'side request' in ctx
+        assert ('Claude Code bug' in ctx) is has_bug
     codex_prompt_submit(dict(prompt='all good'))
     assert capsys.readouterr().out == ''
 
