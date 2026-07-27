@@ -34,7 +34,7 @@ Settle first: every hook the user already has; theirs stay alongside these unles
 
 Outcome, in `settings.json`: `permissions.deny` includes `Read`, `Edit`, `Write`, `Grep`, `Glob`, `NotebookEdit`, `Bash(cat *)`, and `Bash(python -c:*)`; `permissions.allow` includes `WebSearch`, `WebFetch`, and `mcp__clikernel__restart`; `env.BASH_DEFAULT_TIMEOUT_MS` is `"90000"`. These force work through the kernel tooling; the harness does not function as designed without them.
 
-Recommended, ask the user: `skillOverrides` turning off the built-in workflow skills (`init`, `review`, `code-review`, `security-review`, `simplify`, `verify`, `run`, `dataviz`, `artifact-design`, `fewer-permission-prompts`, `update-config`, `keybindings-help`), which assume the native file tools this deny list removes.
+Recommended, ask the user: `disableBundledSkills` set to `true` in `settings.json`, turning off the built-in skills (`init`, `review`, `code-review`, `security-review`, `simplify`, `verify`, `run`, `dataviz`, `artifact-design`, `fewer-permission-prompts`, `update-config`, `keybindings-help`), which assume the native file tools this deny list removes.
 
 Settle first: any existing rule that conflicts. In particular a broad `Bash` allow rule defeats both the bash guard and safecmd; surface that one explicitly.
 
