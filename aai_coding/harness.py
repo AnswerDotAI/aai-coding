@@ -1,6 +1,4 @@
-"""Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is
-registered in a harness's hook config (Claude Code settings.json or codex hooks.json) and reads the
-hook event's JSON payload from stdin; see SETUP.md for the wiring."""
+"""Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is registered in a harness's hook config (Claude Code settings.json or codex hooks.json) and reads the hook event's JSON payload from stdin. See SETUP.md for the wiring."""
 import json, os, re, sys
 from datetime import datetime
 from pathlib import Path
@@ -9,11 +7,16 @@ __all__ = ['main']
 
 NO_TRUNCATE = ('Output pipe truncates below 20 lines. Drop the pipe or keep >=20: truncation is decided '
     'before the output exists, so keep enough to diagnose surprises.')
+NO_STDERR_MERGE = ('Do not merge stderr into stdout with 2>&1. Remove redirection entirely where possible - '
+    'the harness automatically pushes large outputs to external files when needed; use this form where '
+    'strictly needed: `>meta/stdout.txt 2>meta/stderr.txt`, reading the files with clikernel.')
 _TRUNC = re.compile(r'\|\s*(tail|head)\s+(-n\s*)?-?([1-9]|1[0-9])\b')
+_MERGE = re.compile(r'2>\s*&\s*1')
 
 
 def bash_guard_msg(cmd):
-    "The no-truncation objection when `cmd` pipes output through a sub-20-line head/tail, else None"
+    "The objection `cmd` earns - a sub-20-line head/tail pipe, or a 2>&1 stderr merge - else None"
+    if _MERGE.search(cmd): return NO_STDERR_MERGE
     return NO_TRUNCATE if _TRUNC.search(cmd) else None
 
 
@@ -94,15 +97,20 @@ def claude_session_start(o):
     if nb: print(NBDEV_MSG)
 
 
+def _prompt_submit(o, q_notice):
+    ns = prompt_notices(o.get('prompt') or '', q_notice)
+    if ns: print(json.dumps(dict(hookSpecificOutput=dict(
+        hookEventName='UserPromptSubmit', additionalContext='\n'.join(ns)))))
+
+
 def claude_prompt_submit(o):
-    "UserPromptSubmit: print each notice the prompt earns"
-    for n in prompt_notices(o.get('prompt') or ''): print(n)
+    "Claude UserPromptSubmit: emit all notices as one hookSpecificOutput JSON object"
+    _prompt_submit(o, Q_NOTICE)
 
 
 def codex_prompt_submit(o):
-    "codex UserPromptSubmit: emit each notice the prompt earns as hookSpecificOutput JSON"
-    for n in prompt_notices(o.get('prompt') or '', Q_NOTICE_CODEX):
-        print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='UserPromptSubmit', additionalContext=n))))
+    "codex UserPromptSubmit: emit all notices as one hookSpecificOutput JSON object"
+    _prompt_submit(o, Q_NOTICE_CODEX)
 
 
 def claude_bash_guard(o):
