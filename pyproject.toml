@@ -22,6 +22,7 @@ coding_patterns = "aai_coding.coding_patterns"
 write_prose = "aai_coding.write_prose"
 harness_docs = "aai_coding.harness_docs"
 looker = "aai_coding.looker"
+theory = "aai_coding.theory"
 
 [project.scripts]
 aai-hook = "aai_coding.harness:main"
