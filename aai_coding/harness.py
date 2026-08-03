@@ -126,6 +126,97 @@ def claude_block_native_edit(o):
     sys.exit(2)
 
 
+AIR_ROUNDS, AIR_RENUDGE, AIR_SUBSTANCE = 8, 5, 100
+AIR_MSG = 'You have made {0} consecutive tool-call rounds. LLMs measurably do worse on long uninterrupted tool runs: if you have not "come up for air" in the last {0} rounds, do it before your next tool call. Write ordinary response text - a real text part, not a comment cell and not thinking - covering what you just did, what you found, what you plan next, and whether that still aligns with the user request and its constraints.'
+
+
+def _state_file(kind, sid):
+    "Per-session state file of the given `kind` under the shared state root, sweeping abandoned siblings"
+    d = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))/kind
+    d.mkdir(parents=True, exist_ok=True)
+    import time
+    for g in d.glob('*'):
+        try:
+            if g.stat().st_mtime < time.time() - 86400: g.unlink(missing_ok=True)
+        except FileNotFoundError: pass   # a concurrent sweep got it first
+    return d/f'{sid}.json'
+
+
+def claude_air(o):
+    "UserPromptSubmit/MessageDisplay/PostToolBatch: nudge after AIR_ROUNDS tool rounds with no substantive text"
+    f = _state_file('air', o.get('session_id', ''))
+    try: st = json.loads(f.read_text())
+    except (OSError, ValueError): st = {}   # missing, torn by a concurrent writer, or otherwise unreadable: start fresh
+    if not isinstance(st, dict): st = {}
+    st = {k: st.get(k, d) for k, d in dict(rounds=0, nudged=0, mid='', midlen=0).items()}
+    ev = o['hook_event_name']
+    if ev == 'UserPromptSubmit': st.update(rounds=0, nudged=0)
+    elif ev == 'MessageDisplay':
+        if o.get('message_id') != st['mid']: st.update(mid=o.get('message_id'), midlen=0)
+        st['midlen'] += len(o.get('delta') or '')
+        if o.get('final') and st['midlen'] >= AIR_SUBSTANCE: st.update(rounds=0, nudged=0)
+    elif ev == 'PostToolBatch':
+        st['rounds'] += 1
+        if st['rounds'] >= AIR_ROUNDS and st['rounds'] - st['nudged'] >= AIR_RENUDGE:
+            st['nudged'] = st['rounds']
+            print(json.dumps(dict(hookSpecificOutput=dict(
+                hookEventName='PostToolBatch', additionalContext=AIR_MSG.format(st['rounds'])))))
+    tmp = f.with_suffix(f'.{os.getpid()}.tmp')   # concurrent hook processes share this file: atomic replace, never a torn write
+    tmp.write_text(json.dumps(st))
+    tmp.replace(f)
+
+
+# Port of podlayer/message-drop-sentinel (MIT). Workaround for a live platform bug: mid-turn
+# `thinking -> text -> thinking -> tool_use` drops the text upstream - never rendered, never in the
+# transcript, gone from the agent's replayed context - leaving two ADJACENT thinking blocks as a scar.
+# Retire when fixed; upstream reports and the re-test recipe are in that repo's README.
+DROP_MSG_BATCH = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If the user should see it, say it again in your turn-final message; if the user may need it NOW, say it now and immediately end the turn.'
+DROP_MSG_STOP = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If your turn-final message did not already say it, say it again now: this message is delivered reliably. If it did, ignore this.'
+
+
+def _is_user_prompt(r):
+    "A real user prompt record: non-meta, plain text content, not a tool_result carrier"
+    if r.get('type') != 'user' or r.get('isMeta'): return False
+    c = (r.get('message') or {}).get('content')
+    if isinstance(c, str): return True
+    return isinstance(c, list) and any(b.get('type') == 'text' for b in c) and not any(b.get('type') == 'tool_result' for b in c)
+
+
+def count_scars(transcript_path):
+    "`(scars, prompt_uuid)` for the current turn: adjacent thinking-block pairs mark where a dropped text used to be"
+    recs = []
+    for line in Path(transcript_path).open():
+        try: recs.append(json.loads(line))
+        except ValueError: pass   # blank or malformed line
+    start = 0
+    for i, r in enumerate(recs):
+        if _is_user_prompt(r): start = i
+    types = [b.get('type') for r in recs[start:] if r.get('type') == 'assistant' and isinstance((r.get('message') or {}).get('content'), list)
+        for b in r['message']['content']]
+    scars = sum(1 for a, b in zip(types, types[1:]) if a == b == 'thinking')
+    return scars, (recs[start].get('uuid') if recs else None)
+
+
+def claude_drop_sentinel(o):
+    "PostToolBatch/Stop: detect thinking-sandwich message drops via the transcript scar, and prompt a pinned restate"
+    try:
+        if o.get('agent_id'): return   # a subagent's deliverable is its turn-final message: the shape the bug never touches
+        tp = o.get('transcript_path')
+        if not tp or not Path(tp).is_file(): return
+        scars, uid = count_scars(tp)
+        f = _state_file('drop-sentinel', o.get('session_id', ''))
+        try: st = json.loads(f.read_text())
+        except (OSError, ValueError): st = {}
+        done = st.get('reported', 0) if isinstance(st, dict) and st.get('prompt_uuid') == uid else 0
+        if scars <= done: return   # whichever boundary reports first claims the holes
+        tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+        tmp.write_text(json.dumps(dict(prompt_uuid=uid, reported=scars)))
+        tmp.replace(f)
+        if o['hook_event_name'] == 'PostToolBatch':
+            print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='PostToolBatch',
+                additionalContext=DROP_MSG_BATCH))))
+        else: print(json.dumps(dict(decision='block', reason=DROP_MSG_STOP)))
+    except Exception as e: print(f'[drop-sentinel] fail-open: {e!r}', file=sys.stderr)
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))
