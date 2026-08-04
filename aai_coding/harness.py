@@ -127,7 +127,7 @@ def claude_block_native_edit(o):
 
 
 AIR_ROUNDS, AIR_RENUDGE, AIR_SUBSTANCE = 8, 5, 100
-AIR_MSG = 'You have made {0} consecutive tool-call rounds. LLMs measurably do worse on long uninterrupted tool runs: if you have not "come up for air" in the last {0} rounds, do it before your next tool call. Write ordinary response text - a real text part, not a comment cell and not thinking - covering what you just did, what you found, what you plan next, and whether that still aligns with the user request and its constraints.'
+AIR_MSG = 'You may have made {0} tool rounds without surfacing. Write real response text that re-points your attention (long runs collapse it onto recent results): restate the request, including one constraint you\'d stopped mentioning; name your most questionable recent tool call (nbdev => nb tooling, pyskills over Bash, exhash for edits) and correct it if wrong; state the next step. If this reads like your last surfacing, you haven\'t reconnected.'
 
 
 def _state_file(kind, sid):
@@ -171,7 +171,7 @@ def claude_air(o):
 # transcript, gone from the agent's replayed context - leaving two ADJACENT thinking blocks as a scar.
 # Retire when fixed; upstream reports and the re-test recipe are in that repo's README.
 DROP_MSG_BATCH = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If the user should see it, say it again in your turn-final message; if the user may need it NOW, say it now and immediately end the turn.'
-DROP_MSG_STOP = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If your turn-final message did not already say it, say it again now: this message is delivered reliably. If it did, ignore this.'
+DROP_MSG_STOP = 'Two thinking blocks in a row appeared in this turn: text you emitted mid-turn may have been silently dropped (it reached neither the user nor the transcript, and will not be in your future context). If your turn-final message already contains everything the user needs, reply with exactly "ok" and nothing else - do not re-summarize. Only if something important appears nowhere in your final message should you state that missing thing now: just the missing part, not a recap.'
 
 
 def _is_user_prompt(r):

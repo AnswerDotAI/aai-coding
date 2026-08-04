@@ -80,11 +80,11 @@ def test_claude_air(tmp_path, monkeypatch, capsys):
     for _ in range(7): batch()
     assert out() == ''                                      # under threshold: silent
     batch()
-    assert 'come up for air' in json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 're-points your attention' in json.loads(out())['hookSpecificOutput']['additionalContext']
     for _ in range(4): batch()
     assert out() == ''                                      # renudge interval not yet reached
     batch()
-    assert 'made 13 consecutive' in json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'made 13 tool rounds' in json.loads(out())['hookSpecificOutput']['additionalContext']
     claude_air(dict(hook_event_name='MessageDisplay', session_id='s1', message_id='m1', final=False, delta='x'*60))
     claude_air(dict(hook_event_name='MessageDisplay', session_id='s1', message_id='m1', final=True, delta='x'*60))
     batch()
@@ -93,7 +93,7 @@ def test_claude_air(tmp_path, monkeypatch, capsys):
     for _ in range(6): batch()
     assert out() == ''                                      # a sub-100-char message resets nothing: 7 rounds now
     batch()
-    assert 'made 8 consecutive' in json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'made 8 tool rounds' in json.loads(out())['hookSpecificOutput']['additionalContext']
     claude_air(dict(hook_event_name='UserPromptSubmit', session_id='s1', prompt='hi'))
     batch()
     assert out() == ''                                      # new prompt reset
