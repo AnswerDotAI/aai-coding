@@ -2,15 +2,13 @@ r'''How to write prose that doesn't read as AI slop: read before writing anythin
 
 # Writing Prose That Doesn't Sound Like AI
 
-Guidelines for writing clear, human-sounding prose. Based on the [Anti-Slop Reference](https://github.com/NousResearch/autonovel/blob/master/ANTI-SLOP.md). Apply these when writing documentation, blog posts, READMEs, or any prose.
+Guidelines for writing clear, human-sounding prose. Apply these when writing documentation, blog posts, READMEs, or any prose. The overall goal is a style combining the best parts of GOV.UK/GDS house style, ASD-STE100, and The Economist.
 
-Here is a passage from The Economist. Its house style is the register most prose this skill covers should default to: documentation, explanation, argument.
+Here is a passage from The Economist:
 
 > No form of emissions reduction, though, can quickly bend the current trajectory.[1][2] Endurance is what remains.[3][14] Making air conditioning more efficient, cheap and widespread[10] saves lives[6] and fits well with other policy goals, like making clean electricity cheap to produce and consume.[7] Ten years ago a commitment to phase out the fluorinated gases in cooling systems was reached in Kigali, the capital of Rwanda.[8][9] There is scope for extra international efforts to improve the machinery that uses them.[7][19] This could double the cooling benefit of phasing out the gases.[6]
 
-Each sentence sets out to say one thing, says it, and stops.
-
-It is simple plain English prose. It carries no byline and needs none. Plainness, not personality, does the work. It's not trying to sell anything. It lets you figure out what the takeaways are.
+Each sentence sets out to say one thing, says it, and stops. It is simple plain English prose. It carries no byline and needs none. Plainness, not personality, does the work. It's not trying to sell anything. It lets you figure out what the takeaways are.
 
 Write like that.
 
@@ -84,7 +82,7 @@ These are statistically overrepresented in AI output. Replace or delete on sight
 
 The word lists above are examples of a general rule: always reach for the simplest, most normal, least jargony word that is still correct. If a plainer word says the same thing, use it.
 
-Much of the clarity core above is also codified in ASD-STE100: one idea per sentence, active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution). STE's rules are field-tested and designed for mechanical checking. Do not adopt its register. STE is deliberately voiceless and choppy, built for non-native mechanics under time pressure, and it would fail the standard the Economist passage sets. Borrow the discipline, not the sound.
+Much of the clarity core above is also codified in ASD-STE100: one idea per sentence, active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution). Do not adopt its register. STE is deliberately voiceless and choppy, built for non-native mechanics under time pressure, and it would fail the standard the Economist passage sets. Borrow the discipline, not the sound.
 
 Don't hard-wrap prose. Write each paragraph as one continuous line and let the display soft-wrap it. Manual line breaks mid-paragraph make the text painful to reflow, edit, and copy.
 
@@ -119,7 +117,7 @@ async def check_prose(
     model='sol',  # An `llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort where the model supports it: 'low'/'medium'/'high'
 ):
-    "Review `text` against the rules above (this module's docstring), returning flagged spans or 'Clean'."
+    "Review `text` against the rules above (this module's docstring) using an agent, returning flagged spans or 'Clean'. Only use if specifically asked to use an agent."
     from .llms import ask
     return await ask(f'# Rules\n\n{__doc__}\n\nAUDIENCE: {audience}\n\n# TEXT UNDER REVIEW\n\n{text}',
         model=model, system=_CHARTER, effort=effort)
