@@ -14,6 +14,8 @@ Making our tools marvellous matters more than the task in hand. A finished task 
 
 Readers assume everything present is necessary. When they see `str(x)` on something that's already a str, they stop and wonder what subtle thing it's guarding against. When the answer is "nothing", they paid for a mystery with no payoff. The same goes for defensive copies (`list(x)` that's never mutated), "just in case" try/excepts, redundant type coercions, and unused parameters. Before adding any construct, know why it's needed. If you can't say, leave it out. The cost doubles in nbdev projects, where tests are documentation.
 
+Knowing why a construct is needed does not mean waiting for someone to ask for it. An open source user who finds a gap concludes the library cannot do it and moves on. Judge a library feature by whether the design calls for it and users would expect it.
+
 The same applies to prose in code: almost never add comments (only when the code is truly unclear), and don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
 Only write a code comment to state a constraint the code itself can't show, never to say where it came from, what the next line does, or why your change is correct. That's you talking to the reviewer, not the next reader, and it's noise the moment the PR merges.
 
