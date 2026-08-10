@@ -1,3 +1,4 @@
+.sesskey
 __pycache__/
 *.py[cod]
 *.so
