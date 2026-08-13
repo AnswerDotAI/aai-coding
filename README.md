@@ -8,7 +8,7 @@ Sessions here run bash-and-python-only: the harness's native file tools are deni
 
 ## What is in here
 
-- `aai_coding/` - the pyskills. `coding_patterns` (style, testing judgment, and team policy; part of the kernel startup doc round), `write_prose` (anti-slop prose rules), `harness_docs` (how to find official harness docs via llms.txt), and `harness` (not a skill: the `aai-hook` CLI that implements both harnesses' hooks).
+- `aai_coding/` - the pyskills. `coding_patterns` (style, testing judgment, and team policy; part of the kernel startup doc round), `write_prose` (anti-slop rules for narrative prose), `write_docs` (the voiceless register for docstrings, READMEs, and PRs), `harness_docs` (how to find official harness docs via llms.txt), and `harness` (not a skill: the `aai-hook` CLI that implements both harnesses' hooks).
 - `skills/` - the two harness-level SKILL.md sources, symlinked into `~/.claude/skills` and `~/.codex/skills`.
 - `plugins/safecmd/` - a Claude Code plugin that auto-approves allowlisted Bash commands via the `safecmd` package, so the deny-heavy permission setup stays livable.
 - `prompts/` - shared prompt text. `core.md` holds harness-neutral behavioral rules: codex reads it natively via a `~/.codex/AGENTS.md` symlink, and Claude Code can append it. `sysp.md` is a full replacement for Claude Code's default system prompt, tuned against the default's consultant and action biases; install it as a `~/.claude/sysp` symlink and launch with `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md` (replacement drops the default prompt's prose but tool schemas survive; the dynamic environment block and scratchpad path are the known losses).
