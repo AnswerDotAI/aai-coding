@@ -170,7 +170,7 @@ def claude_air(o):
     except (OSError, ValueError): st = {}   # missing, torn by a concurrent writer, or otherwise unreadable: start fresh
     if not isinstance(st, dict): st = {}
     st = {k: st.get(k, d) for k, d in dict(rounds=0, nudged=0, mid='', midlen=0).items()}
-    ev = o['hook_event_name']
+    ev = o.get('hook_event_name')
     if ev == 'UserPromptSubmit': st.update(rounds=0, nudged=0)
     elif ev == 'MessageDisplay':
         if o.get('message_id') != st['mid']: st.update(mid=o.get('message_id'), midlen=0)
@@ -358,5 +358,7 @@ def codex_orientation(o):
 
 
 def main():
-    "Dispatch `aai-hook <subcommand>` to its handler with the stdin JSON payload"
-    globals()[sys.argv[1].replace('-', '_')](json.load(sys.stdin))
+    "Dispatch `aai-hook <subcommand>` to its handler with the stdin JSON payload; an unreadable payload is a fail-open no-op, since the harness surfaces a crashed hook as a tool error"
+    try: o = json.load(sys.stdin)
+    except ValueError: return
+    globals()[sys.argv[1].replace('-', '_')](o)
