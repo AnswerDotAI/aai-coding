@@ -79,11 +79,32 @@ def _forget(session_id):
     except Exception: pass
 
 
+def _desktop():
+    "True in a Claude desktop app session, which runs the relaxed harness: the desktop can neither replace the system prompt nor start dojo-preloaded"
+    return os.environ.get('CLAUDE_CODE_ENTRYPOINT') == 'claude-desktop'
+
+
+def _is_nbdev(d):
+    try: return any(l.startswith('[tool.nbdev]') for l in (d/'pyproject.toml').open())
+    except OSError: return False
+
+
+CORE_MD = Path(__file__).parent.parent/'prompts'/'core.md'
+
+
+def claude_desktop_start(o, d):
+    "SessionStart, desktop app: core behavioral rules and the nbdev caution; kernel-only enforcement stays off"
+    if o.get('source') == 'compact': _forget(o.get('session_id', ''))
+    print(CORE_MD.read_text())
+    if _is_nbdev(d): print(NBDEV_MSG)
+
+
 def claude_session_start(o):
-    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda"
+    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda (relaxed in the desktop app)"
     d = Path(os.environ.get('CLAUDE_PROJECT_DIR') or os.getcwd())
     src = o.get('source', '')
     if src in ('resume', 'compact'): print(f'[{src} at {datetime.now():%H:%M:%S}]')
+    if _desktop(): return claude_desktop_start(o, d)
     if src == 'compact':
         _forget(o.get('session_id', ''))
         print(COMPACT_MSG)
@@ -92,9 +113,7 @@ def claude_session_start(o):
         print(SYNTH_MSG)
     elif src == 'resume' and (d/'pyproject.toml').is_file(): print(RESUME_MSG)
     if (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
-    try: nb = any(l.startswith('[tool.nbdev]') for l in (d/'pyproject.toml').open())
-    except OSError: nb = False
-    if nb: print(NBDEV_MSG)
+    if _is_nbdev(d): print(NBDEV_MSG)
 
 
 def _prompt_submit(o, q_notice):
@@ -121,7 +140,8 @@ def claude_bash_guard(o):
 
 
 def claude_block_native_edit(o):
-    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling"
+    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling (desktop sessions keep native tools)"
+    if _desktop(): return
     print(BLOCK_EDIT_MSG, file=sys.stderr)
     sys.exit(2)
 
@@ -280,6 +300,30 @@ def claude_slop(o):
         if notes: print(json.dumps(dict(hookSpecificOutput=dict(
             hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
+DOJO_SAMPLE_MSG = ('This desktop session studies a worked dojo round instead of playing one. Read the round below as reference '
+    'for correct kernel tool usage; do not repeat or score it. Then run `dojo_start({cid!r})` in the kernel to record the skip, '
+    'and retry this call.\n\n{sample}')
+
+
+def claude_dojo_sample(o):
+    "PreToolUse(mcp__clikernel__execute), desktop only: gate the first kernel call on studying the worked round"
+    try:
+        if not _desktop() or o.get('agent_id'): return
+        if not (Path(os.environ.get('CLAUDE_PROJECT_DIR') or os.getcwd())/'pyproject.toml').is_file(): return
+        f = _state_file('dojo-sample', o.get('session_id', ''))
+        if f.exists(): return
+        from llmdojo.claudedojo import _load_reg
+        _,meta = _load_reg(None)   # side effect: registers the template's completion id, so dojo_start honors the skip
+        import llmdojo
+        sample = (Path(llmdojo.__file__).parent/'dojo_data/codexdojo_sample.md').read_text()
+        print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='PreToolUse', permissionDecision='deny',
+            permissionDecisionReason=DOJO_SAMPLE_MSG.format(cid=meta['cid'], sample=sample)))))
+        f.write_text('{}')
+    except Exception as e: print(f'[dojo-sample] fail-open: {e!r}', file=sys.stderr)
+
+
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))
