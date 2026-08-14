@@ -151,17 +151,19 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
 
 def test_desktop_relaxed(tmp_path, monkeypatch, capsys):
     "Desktop sessions keep native edits and swap the bootstrap gate for core.md; terminal sessions are unchanged"
-    from aai_coding.harness import claude_block_native_edit, claude_session_start
+    from aai_coding.harness import claude_bash_guard, claude_block_native_edit, claude_session_start
     monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
     (tmp_path/'pyproject.toml').write_text('[tool.nbdev]\n')
     monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
     claude_block_native_edit({})                            # returns: native edits pass
+    claude_bash_guard(dict(tool_input=dict(command='pytest | head -5')))   # returns: truncating pipes pass
     claude_session_start(dict(source='startup', session_id='s1'))
     out = capsys.readouterr().out
     assert 'final text message' in out                      # core.md loaded
     assert 'NEVER touch local files' not in out and 'nbdev project' in out
     monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
     with pytest.raises(SystemExit): claude_block_native_edit({})
+    with pytest.raises(SystemExit): claude_bash_guard(dict(tool_input=dict(command='pytest | head -5')))
     claude_session_start(dict(source='startup', session_id='s1'))
     out = capsys.readouterr().out
     assert 'NEVER touch local files' in out and 'final text message' not in out

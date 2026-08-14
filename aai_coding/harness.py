@@ -133,7 +133,8 @@ def codex_prompt_submit(o):
 
 
 def claude_bash_guard(o):
-    "PreToolUse(Bash): reject output-truncating pipes"
+    "PreToolUse(Bash): reject output-truncating pipes (desktop sessions are exempt)"
+    if _desktop(): return
     if m := bash_guard_msg(o.get('tool_input', {}).get('command') or ''):
         print(m, file=sys.stderr)
         sys.exit(2)
