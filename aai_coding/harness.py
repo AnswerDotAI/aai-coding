@@ -217,6 +217,69 @@ def claude_drop_sentinel(o):
                 additionalContext=DROP_MSG_BATCH))))
         else: print(json.dumps(dict(decision='block', reason=DROP_MSG_STOP)))
     except Exception as e: print(f'[drop-sentinel] fail-open: {e!r}', file=sys.stderr)
+
+
+SLOP_WORST, SLOP_DENSITY, SLOP_WORDS, SLOP_TOP = 10, 10, 40, 8
+SLOP_MSG = ("slopometer: your previous turn's final message scored density {d} (flag threshold {t}), worst finding {w}. "
+    'The rows below apply to your own prose only: a span that is a quoted example, discussed text, or a title needs no change. '
+    'Write your reply to the prompt above in the reference register, avoiding these patterns.\n{rows}')
+SLOP_RESTATE = ('The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: '
+    'short sentences, named actors, plain words, no joins, and define every term you keep.')
+
+
+_SLOP_KEYS = dict(mid='', buf='', last='', lastmid='', done='')
+
+def _slop_state(f):
+    try: st = json.loads(f.read_text())
+    except (OSError, ValueError): st = {}
+    if not isinstance(st, dict): st = {}
+    return {k: st.get(k, d) for k, d in _SLOP_KEYS.items()}
+
+def _slop_report(txt):
+    "Zero or one scored-message notices for `txt`, applying the env-tunable thresholds"
+    if len(txt.split()) < int(os.environ.get('SLOP_WORDS', SLOP_WORDS)): return []
+    from shutil import which
+    if not which('slopometer'): return []
+    import subprocess
+    r = subprocess.run(['slopometer', '--json'], input=txt, capture_output=True, text=True, timeout=60)
+    if r.returncode: return []
+    j = json.loads(r.stdout)
+    worst_min = int(os.environ.get('SLOP_WORST', SLOP_WORST))
+    dens_min = float(os.environ.get('SLOP_DENSITY', SLOP_DENSITY))
+    if not (j['worst'] >= worst_min or j['density'] >= dens_min): return []
+    def row(f):
+        tl = f" (tell {f['tell']})" if f['tell'] is not None else ''
+        return f"[{f['weight']}] {f['rule']}{tl}: {f['text']!r}"
+    rows = '\n'.join(row(f) for f in j['findings'][:SLOP_TOP])
+    return [SLOP_MSG.format(d=j['density'], t=dens_min, w=j['worst'], rows=rows)]
+
+
+def claude_slop(o):
+    "MessageDisplay/UserPromptSubmit: track the displaying message, then report the previous turn's score with the new prompt"
+    try:
+        if o.get('agent_id'): return
+        f = _state_file('slop', o.get('session_id', ''))
+        st = _slop_state(f)
+        if o['hook_event_name'] == 'MessageDisplay':
+            if o.get('message_id') != st['mid']: st.update(mid=o.get('message_id'), buf='')
+            st['buf'] += o.get('delta') or ''
+            if o.get('final'): st['last'], st['lastmid'] = st['buf'], st['mid']
+            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+            tmp.write_text(json.dumps(st))
+            tmp.replace(f)
+            return
+        notes = []
+        if (o.get('prompt') or '').strip() == ';': notes.append(SLOP_RESTATE)
+        txt, fresh = st['last'], st['lastmid'] != st['done']
+        if txt and fresh:
+            st['done'] = st['lastmid']
+            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+            tmp.write_text(json.dumps(st))
+            tmp.replace(f)
+            notes += _slop_report(txt)
+        if notes: print(json.dumps(dict(hookSpecificOutput=dict(
+            hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
+    except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))

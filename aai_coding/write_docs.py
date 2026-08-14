@@ -6,15 +6,17 @@ These rules cover the prose that ships with code: docstrings, code comments, REA
 
 Here is a passage from a design doc, written in this register:
 
-> `GatewayKernel` ties the three lower layers together. The ready-wait runs once per kernel, in `start`.[1][3] `watch` polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status.[1] Three missed heartbeats[4] mark the kernel `unresponsive` in its model, with the next echo clearing the mark. The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
+> `GatewayKernel` ties the three lower layers together. The ready-wait runs once per kernel, in `start`.[1][3] `watch` polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status.[1] Three missed heartbeats[4] mark the kernel `unresponsive` in its model, with the next echo clearing the mark.
+>
+> The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
 Write like that. Each sentence states one fact and stops. Each guarantee is its own sentence. The negative guarantee is stated too: what the gateway never does. Every status is named by its real identifier. Sentences this uniform would read as monotone in an essay. In reference prose they are correct. Readers scan, take the fact they came for, and leave.
 
 Here is the same passage before editing:
 
-> `GatewayKernel` ties the three lower layers together, and its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] `watch` polls the process and the heartbeat: a process that dies unexpectedly broadcasts the synthesized `dead` status, and three missed beats[4] mark the kernel `unresponsive` in its model.[1] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. `restart` terminates and respawns; the new process gets fresh ports, so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
+> This section describes how `GatewayKernel` manages the kernel lifecycle.[13] `GatewayKernel` ties the three lower layers together, and its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[15] It isn't just a poller - it's the liveness authority.[16] Furthermore,[19] it polls the process and the heartbeat: a process that dies unexpectedly broadcasts the synthesized `dead` status, and three missed beats[4] mark the kernel `unresponsive` in its model.[1] The distinction is worth being precise about.[21] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[18] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[20][23] so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
 
-Do NOT write like that. Nothing in it is false. In a blog post it might pass. As reference prose it fails. Each sentence carries several facts. The key guarantee is an aside. The final state gets a flourish instead of its name.
+Do NOT write like that. Nothing in it is false. In a blog post it might pass. As reference prose it fails. Each sentence carries several facts. The key guarantee is an aside. The final state gets a flourish instead of its name. The opener announces the section instead of starting it. A question delays a fact the reader came for.
 
 The numbers refer to the [bracketed] markers in both passages. Where a number appears in each, the pair is the failing and the working version of the same thing.
 
@@ -30,8 +32,22 @@ The numbers refer to the [bracketed] markers in both passages. Where a number ap
 10. Justification rider: a fact with a benefit clause attached: "kind-sorted so a collector stays legal wherever it came from", "parses bools so flag values test correctly". The rider argues for the fact instead of stating it. Reference prose states the contract. Rationale lives in design docs and narrative prose.
 11. Decorative verbs: a verb chosen for texture instead of the plain word for the event: ids "ride" in rows, a note "lands" in the output. Ask whether you would say the verb at a whiteboard. An artifact subject is fine when the artifact really acts ("`watch` polls the process"). Its verb must still be the plain one.
 12. Audience misjudged, in either direction: explaining what every reader of the doc already knows ("the README documents the package"), or dropping a local coinage without definition ("the carrier"). Name the audience. Cut what they know. Define your own coinages at first use. Established external terms of art may stay. They can be looked up. A coinage cannot.
+13. Throat-clearing: an opener that announces the document instead of starting it: "This section describes...", "The purpose of this document is...", "This README covers...". Delete it. The first sentence states the first fact.
+14. Today's-world opener: "In today's fast-moving AI landscape...". The README form of throat-clearing, with marketing attached. Start with what the package does.
+15. Announce-then-deliver: a label and a colon in place of a sentence: "The core mechanism: `watch`.", "The fix: retry on timeout." The label is scaffolding. Write the sentence: "Retrying on timeout fixes it."
+16. Not-X-but-Y: "isn't just a poller - it's the liveness authority", "not X, but Y". State what the thing is, directly. Restructure every time.
+17. Teaser pivot: "but here's where it gets interesting", "the real story is". A contrast flourish that withholds a fact to build suspense. Reference prose has no suspense. State the facts in order.
+18. Rhetorical questions: "So what does `restart` actually do?". Never ask the reader questions, in headings or in prose. Turn each question into the statement it delays. GDS bans FAQ pages on the same principle.
+19. Filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "When it comes to". Use "and", "also", or start with the subject.
+20. Forced symmetry: three parallel adjectives ("fresh ports, fresh channels, and a fresh interpreter"), three pros and three cons, sections padded to equal length, list items forced into one grammatical mold. Let the material set the count. Treat any list of exactly three as suspect.
+21. Appraisal preamble: a clause that appraises the content it introduces: "the distinction is worth being precise about", "the key point is", "crucially". Deliver the fact. Never advertise it.
+22. Artifact-as-agent: "this PR introduces", "the change enables", "the design lets you". A person did the deed. Name the doer ("I added retry logic"), or state the resulting behavior ("`connect` now retries").
+23. Recipient-as-subject: the beneficiary promoted to subject, with "gets"/"gains"/"receives" and the doer demoted to a "via"/"through" phrase: "the kernel gains fresh ports via the new process". Name the doer and the deed, or state the new state: "the new process listens on fresh ports".
+24. Decoration: emoji, decorative unicode, and ornamental symbols. Use ASCII: "->" not an arrow glyph, words not emoji.
+25. Over-structuring: headers, tables, or bullets imposed on a document that fits on a screen. Headers are navigation. A short document needs none. Bullets carry parallel facts, never prose chopped into fragments.
+26. False depth: restating the problem in fancier words, listing obvious considerations, concluding "it depends". Depth is specifics: identifiers, numbers, edge cases, failure modes.
 
-Entries 7-12 are tells the passage pair is too short to show. When a new tell is added to this skill, add a marked instance to the before passage where a short sample can show it.
+Entries 7-12, 14, 17, 22, and 24-26 are tells the passage pair is too short to show. When a new tell is added to this skill, add a marked instance to the before passage where a short sample can show it.
 
 Instructions address the reader as "you", in the imperative: "Run the tests", not "The tests should be run". Prefer active voice everywhere. A passive that hides the actor usually hides part of the contract with it.
 
@@ -45,7 +61,7 @@ Always use the plainest word that is still correct:
 - strong, not "robust"
 - help, not "facilitate"
 
-Kill on sight: seamless, streamline, empower, foster, pivotal, "a testament to", realm, landscape (metaphorical), navigate (metaphorical), delve, myriad. For "land"/"landed" say what happened: merged, committed, released, appears. For metaphorical "shape"/"shaped" say structure, format, or the actual event. "Invariant" is usually "rule" or "guarantee". Compounds in "-bearing" (load-bearing, text-bearing) have plainer forms.
+Kill on sight: seamless, streamline, empower, foster, pivotal, "a testament to", realm, landscape (metaphorical), navigate (metaphorical), delve, myriad, plethora, paradigm, synergy, holistic, catalyze, juxtapose, tapestry, embark, endeavor, encompass, multifaceted, elucidate, nuanced (as filler), minted (metaphorical). For "land"/"landed" say what happened: merged, committed, released, appears. For metaphorical "shape"/"shaped" say structure, format, or the actual event. "Invariant" is usually "rule" or "guarantee". Compounds in "-bearing" (load-bearing, text-bearing) have plainer forms.
 
 ## Doc types
 

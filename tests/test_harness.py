@@ -1,6 +1,9 @@
 import json
 
-from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, codex_orientation, prompt_notices, synthetic_resume
+import pytest
+from shutil import which
+
+from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, claude_slop, codex_orientation, prompt_notices, synthetic_resume
 
 
 def test_bash_guard():
@@ -133,7 +136,7 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     _transcript(tp, [['thinking', 'thinking', 'tool_use']]*3)
     fire('Stop')
     r = json.loads(out())
-    assert r['decision'] == 'block' and 'thinking blocks in a row' in r['reason'] and 'say it again now' in r['reason']
+    assert r['decision'] == 'block' and 'thinking blocks in a row' in r['reason'] and 'state that missing thing now' in r['reason']
     fire('Stop')
     assert out() == ''                                      # blocks once, not forever
     _transcript(tp, [['thinking', 'thinking', 'tool_use']], prompt_uuid='u2')
@@ -144,3 +147,48 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     tp.write_text('not json at all\n{"type": "garbage"')
     fire()
     assert out() == ''                                      # unparseable transcript: fail-open, silent on stdout
+
+
+@pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
+def test_slop(tmp_path, monkeypatch, capsys):
+    "Sloppy previous message -> context rows at the next prompt; repeats, subagents, short and clean prose stay silent"
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    def disp(mid, txt, final=True, **kw): claude_slop(dict(hook_event_name='MessageDisplay', session_id='s1', message_id=mid, delta=txt, final=final, **kw))
+    def psub(**kw): claude_slop(dict(hook_event_name='UserPromptSubmit', session_id='s1', **kw))
+    def out(): return capsys.readouterr().out
+    sloppy = "This isn't just a linter - it's a comprehensive paradigm that will streamline your workflow. " * 3
+    disp('m1', 'a mid-turn note that nobody should score')
+    disp('m2', sloppy[:40], final=False)
+    disp('m2', sloppy[40:])
+    assert out() == ''                                      # display tracking is silent
+    psub()
+    r = json.loads(out())['hookSpecificOutput']
+    assert 'previous turn' in r['additionalContext'] and 'splice' in r['additionalContext']
+    psub()
+    assert out() == ''                                      # the same message reports once
+    disp('m3', sloppy)
+    psub(agent_id='sub1')
+    assert out() == ''                                      # subagents are not scored
+    disp('m4', "It isn't just short - it's a paradigm.")
+    psub()
+    assert out() == ''                                      # under the word gate: never scored, kills included
+    disp('m5', 'The gateway never kills an unresponsive kernel. A kernel becomes dead only when its process exits. ' * 5)
+    psub()
+    assert out() == ''                                      # clean prose stays silent
+    disp('m6', sloppy)
+    monkeypatch.setenv('SLOP_WORST', '99')
+    monkeypatch.setenv('SLOP_DENSITY', '1000')
+    psub()
+    assert out() == ''                                      # env overrides raise the bar
+    monkeypatch.delenv('SLOP_WORST')
+    monkeypatch.delenv('SLOP_DENSITY')
+    disp('m7', sloppy)
+    psub()
+    assert 'previous turn' in json.loads(out())['hookSpecificOutput']['additionalContext']   # defaults return
+    disp('m8', sloppy)
+    psub(prompt=';')
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'did not understand' in ctx and 'previous turn' in ctx   # bare ; adds the restate notice to the report
+    psub(prompt=';')
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'did not understand' in ctx and 'previous turn' not in ctx   # repeats restate only, scoring once
