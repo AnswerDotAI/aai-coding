@@ -149,6 +149,46 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     assert out() == ''                                      # unparseable transcript: fail-open, silent on stdout
 
 
+def test_desktop_relaxed(tmp_path, monkeypatch, capsys):
+    "Desktop sessions keep native edits and swap the bootstrap gate for core.md; terminal sessions are unchanged"
+    from aai_coding.harness import claude_block_native_edit, claude_session_start
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    (tmp_path/'pyproject.toml').write_text('[tool.nbdev]\n')
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    claude_block_native_edit({})                            # returns: native edits pass
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'final text message' in out                      # core.md loaded
+    assert 'NEVER touch local files' not in out and 'nbdev project' in out
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    with pytest.raises(SystemExit): claude_block_native_edit({})
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'NEVER touch local files' in out and 'final text message' not in out
+
+
+def test_dojo_sample(tmp_path, monkeypatch, capsys):
+    "First desktop kernel call in a Python project is denied with the worked round; replays, subagents, plain dirs, and terminal sessions pass"
+    from aai_coding.harness import claude_dojo_sample
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    ev = dict(hook_event_name='PreToolUse', session_id='s1')
+    claude_dojo_sample(ev)
+    assert capsys.readouterr().out == ''                    # no pyproject.toml: not a kernel-regime project
+    (tmp_path/'pyproject.toml').write_text('')
+    claude_dojo_sample(ev)
+    r = json.loads(capsys.readouterr().out)['hookSpecificOutput']
+    assert r['permissionDecision'] == 'deny' and 'dojo_start' in r['permissionDecisionReason']
+    claude_dojo_sample(ev)
+    assert capsys.readouterr().out == ''                    # studied once: later calls pass
+    claude_dojo_sample(dict(hook_event_name='PreToolUse', session_id='s2', agent_id='sub1'))
+    assert capsys.readouterr().out == ''                    # subagents pass
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    claude_dojo_sample(dict(hook_event_name='PreToolUse', session_id='s3'))
+    assert capsys.readouterr().out == ''                    # terminal sessions play the real round
+
+
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
 def test_slop(tmp_path, monkeypatch, capsys):
     "Sloppy previous message -> context rows at the next prompt; repeats, subagents, short and clean prose stay silent"
