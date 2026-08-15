@@ -8,7 +8,7 @@ Use the fastcore/fasthtml ecosystem (fastcore, fasthtml, fastlite, ...) when pic
 
 ## Improving Tooling Pays Off Exponentially
 
-Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Your training data is mostly written by people who put up with tool friction rather than fix it, so your default is the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
+Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Most code you have read was written by people who put up with tool friction rather than fix it, so your default is the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
 
 ## Every Construct Must Earn Its Place
 
@@ -48,7 +48,7 @@ When `**kwargs` passes through to a known callee, decorate with `@delegates(call
 
 ## Raw Strings
 
-Write any non-trivial string literal as a raw string (`r"..."` / `r"""..."""`): regexes, payload text for tools, code or markup inside strings, anything multi-line or containing backslashes. In plain strings a stray `\n` or `\d` either errors or silently corrupts, and each miss costs a round trip to diagnose plus another to fix. Raw strings are WYSIWYG, so the first attempt matches what you meant. The `r` costs nothing when no escapes are present, so make it the default, not the exception.
+Write any non-trivial string literal as a raw string (`r"..."` / `r"""..."""`): regexes, text you pass to tools, code or markup inside strings, anything multi-line or containing backslashes. In plain strings a stray `\n` or `\d` either errors or silently corrupts, and each miss costs a round trip to diagnose plus another to fix. Raw strings are WYSIWYG, so the first attempt matches what you meant. The `r` costs nothing when no escapes are present, so make it the default, not the exception.
 
 ## Style Checker (chkstyle)
 
@@ -66,7 +66,9 @@ Read from standard locations rather than duplicating config:
 
 ## Versioning: Bump After Release
 
-Versions are bumped immediately *after* release, so the tree always carries the next release's version. Hence a sibling dep pin can be written before it ships (`foo>=<foo's local version>`), releasing means shipping what's there (no suffix machinery, no bump step to forget), and bumping is part of releasing, Jeremy's step, never part of a change.
+Jeremy bumps the version immediately after each release, as part of releasing and never as part of a change. The tree therefore always carries the next release's version. A sibling dep pin can name a version before it ships (`foo>=<foo's local version>`).
+
+A downstream pin is part of the change that creates the dependency. When a change makes one package consume another's new behavior or API, stamp the consumers' pins in the same session. A pin deferred to release time is a forgotten pin.
 
 This convention is for Python projects. Other artifact types version at change time instead: for example, the Claude Code plugins in skill-plugins bump automatically when `./build.py` regenerates a changed output.
 
@@ -93,11 +95,11 @@ All code has writing, maintenance, and readability costs, and tests most of all:
 
 Wiring and orchestration get zero tests: re-exports, delegations, one-line glue, functions that only sequence calls to other tools. A test there only asserts that Python works, and pins down internals we may want to change. Strong tell: if a test needs recording fakes or mock collaborators to reach the code, it's testing a transcript of the implementation, not logic. Extract the logic into a small pure function and test that, or don't test at all.
 
-IF you add a test, ALWAYS work red-green: write it FIRST, run it to see it fail, THEN make the change, then run it again to see it pass.
+IF you add a pytest test, ALWAYS work red-green: write it FIRST, run it to see it fail, THEN make the change, then run it again to see it pass. In nbdev projects there are no test cells - see `doc(nbdev.skill)`: changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added.
 
 - Prefer as few tests as possible: a single test that walks through many checks is more readable and faster than many small ones
 - A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative (each one both documents what we needed to know and keeps guarding it), so they stay as example cells. In a pytest file, an exploratory check survives only if it meets one of the criteria above
-- Assert the logic, not incidentals: check what the behavior guarantees, never byte-exact renderings, exact reprs, or field order. A test that compares a whole output string locks in formatting decisions that were never the point (e.g. assert the content appears in a markdown display block, not the display's exact payload). NEVER use tests to "lock in" behavior, unless that exact behavior really is a key part of the logic or contract that must always be true forever
+- Assert the logic, not incidentals: check what the behavior guarantees, never byte-exact renderings, exact reprs, or field order. A test that compares a whole output string locks in formatting decisions that were never the point (e.g. assert the content appears in a markdown display block, not the display's exact text). NEVER use tests to "lock in" behavior, unless that exact behavior really is a key part of the logic or contract that must always be true forever
 - Use `pytest -q` (not `python -m pytest`, which prompts for permission). nbdev projects use `nbdev-test` on the changed notebook, but some notebooks are slow or hit live services, so check with the user before running one you don't know is safe (known safe: all of pyskills)
 - Don't run slow-marked tests until finishing a session, or after a change likely to directly impact them
 

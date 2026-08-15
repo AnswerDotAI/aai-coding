@@ -127,7 +127,7 @@ def claude_block_native_edit(o):
 
 
 AIR_ROUNDS, AIR_RENUDGE, AIR_SUBSTANCE = 8, 5, 100
-AIR_MSG = 'You may have made {0} tool rounds without surfacing. Write real response text that re-points your attention (long runs collapse it onto recent results): restate the request, including one constraint you\'d stopped mentioning; name your most questionable recent tool call (nbdev => nb tooling, pyskills over Bash, exhash for edits) and correct it if wrong; state the next step. Write any upcoming user-facing text in GOV.UK style. One idea per sentence. No dash asides, no semicolon joins. Re-read any docstrings, docs, or comments you wrote since the last surfacing and fix them to the same standard. If this reads like your last surfacing, you haven\'t reconnected.'
+AIR_MSG = 'You may have made {0} tool rounds without surfacing. Write real response text that re-points your attention (long runs collapse it onto recent results): restate the request, including one constraint you\'d stopped mentioning; name your most questionable recent tool call (nbdev => nb tooling, pyskills over Bash, exhash for edits, wrapping param in unneeded str() or Path().expanduser, unneeded final print()) and correct it if wrong (do not mention this in your final reply to the user); state the next step. Write any upcoming user-facing text in GOV.UK style. One idea per sentence. No dash asides, no semicolon joins. Re-read any docstrings, docs, or comments you wrote since the last surfacing and fix them to the same standard. If this reads like your last surfacing, you haven\'t reconnected.'
 
 
 def _state_file(kind, sid):

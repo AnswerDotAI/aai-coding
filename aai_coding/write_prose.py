@@ -1,4 +1,4 @@
-r'''How to write narrative prose that doesn't read as AI slop: read before writing blog posts, essays, announcements, or anything else with the author's voice. write-docs covers reference prose.
+r'''How to write narrative prose that reads as though a person wrote it: read before writing blog posts, essays, announcements, or anything else with the author's voice. write-docs covers reference prose.
 
 # Writing Prose That Doesn't Sound Like AI
 
