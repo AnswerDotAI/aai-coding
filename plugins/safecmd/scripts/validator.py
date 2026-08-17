@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Claude Code PreToolUse hook that auto-approves safe bash commands using safecmd."""
-import sys,json
+import sys,json,os
 
 def respond(decision, reason):
     print(json.dumps({"hookSpecificOutput": {
@@ -14,6 +14,7 @@ try: from safecmd import validate, DisallowedError
 except ImportError as e: respond("defer", f"safecmd import failed: {e}")
 
 def main():
+    if os.environ.get("CLAUDE_CODE_ENTRYPOINT") == "claude-desktop": sys.exit(0)   # desktop drops deferred tools, stalling the run
     try: hook_input = json.load(sys.stdin)
     except json.JSONDecodeError as e: respond("deny", f"JSON decode failed: {e}")
 

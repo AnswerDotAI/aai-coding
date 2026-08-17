@@ -46,7 +46,7 @@ Check: the file still parses as JSON after editing.
 
 Outcome: symlinks from `~/.claude/skills/persistent-python`, `~/.claude/skills/pyskills`, and the same two names in `~/.codex/skills`, to `<this repo>/skills/<name>`; `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd`; `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
 
-safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
+safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start. It stands down in desktop sessions. A command off the allowlist returns `defer`. The CLI turns that into a permission prompt. The desktop app currently drops it, so the tool call goes unanswered and the run stalls.
 
 Optional, Claude Code: the user might like `<this repo>/prompts/core.md` appended to the system prompt; a shell alias adding `--append-system-prompt-file <this repo>/prompts/core.md` to `claude` does it. The stronger option is the team's full behavioral prompt: symlink `~/.claude/sysp` to `<this repo>/prompts/sysp.md` and alias `claude` to `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md`, which replaces Claude Code's default prompt entirely. Explain the trade to the user before wiring it: the default's tool schemas survive replacement, but its dynamic environment block and scratchpad path do not, and the behavioral text takes over from the default's guidance.
 
