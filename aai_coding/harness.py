@@ -304,9 +304,9 @@ def claude_slop(o):
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
 
 
-DOJO_SAMPLE_MSG = ('This desktop session studies a worked dojo round instead of playing one. Read the round below as reference '
+DOJO_SAMPLE_MSG = ('This desktop session studies a worked dojo round instead of playing one. Read {path} in full as reference '
     'for correct kernel tool usage; do not repeat or score it. Then run `dojo_start({cid!r})` in the kernel to record the skip, '
-    'and retry this call.\n\n{sample}')
+    'and retry this call.')
 
 
 def claude_dojo_sample(o):
@@ -319,9 +319,9 @@ def claude_dojo_sample(o):
         from llmdojo.claudedojo import _load_reg
         _,meta = _load_reg(None)   # side effect: registers the template's completion id, so dojo_start honors the skip
         import llmdojo
-        sample = (Path(llmdojo.__file__).parent/'dojo_data/codexdojo_sample.md').read_text()
+        sample = Path(llmdojo.__file__).parent/'dojo_data/codexdojo_sample.md'   # hook output is capped at 10k chars: point at the round, never inline it
         print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='PreToolUse', permissionDecision='deny',
-            permissionDecisionReason=DOJO_SAMPLE_MSG.format(cid=meta['cid'], sample=sample)))))
+            permissionDecisionReason=DOJO_SAMPLE_MSG.format(cid=meta['cid'], path=sample)))))
         f.write_text('{}')
     except Exception as e: print(f'[dojo-sample] fail-open: {e!r}', file=sys.stderr)
 

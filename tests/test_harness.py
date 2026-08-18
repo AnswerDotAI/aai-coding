@@ -182,6 +182,8 @@ def test_dojo_sample(tmp_path, monkeypatch, capsys):
     claude_dojo_sample(ev)
     r = json.loads(capsys.readouterr().out)['hookSpecificOutput']
     assert r['permissionDecision'] == 'deny' and 'dojo_start' in r['permissionDecisionReason']
+    assert 'codexdojo_sample.md' in r['permissionDecisionReason']
+    assert len(r['permissionDecisionReason']) < 10_000        # hook output strings are capped at 10k chars
     claude_dojo_sample(ev)
     assert capsys.readouterr().out == ''                    # studied once: later calls pass
     claude_dojo_sample(dict(hook_event_name='PreToolUse', session_id='s2', agent_id='sub1'))
