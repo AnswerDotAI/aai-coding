@@ -15,7 +15,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
 ]
 
-dependencies = ["llmdojo>=0.0.1"]
+dependencies = ["llmdojo>=0.0.3"]
 
 [project.entry-points.pyskills]
 coding_patterns = "aai_coding.coding_patterns"

@@ -1,9 +1,10 @@
-import json
+import json, os
+from datetime import datetime, timezone
 
 import pytest
 from shutil import which
 
-from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, claude_slop, codex_orientation, prompt_notices, synthetic_resume
+from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, claude_slop, claude_session_start, codex_orientation, prompt_notices, synthetic_resume
 
 
 def test_bash_guard():
@@ -192,3 +193,27 @@ def test_slop(tmp_path, monkeypatch, capsys):
     psub(prompt=';')
     ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
     assert 'did not understand' in ctx and 'previous turn' not in ctx   # repeats restate only, scoring once
+    psub(prompt="'")
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'caveat' in ctx and 'did not understand' not in ctx   # bare ' asks whether the closing caveat is real
+
+
+def test_synthetic_wipe_guard(tmp_path, monkeypatch):
+    import llmdojo.rules as lr
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path/'state'))
+    monkeypatch.setenv('CLAUDE_CODE_SESSION_ID', 'tsid')
+    monkeypatch.delenv('CODEX_THREAD_ID', raising=False)
+    monkeypatch.delenv('CLAUDE_PROJECT_DIR', raising=False)
+    monkeypatch.setattr(lr, '_HOST', None)
+    bt = datetime.now(timezone.utc)
+    t = tmp_path/'t.jsonl'
+    t.write_text(json.dumps(dict(type='system', subtype='compact_boundary', timestamp=bt.isoformat().replace('+00:00', 'Z')))+'\n')
+    f = tmp_path/'state'/'doced'/'tsid.json'
+    f.parent.mkdir(parents=True)
+    o = dict(source='resume', transcript_path=str(t), session_id='tsid')
+    f.write_text('["rg"]'); os.utime(f, times=(bt.timestamp()-9,)*2)
+    claude_session_start(o)
+    assert json.loads(f.read_text()) == []       # record predates the compact: its docs left the context, so it resets
+    f.write_text('["rg"]'); os.utime(f, times=(bt.timestamp()+9,)*2)
+    claude_session_start(o)
+    assert json.loads(f.read_text()) == ['rg']   # record written since the compact (e.g. a seeded round): kept
