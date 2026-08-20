@@ -150,6 +150,74 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     assert out() == ''                                      # unparseable transcript: fail-open, silent on stdout
 
 
+def _python_project(monkeypatch, tmp_path, nbdev=False):
+    "Point the hooks at a Python project in `tmp_path`"
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    (tmp_path/'pyproject.toml').write_text('[tool.nbdev]\n' if nbdev else '')
+
+
+def test_desktop_session_relaxed(tmp_path, monkeypatch, capsys):
+    "In the desktop app the enforcement hooks stand down, and session start prints core.md instead of the bootstrap gate"
+    from aai_coding.harness import claude_bash_guard, claude_block_native_edit, claude_session_start
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    _python_project(monkeypatch, tmp_path, nbdev=True)
+
+    claude_block_native_edit({})                                            # returns instead of exiting: native edits allowed
+    claude_bash_guard(dict(tool_input=dict(command='pytest | head -5')))    # returns instead of exiting: pipes allowed
+
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'final text message' in out              # core.md, the behavioral layer
+    assert 'NEVER touch local files' not in out     # no kernel-only bootstrap gate
+    assert 'nbdev project' in out                   # the nbdev caution still applies
+
+
+def test_cli_session_enforced(tmp_path, monkeypatch, capsys):
+    "In a terminal session the same hooks enforce the kernel-only regime"
+    from aai_coding.harness import claude_bash_guard, claude_block_native_edit, claude_session_start
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    _python_project(monkeypatch, tmp_path)
+
+    with pytest.raises(SystemExit): claude_block_native_edit({})
+    with pytest.raises(SystemExit): claude_bash_guard(dict(tool_input=dict(command='pytest | head -5')))
+
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'NEVER touch local files' in out         # the bootstrap gate
+    assert 'final text message' not in out          # core.md arrives via the CLI launch flags, not this hook
+
+
+def test_dojo_sample(tmp_path, monkeypatch, capsys):
+    "A desktop session's first kernel call is held once, with directions to study a worked round and skip the live one"
+    from aai_coding.harness import claude_dojo_sample
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    first_call = dict(hook_event_name='PreToolUse', session_id='s1')
+
+    claude_dojo_sample(first_call)
+    assert capsys.readouterr().out == ''            # no pyproject.toml, so no dojo to substitute
+
+    _python_project(monkeypatch, tmp_path)
+    claude_dojo_sample(first_call)
+    r = json.loads(capsys.readouterr().out)['hookSpecificOutput']
+    assert r['permissionDecision'] == 'deny'
+    reason = r['permissionDecisionReason']
+    assert 'codexdojo_sample.md' in reason          # where the worked round is
+    assert 'dojo_start' in reason                   # how to record the skip
+    assert len(reason) < 10_000                     # hook output is capped at 10k chars
+
+    claude_dojo_sample(first_call)
+    assert capsys.readouterr().out == ''            # held once per session: the retry passes
+
+    claude_dojo_sample(dict(first_call, session_id='s2', agent_id='sub1'))
+    assert capsys.readouterr().out == ''            # subagents are never held
+
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    claude_dojo_sample(dict(first_call, session_id='s3'))
+    assert capsys.readouterr().out == ''            # terminal sessions play the real round instead
+
+
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
 def test_slop(tmp_path, monkeypatch, capsys):
     "Sloppy previous message -> context rows at the next prompt; repeats, subagents, short and clean prose stay silent"
