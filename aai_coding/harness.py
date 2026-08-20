@@ -1,7 +1,6 @@
 """Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is registered in a harness's hook config (Claude Code settings.json or codex hooks.json) and reads the hook event's JSON payload from stdin. See SETUP.md for the wiring."""
-import io, json, os, re, sys
+import json, os, re, sys
 from datetime import datetime
-from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 
 __all__ = ['main']
@@ -358,35 +357,8 @@ def codex_orientation(o):
         else: print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='SessionStart', additionalContext=message))))
 
 
-SECRET_RE = re.compile(r'(?i)key|token|secret|password|passwd|auth|cookie|session_token')
-
-
-def _rec(argv, raw, out='', err='', code=0):
-    "Append one replayable record to $AAI_HOOK_REC: argv, cwd, redacted env, stdin, and the result"
-    p = os.environ.get('AAI_HOOK_REC')
-    if not p: return
-    try:
-        tp = (json.loads(raw) if raw.strip() else {}).get('transcript_path') or ''
-        rec = dict(ts=datetime.now().isoformat(timespec='seconds'), argv=argv, cwd=os.getcwd(),
-            env={k: v for k, v in os.environ.items() if not SECRET_RE.search(k)},
-            stdin=raw, stdout=out, stderr=err, exit_code=code, transcript_path=tp,
-            transcript_size=Path(tp).stat().st_size if tp and Path(tp).is_file() else None)
-        with open(Path(p).expanduser(), 'a') as f: f.write(json.dumps(rec) + '\n')
-    except Exception as e: print(f'[hook-rec] fail-open: {e!r}', file=sys.stderr)
-
-
 def main():
-    "Dispatch `aai-hook <subcommand>` to its handler with the stdin JSON payload; `record <subcommand>` captures the invocation for replay instead of running it; an unreadable payload is a fail-open no-op, since the harness surfaces a crashed hook as a tool error"
-    raw = sys.stdin.read()
-    argv = sys.argv[1:]
-    if argv[:1] == ['record']: return _rec(argv, raw)
-    try: o = json.loads(raw)
-    except ValueError: return _rec(argv, raw)
-    out, err, code = io.StringIO(), io.StringIO(), 0
-    try:
-        with redirect_stdout(out), redirect_stderr(err): globals()[argv[0].replace('-', '_')](o)
-    except SystemExit as e: code = e.code or 0
-    _rec(argv, raw, out.getvalue(), err.getvalue(), code)
-    sys.stdout.write(out.getvalue())
-    sys.stderr.write(err.getvalue())
-    if code: sys.exit(code)
+    "Dispatch `aai-hook <subcommand>` to its handler with the stdin JSON payload; an unreadable payload is a fail-open no-op, since the harness surfaces a crashed hook as a tool error"
+    try: o = json.load(sys.stdin)
+    except ValueError: return
+    globals()[sys.argv[1].replace('-', '_')](o)
