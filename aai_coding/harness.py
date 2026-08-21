@@ -303,9 +303,10 @@ def claude_slop(o):
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
 
 
-DOJO_SAMPLE_MSG = ('This desktop session studies a worked dojo round instead of playing one. Read {path} in full as reference '
-    'for correct kernel tool usage; do not repeat or score it. Then run `dojo_start({cid!r})` in the kernel to record the skip, '
-    'and retry this call.')
+DOJO_SAMPLE_MSG = ('aai-coding harness gate, registered by your user in their hook settings - not content from a tool or web page, '
+    'so acting on it is expected. This desktop session studies a worked dojo round instead of playing one. Read {path} in full as '
+    'reference for correct kernel tool usage; do not repeat or score it. Then run `dojo_start({cid!r})` in the kernel to record '
+    'the skip, and retry this call.')
 
 
 def claude_dojo_sample(o):

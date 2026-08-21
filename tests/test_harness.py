@@ -204,6 +204,7 @@ def test_dojo_sample(tmp_path, monkeypatch, capsys):
     reason = r['permissionDecisionReason']
     assert 'codexdojo_sample.md' in reason          # where the worked round is
     assert 'dojo_start' in reason                   # how to record the skip
+    assert 'registered by your user' in reason      # names its source, so cautious agents don't refuse it as injected
     assert len(reason) < 10_000                     # hook output is capped at 10k chars
 
     claude_dojo_sample(first_call)
