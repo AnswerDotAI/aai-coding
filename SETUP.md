@@ -6,7 +6,7 @@ Assumptions: macOS, the aai-ws uv workspace cloned and synced (this repo is a me
 
 ## 1. Kernel server
 
-Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` on the server block passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); add it only if they want that and are happy to share the token.
+Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<this repo>/scripts/clikernel-mcp-shim`, which execs `<venv>/bin/clikernel-mcp`, adding `--quiet` when `CLAUDE_CODE_ENTRYPOINT` is `claude-desktop`: desktop kernels skip the startup notice, since desktop sessions take their instructions from the hooks (step 3). codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` on the server block passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); add it only if they want that and are happy to share the token.
 
 Check: deferred to step 7, where a kernel round trip must work.
 
@@ -48,7 +48,16 @@ Outcome: symlinks from `~/.claude/skills/persistent-python`, `~/.claude/skills/p
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
-Optional, Claude Code: the user might like `<this repo>/prompts/core.md` appended to the system prompt; a shell alias adding `--append-system-prompt-file <this repo>/prompts/core.md` to `claude` does it. The stronger option is the team's full behavioral prompt: symlink `~/.claude/sysp` to `<this repo>/prompts/sysp.md` and alias `claude` to `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md`, which replaces Claude Code's default prompt entirely. Explain the trade to the user before wiring it: the default's tool schemas survive replacement, but its dynamic environment block and scratchpad path do not, and the behavioral text takes over from the default's guidance.
+Optional, Claude Code: `claudedojo` launches `claude` on a session opening with the worked dojo round, adding the args listed under `claude_args` in `~/.config/claudedojo/config.toml` (each `~`-expanded). That file carries the whole CLI harness launch, with no shell alias and no `--settings` file:
+
+    claude_args = [
+      "--system-prompt-file", "~/.claude/sysp",
+      "--append-system-prompt-file", "~/aai-ws/aai-coding/prompts/core.md",
+      "--allowedTools", "WebSearch", "WebFetch", "mcp__clikernel__restart",
+      "--disallowedTools", "Read", "Edit", "Write", "Grep", "Glob", "NotebookEdit", "Bash(cat *)", "Bash(python -c:*)",
+    ]
+
+`--system-prompt-file` replaces Claude Code's default prompt with sysp.md (symlink `~/.claude/sysp` to `<this repo>/prompts/sysp.md`). Explain the trade to the user before wiring it: the default's tool schemas survive replacement, but its dynamic environment block and scratchpad path do not, and the behavioral text takes over from the default's guidance. On the first launch, check a spaced rule actually blocks (ask the session to run `cat /etc/hosts`): the flag parser's handling of a space inside one rule is unverified.
 
 Optional, codex: the analogue of the full behavioral prompt is `model_instructions_file = "<this repo>/prompts/codex-sysp.md"` (absolute path) in `~/.codex/config.toml`, replacing codex's built-in instructions entirely; `~/.codex/AGENTS.md` (and so `core.md`) still loads on top, and no symlink is involved since the key points straight into the checkout. Explain the trade to the user before wiring it: the file is the team's edited reconstruction of the built-in instructions, so upstream changes to codex's own prompt stop arriving until the file is revised.
 
