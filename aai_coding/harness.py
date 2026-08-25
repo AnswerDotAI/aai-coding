@@ -36,15 +36,22 @@ Q_NOTICE_CODEX = ('This prompt ends with a question mark, so it seems to be a qu
 BTW_NOTICE = ('This prompt begins with `BTW ` and is a side request. Answer it first, then resume the '
     'previously active task if it still has unfinished items. Do not treat the side request as replacing '
     'or cancelling that task unless the user explicitly says so.')
+PF_NOTICE = ('The user sent a bare "`": your previous reply violated one or more of the problem_finding tells, and they may be '
+    'committing one of their own. If aai_coding.problem_finding is not in your context, run doc(aai_coding.problem_finding) first. '
+    'Then name which tells you committed, by number (1 anchoring, 2 example fixation, 3 premature commitment, 4 hidden constraint, '
+    '5 skipping impasse, 6 tutor drift), and any user tell you see, by letter (A options instead of a situation, B refusing to formulate, '
+    "C inherited frame, D asking for the answer at impasse, E adopting the AI's proposal, F choosing from the menu). "
+    'Then rewrite the reply without yours.')
 
 
 def prompt_notices(prompt, q_notice=Q_NOTICE):
-    "Notices a submitted prompt earns: question-mark answer-first, read-in-full, bare-approval scope, and BTW side-request"
+    "Notices a submitted prompt earns: question-mark answer-first, read-in-full, bare-approval scope, BTW side-request, and bare-backtick tell call"
     out = []
     if prompt.rstrip().endswith('?'): out.append(q_notice)
     if 'please read' in prompt.lower(): out.append(READ_NOTICE)
     if re.sub(r'^\s+|[\s.!]+$', '', prompt.lower()) in ('go', 'ok'): out.append(APPROVAL_NOTICE)
     if prompt.startswith('BTW '): out.append(BTW_NOTICE)
+    if prompt.strip() == '`': out.append(PF_NOTICE)
     return out
 
 

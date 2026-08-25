@@ -32,6 +32,7 @@ def test_prompt_notices():
     assert kinds('please read this?') == ['ends', 'appears']
     assert kinds('BTW can you also check the tests') == ['begins']
     assert kinds('the btw case is prefix-only') == []
+    assert kinds('`') == ['sent'] and kinds(' ` ') == ['sent'] and kinds('`x`') == []
 
 
 def test_prompt_submit(capsys):

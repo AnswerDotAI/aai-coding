@@ -25,6 +25,7 @@ write_summary = "aai_coding.write_summary"
 harness_docs = "aai_coding.harness_docs"
 looker = "aai_coding.looker"
 theory = "aai_coding.theory"
+problem_finding = "aai_coding.problem_finding"
 
 [project.scripts]
 aai-hook = "aai_coding.harness:main"
