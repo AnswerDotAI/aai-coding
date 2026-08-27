@@ -4,9 +4,44 @@ This file is a runbook for an LLM session, not a script. If you are a person: op
 
 Assumptions: macOS, the aai-ws uv workspace cloned and synced (this repo is a member, so its `aai-hook` CLI and pyskills are already installed), and at least one harness (Claude Code or codex) installed and signed in. Ask which harnesses to set up before starting, and use absolute paths for this repo and the workspace venv throughout.
 
+Codex has two supported modes. This choice applies only to codex; Claude Code remains kernel-centric. Settle which codex mode the user wants before changing its configuration:
+
+1. **Kernel-centric:** do file, shell, and Python work through clikernel, complete the llmdojo bootstrap, and discover tools through pyskills. This is the existing Answer.AI harness workflow and most closely matches the Claude Code setup.
+2. **Hybrid:** use codex's `apply_patch` and Bash tools normally, and use `clikernel-mcp --quiet` only for Python-specific work. This keeps persistent Python state and pyskills without replacing codex's native file and shell workflow.
+
 ## 1. Kernel server
 
-Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<this repo>/scripts/clikernel-mcp-shim`, which execs `<venv>/bin/clikernel-mcp`, adding `--quiet` when `CLAUDE_CODE_ENTRYPOINT` is `claude-desktop`: desktop kernels skip the startup notice, since desktop sessions take their instructions from the hooks (step 3). codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` on the server block passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); add it only if they want that and are happy to share the token.
+Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<this repo>/scripts/clikernel-mcp-shim`, which execs `<venv>/bin/clikernel-mcp`, adding `--quiet` when `CLAUDE_CODE_ENTRYPOINT` is `claude-desktop`: desktop kernels skip the startup notice, since desktop sessions take their instructions from the hooks (step 3). Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
+
+Hybrid codex: use the following exact working configuration, changing the `command` path if the workspace is elsewhere:
+
+```toml
+[mcp_servers.clikernel]
+command = "/Users/jhoward/aai-ws/.venv/bin/clikernel-mcp"
+args = ["--quiet"]
+env_vars = ["GITHUB_TOKEN"]
+omit_tools_from = ["deferred"]
+
+[mcp_servers.clikernel.tools.execute]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.list_kernels]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.stop_kernel]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.restart]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.connect]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.interrupt]
+approval_mode = "approve"
+```
+
+`--quiet` keeps automatic startup output out of ordinary execution replies. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); remove that line if they do not want it.
 
 Check: deferred to step 7, where a kernel round trip must work.
 
@@ -26,7 +61,7 @@ Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse mat
 
 Desktop app: the desktop currently has no launch flags, so it cannot replace the system prompt or open on a prepared session the way `claudedojo` launches `claude`. The hooks detect it (`CLAUDE_CODE_ENTRYPOINT` = `claude-desktop`): SessionStart prints `prompts/core.md` instead of the bootstrap gate, and native Write and Edit stay usable. NotebookEdit stays blocked everywhere: its writer saves non-ASCII as JSON escapes and churns every notebook it touches. The bash guard also runs in both frontends. Revisit if the desktop gains launch options.
 
-Outcome, codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
+Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
 
 Check: `aai-hook claude-prompt-submit` fed `{"prompt": "test?"}` on stdin prints the question notice.
 
@@ -44,7 +79,7 @@ Check: the file still parses as JSON after editing.
 
 ## 5. Skills, safecmd, and prompts
 
-Outcome: symlinks from `~/.claude/skills/persistent-python`, `~/.claude/skills/pyskills`, and the same two names in `~/.codex/skills`, to `<this repo>/skills/<name>`; `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd`; `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
+Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks; hybrid codex instead gets `~/.codex/skills/clikernel` pointing to `<this repo>/skills/clikernel`. Remove the other mode's codex skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
@@ -69,8 +104,10 @@ The user might find it useful to hear a quiet tone when the harness finishes or 
 
 ## 7. Restart and verify wiring
 
-Both harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt. Then verify a kernel round trip (run `1+1` through the clikernel execute tool) and that the session-start notice appeared.
+Both harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt when hooks changed. Then verify a kernel round trip by running `1+1` through clikernel. In the hybrid codex mode, the reply should contain just the result rather than the startup text.
 
 ## 8. Acceptance
 
-In a fresh Claude Code session in any workspace Python project: the bootstrap notice fires; invoking `persistent-python` then running `dojo_start()` completes a clean round; `list_pyskills()` shows the `aai_coding.*` rows; `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
+In a fresh Claude Code or kernel-centric codex session in any workspace Python project: the bootstrap notice fires; invoking `persistent-python` then running `dojo_start()` completes a clean round; `list_pyskills()` shows the `aai_coding.*` rows; `doc(aai_coding.coding_patterns)` renders.
+
+In a fresh hybrid codex session: `clikernel-workflow` appears in the available skills; ordinary local text edits use `apply_patch`; shell work uses Bash; and clikernel retains Python state across two execution calls. Inside clikernel, `list_pyskills()` shows the `aai_coding.*` rows and `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
