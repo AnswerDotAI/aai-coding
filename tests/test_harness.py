@@ -198,6 +198,32 @@ def test_slop(tmp_path, monkeypatch, capsys):
     assert 'caveat' in ctx and 'did not understand' not in ctx   # bare ' asks whether the closing caveat is real
 
 
+@pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
+def test_codex_slop(tmp_path, monkeypatch, capsys):
+    "Codex Stop captures the final reply; the next prompt reports it once and handles the punctuation notices"
+    from aai_coding.harness import codex_slop
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    def stop(tid, txt): codex_slop(dict(hook_event_name='Stop', session_id='s1', turn_id=tid, last_assistant_message=txt))
+    def psub(prompt='hi'): codex_slop(dict(hook_event_name='UserPromptSubmit', session_id='s1', prompt=prompt))
+    def out(): return capsys.readouterr().out
+    sloppy = "This isn't just a linter - it's a comprehensive paradigm that will streamline your workflow. " * 3
+    stop('t1', sloppy)
+    assert json.loads(out()) == {}
+    psub()
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'previous turn' in ctx and 'splice' in ctx
+    psub()
+    assert out() == ''
+    stop('t2', 'The parser rejects malformed input. ' * 10)
+    assert json.loads(out()) == {}
+    psub(';')
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'did not understand' in ctx and 'previous turn' not in ctx
+    psub("'")
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'caveat' in ctx and 'did not understand' not in ctx
+
+
 def test_synthetic_wipe_guard(tmp_path, monkeypatch):
     import llmdojo.rules as lr
     monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path/'state'))
