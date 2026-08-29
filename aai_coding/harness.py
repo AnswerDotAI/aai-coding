@@ -239,6 +239,11 @@ def _slop_state(f):
     if not isinstance(st, dict): st = {}
     return {k: st.get(k, d) for k, d in _SLOP_KEYS.items()}
 
+def _slop_save(f, st):
+    tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+    tmp.write_text(json.dumps(st))
+    tmp.replace(f)
+
 def _slop_report(txt):
     "Zero or one scored-message notices for `txt`, applying the env-tunable thresholds"
     if len(txt.split()) < int(os.environ.get('SLOP_WORDS', SLOP_WORDS)): return []
@@ -258,6 +263,19 @@ def _slop_report(txt):
     return [SLOP_MSG.format(d=j['density'], t=dens_min, w=j['worst'], rows=rows)]
 
 
+def _slop_prompt(o, f, st):
+    notes = []
+    if (o.get('prompt') or '').strip() == ';': notes.append(SLOP_RESTATE)
+    if (o.get('prompt') or '').strip() == "'": notes.append(SLOP_CAVEAT)
+    txt, fresh = st['last'], st['lastmid'] != st['done']
+    if txt and fresh:
+        st['done'] = st['lastmid']
+        _slop_save(f, st)
+        notes += _slop_report(txt)
+    if notes: print(json.dumps(dict(hookSpecificOutput=dict(
+        hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
+
+
 def claude_slop(o):
     "MessageDisplay/UserPromptSubmit: track the displaying message, then report the previous turn's score with the new prompt"
     try:
@@ -268,22 +286,23 @@ def claude_slop(o):
             if o.get('message_id') != st['mid']: st.update(mid=o.get('message_id'), buf='')
             st['buf'] += o.get('delta') or ''
             if o.get('final'): st['last'], st['lastmid'] = st['buf'], st['mid']
-            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-            tmp.write_text(json.dumps(st))
-            tmp.replace(f)
+            _slop_save(f, st)
             return
-        notes = []
-        if (o.get('prompt') or '').strip() == ';': notes.append(SLOP_RESTATE)
-        if (o.get('prompt') or '').strip() == "'": notes.append(SLOP_CAVEAT)
-        txt, fresh = st['last'], st['lastmid'] != st['done']
-        if txt and fresh:
-            st['done'] = st['lastmid']
-            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-            tmp.write_text(json.dumps(st))
-            tmp.replace(f)
-            notes += _slop_report(txt)
-        if notes: print(json.dumps(dict(hookSpecificOutput=dict(
-            hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
+        _slop_prompt(o, f, st)
+    except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
+def codex_slop(o):
+    "Stop/UserPromptSubmit: store the final assistant message, then report its score with the next prompt"
+    try:
+        f = _state_file('slop', o.get('session_id', ''))
+        st = _slop_state(f)
+        if o['hook_event_name'] == 'Stop':
+            st['last'], st['lastmid'] = o.get('last_assistant_message') or '', o.get('turn_id') or ''
+            _slop_save(f, st)
+            print('{}')
+            return
+        _slop_prompt(o, f, st)
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
