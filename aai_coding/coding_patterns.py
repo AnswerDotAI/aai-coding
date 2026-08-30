@@ -87,15 +87,17 @@ myproject/
 
 ## Testing
 
-All code has writing, maintenance, and readability costs, and tests most of all: every test must be kept passing forever, gets read by every future contributor, and must be revised whenever the behavior it pins changes. So never write a test as a reflex, and don't aim for anywhere near 100% coverage. A test earns its place only when:
+In nbdev projects (most projects here) there are no test cells: tests ARE the documentation, changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added (see `doc(nbdev.skill)`). Coverage is never a goal.
 
-- it documents an idea: in nbdev notebooks, tests ARE the documentation (see `doc(nbdev.skill)`), or
+All code has writing, maintenance, and readability costs, and tests most of all: every test must be kept passing forever, gets read by every future contributor, and must be revised whenever the behavior it pins changes. So never write a test as a reflex. A test earns its place only when:
+
+- it documents an idea, or
 - the logic is intricate enough that you had to think carefully to get it right (edge cases, parsing, arithmetic, tricky conditionals: the places a future change could silently break it), or
 - the code assumes something about an external system (a file format, an API's response shape, another tool's behavior) that is somewhat likely to change one day, and we want to hear about it when the assumption is violated. These must exercise the real thing (a mock merely re-states our assumption), so they're usually the slow-marked tests
 
 Wiring and orchestration get zero tests: re-exports, delegations, one-line glue, functions that only sequence calls to other tools. A test there only asserts that Python works, and pins down internals we may want to change. Strong tell: if a test needs recording fakes or mock collaborators to reach the code, it's testing a transcript of the implementation, not logic. Extract the logic into a small pure function and test that, or don't test at all.
 
-IF you add a pytest test, ALWAYS work red-green: write it FIRST, run it to see it fail, THEN make the change, then run it again to see it pass. In nbdev projects there are no test cells - see `doc(nbdev.skill)`: changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added.
+Pytest is for checks that don't fit as a readable notebook lesson and are too complex or distracting even for a `#|hide` cell; there, ALWAYS work red-green: write the test FIRST, run it to see it fail, THEN make the change, then run it again to see it pass.
 
 - Prefer as few tests as possible: a single test that walks through many checks is more readable and faster than many small ones
 - A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative (each one both documents what we needed to know and keeps guarding it), so they stay as example cells. In a pytest file, an exploratory check survives only if it meets one of the criteria above
