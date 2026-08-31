@@ -19,8 +19,9 @@ Use these commands instead of manipulating notebook JSON. Read each command's `-
 - Orient within one notebook/dialog: `aidialog-summary PATH`.
 - Semantic message search: `aidialog-find PATH PATTERN`; it can filter types, errors, exports, headings, IDs, and context. Read `aidialog-find --help` for details.
 - Read the complete narrative and outputs: `aidialog-view PATH --out --full-out`; pass a message ID for a targeted view. Multiple IDs are comma-separated.
-- Get edit-ready cell lines: `lnhashview-cell PATH CELL_ID`; use its fresh `line|hash|` addresses with `exhash-cell`.
-- Edit cell source safely: `exhash-cell PATH CELL_ID COMMAND...`; read `exhash-cell --help` and `pyskills-doc exhash.skill` for the command language. Re-view after every edit call before constructing another.
+- Get edit-ready cell lines: `lnhashview-cell PATH CELL_ID`; pass comma-separated IDs to view several cells together. Use its fresh `line|hash|` addresses with `exhash-cell`.
+- Edit cell source safely: `exhash-cell PATH CELL_ID COMMAND...`; each CLI command is one compact argument with the verified address immediately followed by its operation, such as `'3|beef|s/old/new/'` or `'3|beef|c'`. One multiline `a`/`i`/`c` command may read its literal text from stdin through EOF. Read `exhash-cell --help` and `pyskills-doc exhash.skill` for the command language. Re-view after every edit call before constructing another.
+- Stored outputs are generated artifacts and may be stale while source is being edited. Never stop, clear outputs manually, or manipulate notebook JSON because an edited cell retains old output. At PR time, regenerate outputs with `nbdev-test --save` when the project needs saved outputs updated.
 - Add, delete, or move messages: `aidialog-add`, `aidialog-del`, and `aidialog-move`. IDs are comma-separated; use `--dry-run` when previewing placement or removal. Read the command's help before first use.
 
 For dialog semantics beyond CLI help, run `pyskills-doc aidialog.dlgskill`. For notebook search semantics, run `pyskills-doc rgapi.skill`.
