@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs clikernel-mcp, adding --quiet in the desktop app: desktop sessions take
+# their instructions from the hooks, not from the kernel's startup notice.
+mcp="$(CDPATH= cd "$(dirname "$0")/../.." && pwd)/.venv/bin/clikernel-mcp"
+[ "$CLAUDE_CODE_ENTRYPOINT" = claude-desktop ] && exec "$mcp" --quiet "$@"
+exec "$mcp" "$@"

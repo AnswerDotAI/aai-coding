@@ -11,7 +11,7 @@ Codex has two supported modes. This choice applies only to codex; Claude Code re
 
 ## 1. Kernel server
 
-Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
+Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<this repo>/scripts/clikernel-mcp-shim`, which execs `<venv>/bin/clikernel-mcp`, adding `--quiet` when `CLAUDE_CODE_ENTRYPOINT` is `claude-desktop`: desktop kernels skip the startup notice, since desktop sessions take their instructions from the hooks (step 3). Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
 
 Hybrid codex: use the following exact working configuration, changing the `command` path if the workspace is elsewhere:
 
@@ -59,6 +59,8 @@ Settle first: existing non-symlink files at those paths.
 
 Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse matcher `Write|Edit|NotebookEdit` runs `aai-hook claude-block-native-edit`; PreToolUse matcher `Bash` runs `aai-hook claude-bash-guard`; UserPromptSubmit runs `aai-hook claude-prompt-submit`; SessionStart runs `aai-hook claude-session-start`; UserPromptSubmit, MessageDisplay, and PostToolBatch each also run `aai-hook claude-air` (the come-up-for-air nudge: after 8 tool-call rounds with no text response of 100+ chars, it injects a reminder to surface and reassess, repeating every 5 further rounds). The air nudge is Claude-only: codex has no message-level hook event, so it cannot observe the "text happened" reset condition - the codex-shaped substitute is a sentence in AGENTS.md; revisit if codex grows one. PostToolBatch and Stop also each run `aai-hook claude-drop-sentinel`, a Python port of podlayer/message-drop-sentinel (MIT): it detects the thinking-sandwich message-drop platform bug from the transcript scar (two adjacent thinking blocks) and tells the agent its text was probably eaten: restate it in the turn-final message, or say it now and end the turn if the user needs it immediately. Retire the sentinel entries when the upstream bug is fixed (re-test recipe and issue links in that repo's README). UserPromptSubmit and MessageDisplay also each run `aai-hook claude-slop`: MessageDisplay buffers each displayed assistant message, and at the next prompt the hook scores the previous turn's final message with the `slopometer` CLI, injecting the flagged patterns as context. A prompt that is a bare `;` means the user did not understand the previous reply, and the hook injects an instruction to restate it in plain English. Bare `aai-hook` resolves because the user's shell profile puts the workspace venv on PATH; if it does not, use the absolute venv path.
 
+Desktop app: it has no launch flags, so no sysp replacement and no `claudedojo` launch. Hooks detect it (`CLAUDE_CODE_ENTRYPOINT` = `claude-desktop`): SessionStart prints `prompts/core.md` instead of the bootstrap gate, and native Write and Edit stay usable. NotebookEdit stays blocked everywhere: its writer saves non-ASCII as JSON escapes, churning whole notebooks. The bash guard runs in both frontends. Revisit if the desktop gains launch options.
+
 Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
 
 Check: `aai-hook claude-prompt-submit` fed `{"prompt": "test?"}` on stdin prints the question notice.
@@ -71,7 +73,7 @@ Outcome, in `settings.json`: `permissions.deny` includes `Read`, `Edit`, `Write`
 
 Recommended, ask the user: `disableBundledSkills` set to `true` in `settings.json`, turning off the built-in skills (`init`, `review`, `code-review`, `security-review`, `simplify`, `verify`, `run`, `dataviz`, `artifact-design`, `fewer-permission-prompts`, `update-config`, `keybindings-help`), which assume the native file tools this deny list removes.
 
-Settle first: any existing rule that conflicts. In particular a broad `Bash` allow rule defeats both the bash guard and safecmd; surface that one explicitly.
+Settle first: any existing rule that conflicts. In particular a broad `Bash` allow rule defeats both the bash guard and safecmd; surface that one explicitly. Also whether the user works in the desktop app: settings cannot branch by frontend, and this deny list would strip desktop sessions too. Such users carry these rules in `~/.config/claudedojo/config.toml` instead (step 5).
 
 Check: the file still parses as JSON after editing.
 
@@ -81,7 +83,16 @@ Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skill
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
-Optional, Claude Code: the user might like `<this repo>/prompts/core.md` appended to the system prompt; a shell alias adding `--append-system-prompt-file <this repo>/prompts/core.md` to `claude` does it. The stronger option is the team's full behavioral prompt: symlink `~/.claude/sysp` to `<this repo>/prompts/sysp.md` and alias `claude` to `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md`, which replaces Claude Code's default prompt entirely. Explain the trade to the user before wiring it: the default's tool schemas survive replacement, but its dynamic environment block and scratchpad path do not, and the behavioral text takes over from the default's guidance.
+Optional, Claude Code: `claudedojo` launches `claude` on a session opening with the worked dojo round, adding the `claude_args` list from `~/.config/claudedojo/config.toml` (each `~`-expanded). That file carries the whole CLI launch: no shell alias, no `--settings` file:
+
+    claude_args = [
+      "--system-prompt-file", "~/.claude/sysp",
+      "--append-system-prompt-file", "<this repo>/prompts/core.md",
+      "--allowedTools", "WebSearch", "WebFetch", "mcp__clikernel__restart",
+      "--disallowedTools", "Read", "Edit", "Write", "Grep", "Glob", "NotebookEdit", "Bash(cat *)", "Bash(python -c:*)",
+    ]
+
+`--system-prompt-file` replaces Claude Code's default prompt with sysp.md (symlink `~/.claude/sysp` to `<this repo>/prompts/sysp.md`). Explain the trade before wiring it: the default's tool schemas survive replacement, but its dynamic environment block and scratchpad path do not.
 
 Optional, codex: the analogue of the full behavioral prompt is `model_instructions_file = "<this repo>/prompts/codex-sysp.md"` (absolute path) in `~/.codex/config.toml`, replacing codex's built-in instructions entirely; `~/.codex/AGENTS.md` (and so `core.md`) still loads on top, and no symlink is involved since the key points straight into the checkout. Explain the trade to the user before wiring it: the file is the team's edited reconstruction of the built-in instructions, so upstream changes to codex's own prompt stop arriving until the file is revised.
 

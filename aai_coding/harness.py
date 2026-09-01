@@ -80,8 +80,16 @@ def _forget(session_id, boundary=None):
     except Exception: pass
 
 
+def _desktop():
+    "True in a Claude desktop app session, which runs the relaxed harness: the desktop can neither replace the system prompt nor start dojo-preloaded"
+    return os.environ.get('CLAUDE_CODE_ENTRYPOINT') == 'claude-desktop'
+
+
+CORE_MD = Path(__file__).parent.parent/'prompts'/'core.md'
+
+
 def claude_session_start(o):
-    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda"
+    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda; the desktop app gets core.md instead of the bootstrap gate"
     d = Path(os.environ.get('CLAUDE_PROJECT_DIR') or os.getcwd())
     src = o.get('source', '')
     if src in ('resume', 'compact'): print(f'[{src} at {datetime.now():%H:%M:%S}]')
@@ -92,7 +100,8 @@ def claude_session_start(o):
         _forget(o.get('session_id', ''), bt)
         print(SYNTH_MSG)
     elif src == 'resume' and (d/'pyproject.toml').is_file(): print(RESUME_MSG)
-    if (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
+    if _desktop(): print(CORE_MD.read_text())
+    elif (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
     try: nb = any(l.startswith('[tool.nbdev]') for l in (d/'pyproject.toml').open())
     except OSError: nb = False
     if nb: print(NBDEV_MSG)
@@ -122,7 +131,8 @@ def claude_bash_guard(o):
 
 
 def claude_block_native_edit(o):
-    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling"
+    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling. Desktop sessions keep Write and Edit but never NotebookEdit: its writer saves non-ASCII as JSON escapes, churning every notebook it touches"
+    if _desktop() and o.get('tool_name') != 'NotebookEdit': return
     print(BLOCK_EDIT_MSG, file=sys.stderr)
     sys.exit(2)
 
@@ -285,6 +295,8 @@ def claude_slop(o):
         if notes: print(json.dumps(dict(hookSpecificOutput=dict(
             hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))

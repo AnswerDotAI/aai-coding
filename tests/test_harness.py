@@ -150,6 +150,24 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     assert out() == ''                                      # unparseable transcript: fail-open, silent on stdout
 
 
+def test_desktop_relaxed(tmp_path, monkeypatch, capsys):
+    "Desktop sessions keep native Write/Edit (never NotebookEdit) and get core.md instead of the bootstrap gate; terminal sessions enforce both"
+    from aai_coding.harness import claude_block_native_edit, claude_session_start
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    (tmp_path/'pyproject.toml').write_text('')
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    claude_block_native_edit(dict(tool_name='Edit'))
+    with pytest.raises(SystemExit): claude_block_native_edit(dict(tool_name='NotebookEdit'))   # its writer's escape churn corrupts notebooks
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'final text message' in out and 'NEVER touch local files' not in out
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    with pytest.raises(SystemExit): claude_block_native_edit(dict(tool_name='Edit'))
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'NEVER touch local files' in out and 'final text message' not in out
+
+
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
 def test_slop(tmp_path, monkeypatch, capsys):
     "Sloppy previous message -> context rows at the next prompt; repeats, subagents, short and clean prose stay silent"
@@ -200,6 +218,7 @@ def test_slop(tmp_path, monkeypatch, capsys):
 
 def test_synthetic_wipe_guard(tmp_path, monkeypatch):
     import llmdojo.rules as lr
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')   # the wipe guard lives on the terminal path; don't inherit a desktop env
     monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path/'state'))
     monkeypatch.setenv('CLAUDE_CODE_SESSION_ID', 'tsid')
     monkeypatch.delenv('CODEX_THREAD_ID', raising=False)
