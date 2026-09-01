@@ -226,7 +226,7 @@ SLOP_MSG = ("slopometer: your previous turn's final message scored density {d} (
     'Write your reply to the prompt above in the reference register, avoiding these patterns.\n{rows}')
 SLOP_RESTATE = ('The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: '
     'short sentences, named actors, plain words, no joins, and define every term you keep.')
-SLOP_CAVEAT = ('The user sent a bare "\'": your previous reply appears to end with a caveat, and they cannot tell whether it is '
+SLOP_CAVEAT = ('The user sent a bare "\'": your previous reply appears to contain a caveat in the last or penultimate paragraph, and they cannot tell whether it is '
     'a real critical issue they must fully understand and respond to before proceeding, or an LLM sign-off habit they need not act on. '
     'Say plainly which it is. If real, restate the issue, what hangs on it, and what response it needs; if habit, withdraw it.')
 
