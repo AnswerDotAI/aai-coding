@@ -1,4 +1,4 @@
-"""Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is registered in a harness's hook config (Claude Code settings.json, codex hooks.json, or Grok Build ~/.grok/hooks) and reads the hook event's JSON payload from stdin. See SETUP.md for the wiring."""
+"""Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is registered in a harness's hook config (Claude Code settings.json, codex and Grok Build hooks.json) and reads the hook event's JSON payload from stdin. See SETUP.md for the wiring."""
 import json, os, re, sys
 from datetime import datetime
 from pathlib import Path
