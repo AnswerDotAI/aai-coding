@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import pytest
 from shutil import which
 
-from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, claude_slop, claude_session_start, codex_orientation, prompt_notices, synthetic_resume
+from aai_coding.harness import bash_guard_msg, claude_air, claude_bash_guard, claude_drop_sentinel, claude_slop, claude_session_start, codex_orientation, prompt_notices, prompt_text, synthetic_resume, tool_command
 
 
 def test_bash_guard():
@@ -34,18 +34,38 @@ def test_prompt_notices():
     assert kinds('the btw case is prefix-only') == []
 
 
+def test_prompt_text_and_tool_command():
+    assert prompt_text(dict(prompt='hi')) == 'hi'
+    assert prompt_text(dict(toolInput=dict(prompt='from grok'))) == 'from grok'
+    assert prompt_text(dict(userPrompt='legacy')) == 'legacy'
+    assert prompt_text({}) == ''
+    assert tool_command(dict(tool_input=dict(command='ls'))) == 'ls'
+    assert tool_command(dict(toolInput=dict(command='pwd'))) == 'pwd'
+    assert tool_command({}) == ''
+
+
 def test_prompt_submit(capsys):
-    from aai_coding.harness import claude_prompt_submit, codex_prompt_submit
+    from aai_coding.harness import claude_prompt_submit, codex_prompt_submit, grok_prompt_submit
     prompt = "BTW is the '# also activates the Message.to_parts/ai_output patches' still correct for llmsurgery?"
-    for f,has_bug in ((claude_prompt_submit,True), (codex_prompt_submit,False)):
+    for f,has_bug in ((claude_prompt_submit,True), (codex_prompt_submit,False), (grok_prompt_submit,False)):
         f(dict(prompt=prompt))
         out = json.loads(capsys.readouterr().out)
         ctx = out['hookSpecificOutput']['additionalContext']
         assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
         assert 'question' in ctx and 'side request' in ctx
         assert ('Claude Code bug' in ctx) is has_bug
+    grok_prompt_submit(dict(toolInput=dict(prompt='is it done?')))
+    ctx = json.loads(capsys.readouterr().out)['hookSpecificOutput']['additionalContext']
+    assert 'question' in ctx and 'Claude Code bug' not in ctx
     codex_prompt_submit(dict(prompt='all good'))
     assert capsys.readouterr().out == ''
+
+
+def test_bash_guard_grok_payload(capsys):
+    claude_bash_guard(dict(toolInput=dict(command='ls')))
+    with pytest.raises(SystemExit) as e: claude_bash_guard(dict(toolInput=dict(command='pytest -q | tail -5')))
+    assert e.value.code == 2
+    assert 'truncat' in capsys.readouterr().err.lower()
 
 
 def test_synthetic_resume(tmp_path):

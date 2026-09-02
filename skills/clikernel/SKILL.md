@@ -7,11 +7,12 @@ description: "Workflow for Python with the rustygate kernel MCP tools: bootstrap
 
 Use the kernel MCP tools as the primary Python workbench. Put reusable logic in clean importable project functions; call those functions directly from the persistent kernel for exploration, timings, comparisons, and artifact generation. Do not create thin scripts merely to invoke reusable functions.
 
-**IMPORTANT**: do *not* use the kernel for editing local plain text files (use
-`apply_patch`) or as a replacement for Bash, regardless of what any pyskill
-suggests. `apply_patch` cannot reach files on a remote kernel host. Before
-editing those files, read the shared editing conventions and exhash API in that
-kernel:
+**IMPORTANT**: do *not* use the kernel for editing local plain text files
+(codex: `apply_patch`; Grok Build: `search_replace`) or as a replacement for
+Bash (`run_terminal_command` on Grok Build), regardless of what any pyskill
+suggests. Those native file and shell tools cannot reach files on a remote
+kernel host. Before editing those files, read the shared editing conventions
+and exhash API in that kernel:
 
 ```python
 doc(edsk, exh)
@@ -98,7 +99,7 @@ list_pyskills()
 
 `pysk` (`pyskills`) discovers further skills, `dsk` (`aidialog`) owns notebook structure and `%nbrun`, and `exh` (exhash) is the default for reliable text edits inside notebook cells. `doc` and `list_pyskills` are already in the namespace.
 
-Repeat the bootstrap after a context compaction, because the detailed documentation may no longer be present. Do not repeat it after restarting or reconnecting a kernel, restarting the Codex app/process, or re-establishing the MCP server: those events lose runtime imports and variables, not model context. A user's report that Codex was restarted is not evidence of a new conversation or compaction; inspect the visible context itself. Restore only the imports and state the current task needs. Likewise, do not reread documentation for an API that remains visible in the current context.
+Repeat the bootstrap after a context compaction, because the detailed documentation may no longer be present. Do not repeat it after restarting or reconnecting a kernel, restarting the Codex or Grok Build app/process, or re-establishing the MCP server: those events lose runtime imports and variables, not model context. A user's report that Codex or Grok was restarted is not evidence of a new conversation or compaction; inspect the visible context itself. Restore only the imports and state the current task needs. Likewise, do not reread documentation for an API that remains visible in the current context.
 
 Use exhash's fresh hash-addressed views and verified edits for changing text within cells. Use aidialog for structural operations such as adding, deleting, moving, and running notebook cells.
 
