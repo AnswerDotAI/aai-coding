@@ -38,19 +38,6 @@ BTW_NOTICE = ('This prompt begins with `BTW ` and is a side request. Answer it f
     'or cancelling that task unless the user explicitly says so.')
 
 
-def prompt_text(o):
-    "Prompt string from a Claude, codex, or Grok hook payload"
-    if p := o.get('prompt'): return p
-    ti = o.get('tool_input') or o.get('toolInput') or {}
-    return ti.get('prompt') or o.get('userPrompt') or ''
-
-
-def tool_command(o):
-    "Shell command from a Claude (`tool_input`) or Grok (`toolInput`) PreToolUse payload"
-    ti = o.get('tool_input') or o.get('toolInput') or {}
-    return ti.get('command') or ''
-
-
 def prompt_notices(prompt, q_notice=Q_NOTICE):
     "Notices a submitted prompt earns: question-mark answer-first, read-in-full, bare-approval scope, and BTW side-request"
     out = []
@@ -112,7 +99,7 @@ def claude_session_start(o):
 
 
 def _prompt_submit(o, q_notice):
-    ns = prompt_notices(prompt_text(o), q_notice)
+    ns = prompt_notices(o.get('prompt') or '', q_notice)
     if ns: print(json.dumps(dict(hookSpecificOutput=dict(
         hookEventName='UserPromptSubmit', additionalContext='\n'.join(ns)))))
 
@@ -127,14 +114,9 @@ def codex_prompt_submit(o):
     _prompt_submit(o, Q_NOTICE_CODEX)
 
 
-def grok_prompt_submit(o):
-    "Grok Build UserPromptSubmit: same notices as hybrid codex (no Claude display-bug warning)"
-    _prompt_submit(o, Q_NOTICE_CODEX)
-
-
 def claude_bash_guard(o):
     "PreToolUse(Bash): reject output-truncating pipes"
-    if m := bash_guard_msg(tool_command(o)):
+    if m := bash_guard_msg(o.get('tool_input', {}).get('command') or ''):
         print(m, file=sys.stderr)
         sys.exit(2)
 
