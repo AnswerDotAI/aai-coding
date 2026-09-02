@@ -13,7 +13,7 @@ Codex has two supported modes. This choice applies only to codex; Claude Code re
 
 Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
 
-Hybrid (codex or Grok Build): the following block in `~/.codex/config.toml` or `~/.grok/config.toml`, changing the `command` path if the workspace is elsewhere. Codex keeps `env_vars`, `omit_tools_from`, and the per-tool `approval_mode` keys. Grok has none of those; its optional token line is `env = { GITHUB_TOKEN = "${GITHUB_TOKEN}" }`.
+Hybrid (codex or Grok Build): use the following exact working configuration in `~/.codex/config.toml` or `~/.grok/config.toml`, changing the `command` path if the workspace is elsewhere:
 
 ```toml
 [mcp_servers.clikernel]
@@ -41,7 +41,7 @@ approval_mode = "approve"
 approval_mode = "approve"
 ```
 
-`--quiet` keeps automatic startup output out of ordinary execution replies. Optional, ask the user: `env_vars` (Grok: `env`) passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); remove that line if they do not want it.
+`--quiet` keeps automatic startup output out of ordinary execution replies. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); remove that line if they do not want it.
 
 Check: deferred to step 7, where a kernel round trip must work.
 
@@ -77,7 +77,7 @@ Check: the file still parses as JSON after editing.
 
 ## 5. Skills, safecmd, and prompts
 
-Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks. Hybrid (codex or Grok Build) instead gets `clikernel` and `notebook-dialog-editing` under `~/.codex/skills/` or `~/.grok/skills/`, pointing at `<this repo>/skills/<name>`; the latter teaches the harness to inspect and edit notebooks and aidialog dialogs safely through the shell CLIs without using a kernel. Remove the other mode's skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` (Grok: `~/.grok/AGENT.md`, so an existing `~/.grok/AGENTS.md` stays personal) to `<this repo>/prompts/core.md`.
+Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks. Hybrid (codex or Grok Build) instead gets `clikernel` and `notebook-dialog-editing` under `~/.codex/skills/` or `~/.grok/skills/`, pointing at `<this repo>/skills/<name>`; the latter teaches the harness to inspect and edit notebooks and aidialog dialogs safely through the shell CLIs without using a kernel. Remove the other mode's skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` or `~/.grok/AGENTS.md` to `<this repo>/prompts/core.md`.
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
