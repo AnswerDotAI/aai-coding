@@ -2,18 +2,18 @@
 
 This file is a runbook for an LLM session, not a script. If you are a person: open Claude Code or codex, `cd` anywhere in the aai-ws workspace, and say "follow aai-coding/SETUP.md". If you are the session: first read `README.md` in this repo in full, since the steps below change your user's configuration and the README's design context is what lets you merge, recommend, and answer questions in an informed way. Then work through the steps in order. Each step states an outcome to reach, a check, and what to settle with the user first. Make no change beyond the stated outcomes without asking. Where the user's existing configuration overlaps, merge and never replace: show them each conflict and agree a resolution.
 
-Assumptions: macOS, the aai-ws uv workspace cloned and synced (this repo is a member, so its `aai-hook` CLI and pyskills are already installed), and at least one harness (Claude Code or codex) installed and signed in. Ask which harnesses to set up before starting, and use absolute paths for this repo and the workspace venv throughout.
+Assumptions: macOS, the aai-ws uv workspace cloned and synced (this repo is a member, so its `aai-hook` CLI and pyskills are already installed), and at least one harness (Claude Code, codex, or Grok Build) installed and signed in. Ask which harnesses to set up before starting, and use absolute paths for this repo and the workspace venv throughout.
 
-Codex has two supported modes. This choice applies only to codex; Claude Code remains kernel-centric. Settle which codex mode the user wants before changing its configuration:
+Codex has two supported modes. This choice applies only to codex; Claude Code remains kernel-centric; Grok Build is hybrid-only. Settle which codex mode the user wants before changing its configuration:
 
 1. **Kernel-centric:** do file, shell, and Python work through clikernel, complete the llmdojo bootstrap, and discover tools through pyskills. This is the existing Answer.AI harness workflow and most closely matches the Claude Code setup.
-2. **Hybrid:** use codex's `apply_patch` and Bash tools normally, and use `clikernel-mcp --quiet` only for Python-specific work. This keeps persistent Python state and pyskills without replacing codex's native file and shell workflow.
+2. **Hybrid:** use the native file and shell tools normally (codex: `apply_patch` and Bash; Grok Build: `search_replace` and `run_terminal_command`), and use `clikernel-mcp --quiet` only for Python-specific work. This keeps persistent Python state and pyskills without replacing the native file and shell workflow.
 
 ## 1. Kernel server
 
 Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
 
-Hybrid codex: use the following exact working configuration, changing the `command` path if the workspace is elsewhere:
+Hybrid (codex or Grok Build): use the following exact working configuration in `~/.codex/config.toml` or `~/.grok/config.toml`, changing the `command` path if the workspace is elsewhere:
 
 ```toml
 [mcp_servers.clikernel]
@@ -77,7 +77,7 @@ Check: the file still parses as JSON after editing.
 
 ## 5. Skills, safecmd, and prompts
 
-Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks. Hybrid codex instead gets `~/.codex/skills/clikernel` pointing to `<this repo>/skills/clikernel` and `~/.codex/skills/notebook-dialog-editing` pointing to `<this repo>/skills/notebook-dialog-editing`; the latter teaches Codex to inspect and edit notebooks and aidialog dialogs safely through the shell CLIs without using a kernel. Remove the other mode's codex skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
+Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks. Hybrid (codex or Grok Build) instead gets `clikernel` and `notebook-dialog-editing` under `~/.codex/skills/` or `~/.grok/skills/`, pointing at `<this repo>/skills/<name>`; the latter teaches the harness to inspect and edit notebooks and aidialog dialogs safely through the shell CLIs without using a kernel. Remove the other mode's skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` or `~/.grok/AGENTS.md` to `<this repo>/prompts/core.md`.
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
@@ -93,10 +93,10 @@ The user might find it useful to hear a quiet tone when the harness finishes or 
 
 ## 7. Restart and verify wiring
 
-Both harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt when hooks changed. Then verify a kernel round trip by running `1+1` through clikernel. In the hybrid codex mode, the reply should contain just the result rather than the startup text.
+All three harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt when hooks changed. Then verify a kernel round trip by running `1+1` through clikernel. In hybrid mode, the reply should contain just the result rather than the startup text.
 
 ## 8. Acceptance
 
 In a fresh Claude Code or kernel-centric codex session in any workspace Python project: the bootstrap notice fires; invoking `persistent-python` then running `dojo_start()` completes a clean round; `list_pyskills()` shows the `aai_coding.*` rows; `doc(aai_coding.coding_patterns)` renders.
 
-In a fresh hybrid codex session: `clikernel-workflow` and `notebook-dialog-editing` appear in the available skills; ordinary local text edits use `apply_patch`; notebook and aidialog work can use the shell CLIs without starting a kernel; shell work uses Bash; and clikernel retains Python state across two execution calls. Inside clikernel, `list_pyskills()` shows the `aai_coding.*` rows and `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
+In a fresh hybrid session (codex or Grok Build): `clikernel-workflow` and `notebook-dialog-editing` appear in the available skills; ordinary local text edits use `apply_patch` (Grok: `search_replace`); notebook and aidialog work can use the shell CLIs without starting a kernel; shell work uses Bash (Grok: `run_terminal_command`); and clikernel retains Python state across two execution calls. Inside clikernel, `list_pyskills()` shows the `aai_coding.*` rows and `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
