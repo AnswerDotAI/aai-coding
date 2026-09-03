@@ -70,21 +70,12 @@ def synthetic_resume(path):
         return datetime.fromisoformat(bt.replace('Z', '+00:00')).timestamp() if bt else datetime.now().timestamp()
 
 
-COMPACT_MSG = '**Post-compaction: your context was rewritten — all doc() output is gone and skill texts are stale snapshots — but the kernel process survived untouched: namespace, imports, and current-notebook defaults are all still live, so do not re-run startup or re-import.** The doc-state record has been reset mechanically: doc notes will simply re-fire, so read doc(f) afresh before each tooling function\'s next use. Re-invoke `persistent-python` now — the live SKILL.md always wins over a replayed snapshot. You will need to redo the dojo. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
-SYNTH_MSG = '**Post-compaction resume: the conversation context was rewritten and the kernel restarted with a clean namespace.** Tool documentation and skill text shown in the reconstructed history may be truncated or stale. Doc-state from before the compact has been reset mechanically, while a record written since it (e.g. a freshly dealt round) survives. Doc notes fire for docs you don\'t hold: read doc(f) afresh before each tooling function\'s next use — or, where the exact doc() output survived verbatim in your reconstructed context, declare it with doced(f=\'<key>\') instead of re-reading, copying the key from that output\'s `# doced:` line (declarations are key-verified). Re-invoke `persistent-python` now, and rebuild variables, current-notebook defaults, and monkeypatches on demand. Keep any dojo completion id from your context. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
-RESUME_MSG = '**Post-resume: your context is exactly as it was when the app closed — everything you can still see (doc() output, dojo completion id) remains valid — but the kernel restarted with a clean namespace (startup.py re-ran, so its imports are back).** The doc-state record survived on disk, keyed to this conversation: doc notes fire only for functions whose docs you don\'t hold; if one fires for docs you can still see verbatim, declare them with doced(f=\'<key>\') instead of re-reading, copying each key from the visible output\'s `# doced:` line (declarations are key-verified). Rebuild other session state on demand (variables, set_dlg, monkeypatches), and pass a dojo completion id from your context to dojo_start(id) before file work.'
+COMPACT_MSG = '**Post-compaction: your context was rewritten — doc() output is gone and skill texts are stale snapshots — but the kernel process survived untouched: namespace, imports, and current-notebook defaults are all still live, so do not re-run startup or re-import.** Read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now — the live SKILL.md always wins over a replayed snapshot. You will need to redo the dojo. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
+SYNTH_MSG = '**Post-compaction resume: the conversation context was rewritten and the kernel restarted with a clean namespace.** Tool documentation and skill text shown in the reconstructed history may be truncated or stale: read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now, and rebuild variables, current-notebook defaults, and monkeypatches on demand. Keep any dojo completion id from your context. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
+RESUME_MSG = '**Post-resume: your context is exactly as it was when the app closed — everything you can still see (doc() output, dojo completion id) remains valid — but the kernel restarted with a clean namespace (startup.py re-ran, so its imports are back).** Rebuild other session state on demand (variables, set_dlg, monkeypatches), and pass a dojo completion id from your context to dojo_start(id) before file work.'
 BOOTSTRAP_MSG = '**NEVER touch local files or run code before completing the bootstrap. "Touch" means any file read, edit, search, or listing (Read/Edit/Grep/Glob, Bash, `fd`/`rg`), any clikernel `execute`, and any subagent that would do these on your behalf — however small it looks: one quick read counts, one search counts, "just checking one thing" counts. Bootstrap = invoke the `persistent-python` skill, run `from llmdojo.dojo import *; dojo_start()` and complete every task it prints (if a completion id from a clean round is in your context, `dojo_start(id)` replays it instantly). Work that never reaches for the filesystem — pure discussion, web research, browser automation — never hits the trigger and needs no bootstrap. Why: this project runs on a persistent Python workbench with curated pyskills, and unbootstrapped sessions reliably regress to ad-hoc Bash and one-off scripts that cost more to review than the dojo costs to run.** After bootstrapping, map each task to a pyskill from the `list_pyskills()` catalog before reaching for Bash, and read the project `README.md` and `DEV.md` before starting work.'
 NBDEV_MSG = '**This is an nbdev project: notebooks in `nbs/` are the source of truth, and the exported `.py` files are autogenerated — never edit them.** Before your FIRST edit to any .ipynb you MUST: read doc(nbdev.skill). If its output is not visible in your current context, you have not read it — "I know nbdev" is the trigger to read it, not to skip it, because it documents where this house\'s style differs from your priors. Editing a notebook without it is the same class of error as editing a generated `.py`. Search notebooks by cell id (not line numbers) with the notebook-aware search pyskill, and never grep the generated `.py`. Edit cells through the hash-verified edit pyskill, never the `.py`.'
 BLOCK_EDIT_MSG = 'Native file write/edit tools are blocked in this environment: make the edit via the clikernel session instead (exhash / %%exhash, pyskills.edit, pyskills.ipynb).'
-
-
-def _forget(session_id, boundary=None):
-    "Reset llmdojo doc-state for `session_id`, matching the env contract its Session derives from; a record written after `boundary` was earned in the rebuilt context, so it survives"
-    os.environ['CLAUDE_CODE_SESSION_ID'] = session_id
-    try:
-        from llmdojo.rules import forget_doced
-        forget_doced(boundary)
-    except Exception: pass
 
 
 def claude_session_start(o):
@@ -93,11 +84,8 @@ def claude_session_start(o):
     src = o.get('source', '')
     if src in ('resume', 'compact'): print(f'[{src} at {datetime.now():%H:%M:%S}]')
     if src == 'compact':
-        _forget(o.get('session_id', ''))
         print(COMPACT_MSG)
-    elif src == 'resume' and (bt := synthetic_resume(o.get('transcript_path', ''))):
-        _forget(o.get('session_id', ''), bt)
-        print(SYNTH_MSG)
+    elif src == 'resume' and synthetic_resume(o.get('transcript_path', '')): print(SYNTH_MSG)
     elif src == 'resume' and (d/'pyproject.toml').is_file(): print(RESUME_MSG)
     if (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
     try: nb = any(l.startswith('[tool.nbdev]') for l in (d/'pyproject.toml').open())
@@ -233,7 +221,7 @@ SLOP_MSG = ("slopometer: your previous turn's final message scored density {d} (
     'Write your reply to the prompt above in the reference register, avoiding these patterns.\n{rows}')
 SLOP_RESTATE = ('The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: '
     'short sentences, named actors, plain words, no joins, and define every term you keep.')
-SLOP_CAVEAT = ('The user sent a bare "\'": your previous reply appears to end with a caveat, and they cannot tell whether it is '
+SLOP_CAVEAT = ('The user sent a bare "\'": your previous reply appears to contain a caveat in the last or penultimate paragraph, and they cannot tell whether it is '
     'a real critical issue they must fully understand and respond to before proceeding, or an LLM sign-off habit they need not act on. '
     'Say plainly which it is. If real, restate the issue, what hangs on it, and what response it needs; if habit, withdraw it.')
 
@@ -293,25 +281,20 @@ def claude_slop(o):
             hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
 def codex_orientation(o):
-    "codex PostCompact/SessionStart/PreToolUse: post-compaction doc-state reset and one-shot reorientation"
+    "codex PostCompact/SessionStart/PreToolUse: one-shot post-compaction reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))
-    doced, markers = state/'doced', state/'compact'
+    markers = state/'compact'
     marker = markers/f"{o['session_id']}.json"
     event = o['hook_event_name']
     import llmdojo
     message = ('Context was compacted, so the clikernel documentation is no longer in context. Read the startup documentation in '
-        'two separate calls: first `doc(clik,pysk,edsk)`, then `doc(dsk,exh,rgsk)`. If function documentation is already visible in '
-        'the sample below, use `from llmdojo.rules import doced; doced(f=key, ...)` to declare it instead of rereading it, copying each key from the visible doc output (declarations are key-verified). Run `doc()` for '
+        'two separate calls: first `doc(clik,pysk,edsk)`, then `doc(dsk,exh,rgsk)`. Run `doc()` for '
         'anything else you need as you continue. Do not rerun the dojo. After running the two `doc()` calls, retry your last tool '
         'call; it should now work. Then continue your existing task if it is not complete.')
     sample = (Path(llmdojo.__file__).parent/'dojo_data/codexdojo_sample.md').read_text()
     message += ('\n\nThe following is a sample usage session from before compaction. Treat it as reference '
         'for correct tool usage; do not repeat or score it.\n\n') + sample
     if event == 'PostCompact':
-        doced.mkdir(parents=True, exist_ok=True)
-        for p in doced.glob('*.json'):
-            if p.stem.isdigit(): p.write_text('[]')
-        (doced/f"{o['session_id']}.json").write_text('[]')
         markers.mkdir(parents=True, exist_ok=True)
         marker.write_text(json.dumps(dict(turn_id=o.get('turn_id'))))
     elif event == 'PreToolUse':

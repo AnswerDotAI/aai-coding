@@ -4,9 +4,44 @@ This file is a runbook for an LLM session, not a script. If you are a person: op
 
 Assumptions: macOS, the aai-ws uv workspace cloned and synced (this repo is a member, so its `aai-hook` CLI and pyskills are already installed), and at least one harness (Claude Code or codex) installed and signed in. Ask which harnesses to set up before starting, and use absolute paths for this repo and the workspace venv throughout.
 
+Codex has two supported modes. This choice applies only to codex; Claude Code remains kernel-centric. Settle which codex mode the user wants before changing its configuration:
+
+1. **Kernel-centric:** do file, shell, and Python work through clikernel, complete the llmdojo bootstrap, and discover tools through pyskills. This is the existing Answer.AI harness workflow and most closely matches the Claude Code setup.
+2. **Hybrid:** use codex's `apply_patch` and Bash tools normally, and use `clikernel-mcp --quiet` only for Python-specific work. This keeps persistent Python state and pyskills without replacing codex's native file and shell workflow.
+
 ## 1. Kernel server
 
-Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` on the server block passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); add it only if they want that and are happy to share the token.
+Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
+
+Hybrid codex: use the following exact working configuration, changing the `command` path if the workspace is elsewhere:
+
+```toml
+[mcp_servers.clikernel]
+command = "/Users/jhoward/aai-ws/.venv/bin/clikernel-mcp"
+args = ["--quiet"]
+env_vars = ["GITHUB_TOKEN"]
+omit_tools_from = ["deferred"]
+
+[mcp_servers.clikernel.tools.execute]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.list_kernels]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.stop_kernel]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.restart]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.connect]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.interrupt]
+approval_mode = "approve"
+```
+
+`--quiet` keeps automatic startup output out of ordinary execution replies. Optional, ask the user: `env_vars = ["GITHUB_TOKEN"]` passes their GitHub token into the kernel so sessions can act for them on GitHub (via `ghapi`); remove that line if they do not want it.
 
 Check: deferred to step 7, where a kernel round trip must work.
 
@@ -24,7 +59,7 @@ Settle first: existing non-symlink files at those paths.
 
 Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse matcher `Write|Edit|NotebookEdit` runs `aai-hook claude-block-native-edit`; PreToolUse matcher `Bash` runs `aai-hook claude-bash-guard`; UserPromptSubmit runs `aai-hook claude-prompt-submit`; SessionStart runs `aai-hook claude-session-start`; UserPromptSubmit, MessageDisplay, and PostToolBatch each also run `aai-hook claude-air` (the come-up-for-air nudge: after 8 tool-call rounds with no text response of 100+ chars, it injects a reminder to surface and reassess, repeating every 5 further rounds). The air nudge is Claude-only: codex has no message-level hook event, so it cannot observe the "text happened" reset condition - the codex-shaped substitute is a sentence in AGENTS.md; revisit if codex grows one. PostToolBatch and Stop also each run `aai-hook claude-drop-sentinel`, a Python port of podlayer/message-drop-sentinel (MIT): it detects the thinking-sandwich message-drop platform bug from the transcript scar (two adjacent thinking blocks) and tells the agent its text was probably eaten: restate it in the turn-final message, or say it now and end the turn if the user needs it immediately. Retire the sentinel entries when the upstream bug is fixed (re-test recipe and issue links in that repo's README). UserPromptSubmit and MessageDisplay also each run `aai-hook claude-slop`: MessageDisplay buffers each displayed assistant message, and at the next prompt the hook scores the previous turn's final message with the `slopometer` CLI, injecting the flagged patterns as context. A prompt that is a bare `;` means the user did not understand the previous reply, and the hook injects an instruction to restate it in plain English. Bare `aai-hook` resolves because the user's shell profile puts the workspace venv on PATH; if it does not, use the absolute venv path.
 
-Outcome, codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
+Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
 
 Check: `aai-hook claude-prompt-submit` fed `{"prompt": "test?"}` on stdin prints the question notice.
 
@@ -42,7 +77,7 @@ Check: the file still parses as JSON after editing.
 
 ## 5. Skills, safecmd, and prompts
 
-Outcome: symlinks from `~/.claude/skills/persistent-python`, `~/.claude/skills/pyskills`, and the same two names in `~/.codex/skills`, to `<this repo>/skills/<name>`; `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd`; `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
+Outcome: symlinks from `~/.claude/skills/persistent-python` and `~/.claude/skills/pyskills` to `<this repo>/skills/<name>`. Kernel-centric codex gets the same two skill symlinks. Hybrid codex instead gets `~/.codex/skills/clikernel` pointing to `<this repo>/skills/clikernel` and `~/.codex/skills/notebook-dialog-editing` pointing to `<this repo>/skills/notebook-dialog-editing`; the latter teaches Codex to inspect and edit notebooks and aidialog dialogs safely through the shell CLIs without using a kernel. Remove the other mode's codex skill symlinks when switching, since they intentionally prescribe conflicting tool-use policies. Also link `~/.claude/skills/safecmd` to `<this repo>/plugins/safecmd` and `~/.codex/AGENTS.md` to `<this repo>/prompts/core.md`.
 
 safecmd auto-approves allowlisted Bash commands. The `safecmd` package is a workspace member, so it is already installed; its allowlist lives at `~/.config/safecmd/config.ini` and the defaults are fine to start.
 
@@ -58,8 +93,10 @@ The user might find it useful to hear a quiet tone when the harness finishes or 
 
 ## 7. Restart and verify wiring
 
-Both harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt. Then verify a kernel round trip (run `1+1` through the clikernel execute tool) and that the session-start notice appeared.
+Both harnesses read configuration at startup: ask the user to restart each, accepting codex's hook trust prompt when hooks changed. Then verify a kernel round trip by running `1+1` through clikernel. In the hybrid codex mode, the reply should contain just the result rather than the startup text.
 
 ## 8. Acceptance
 
-In a fresh Claude Code session in any workspace Python project: the bootstrap notice fires; invoking `persistent-python` then running `dojo_start()` completes a clean round; `list_pyskills()` shows the `aai_coding.*` rows; `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
+In a fresh Claude Code or kernel-centric codex session in any workspace Python project: the bootstrap notice fires; invoking `persistent-python` then running `dojo_start()` completes a clean round; `list_pyskills()` shows the `aai_coding.*` rows; `doc(aai_coding.coding_patterns)` renders.
+
+In a fresh hybrid codex session: `clikernel-workflow` and `notebook-dialog-editing` appear in the available skills; ordinary local text edits use `apply_patch`; notebook and aidialog work can use the shell CLIs without starting a kernel; shell work uses Bash; and clikernel retains Python state across two execution calls. Inside clikernel, `list_pyskills()` shows the `aai_coding.*` rows and `doc(aai_coding.coding_patterns)` renders. When a check fails, fix that step's wiring before moving on, and tell the user what was wrong.
