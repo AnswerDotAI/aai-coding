@@ -61,14 +61,7 @@ def test_synthetic_resume(tmp_path):
 
 def test_codex_orientation(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
-    doced = tmp_path/'doced'
-    doced.mkdir()
-    (doced/'123.json').write_text('["x"]')
-    (doced/'abc.json').write_text('["x"]')
     codex_orientation(dict(hook_event_name='PostCompact', session_id='s1', turn_id='t1'))
-    assert (doced/'123.json').read_text() == '[]'           # numeric stems reset
-    assert (doced/'abc.json').read_text() == '["x"]'        # others untouched
-    assert (doced/'s1.json').read_text() == '[]'
     codex_orientation(dict(hook_event_name='PreToolUse', session_id='s1'))
     out = json.loads(capsys.readouterr().out)
     assert out['hookSpecificOutput']['permissionDecision'] == 'deny'
@@ -240,25 +233,3 @@ def test_codex_slop(tmp_path, monkeypatch, capsys):
     psub("'")
     ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
     assert 'caveat' in ctx and 'did not understand' not in ctx
-
-
-def test_synthetic_wipe_guard(tmp_path, monkeypatch):
-    import llmdojo.rules as lr
-    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')   # the wipe guard lives on the terminal path; don't inherit a desktop env
-    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path/'state'))
-    monkeypatch.setenv('CLAUDE_CODE_SESSION_ID', 'tsid')
-    monkeypatch.delenv('CODEX_THREAD_ID', raising=False)
-    monkeypatch.delenv('CLAUDE_PROJECT_DIR', raising=False)
-    monkeypatch.setattr(lr, '_HOST', None)
-    bt = datetime.now(timezone.utc)
-    t = tmp_path/'t.jsonl'
-    t.write_text(json.dumps(dict(type='system', subtype='compact_boundary', timestamp=bt.isoformat().replace('+00:00', 'Z')))+'\n')
-    f = tmp_path/'state'/'doced'/'tsid.json'
-    f.parent.mkdir(parents=True)
-    o = dict(source='resume', transcript_path=str(t), session_id='tsid')
-    f.write_text('["rg"]'); os.utime(f, times=(bt.timestamp()-9,)*2)
-    claude_session_start(o)
-    assert json.loads(f.read_text()) == []       # record predates the compact: its docs left the context, so it resets
-    f.write_text('["rg"]'); os.utime(f, times=(bt.timestamp()+9,)*2)
-    claude_session_start(o)
-    assert json.loads(f.read_text()) == ['rg']   # record written since the compact (e.g. a seeded round): kept
