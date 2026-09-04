@@ -20,9 +20,9 @@ def bash_guard_msg(cmd):
     return NO_TRUNCATE if _TRUNC.search(cmd) else None
 
 
-Q_NOTICE = ('This prompt ends with a question mark, so it seems to be a question. Claude Code bug: any tool '
-    'call made after your answer text prevents the answer from displaying. Make only the tool calls needed '
-    'to get the answer, then answer, then stop.')
+Q_NOTICE = ('This prompt ends with a question mark, so it seems to be a question. Claude Code bug: a tool call '
+    'after your answer text hides the answer. Do all your tool calls first, as many as the question needs, '
+    'then write the answer and stop.')
 READ_NOTICE = ('This prompt appears to contain a request to read something. If it could reasonably be interpreted that way, '
     'read the target in full NOW, before composing any response: a notebook via summary_dlg then view_dlg/find_msgs as needed; '
     'a .py or other text file in full. Never respond from assumed or remembered contents.')
