@@ -9,7 +9,11 @@ NO_TRUNCATE = ('Output pipe truncates below 20 lines. Drop the pipe or keep >=20
     'before the output exists, so keep enough to diagnose surprises.')
 NO_STDERR_MERGE = ('Do not merge stderr into stdout with 2>&1. Run the command bare: the harness pushes large '
     'output to a file by itself, and stderr kept separate makes a crash unmissable.')
-_TRUNC = re.compile(r'\|\s*(tail|head)\s+(-n\s*)?-?([1-9]|1[0-9])\b')
+# Two ways a head/tail pipe truncates below 20: an explicit count under 20, or no count at all -
+# bare `head`/`tail` default to 10, so `| head` cuts exactly as hard as the `| head -10` we reject.
+_TRUNC = re.compile(r'\|\s*(?:tail|head)'
+                    r'(?:\s+(?:-n\s*)?-?(?:[1-9]|1[0-9])\b'  # explicit: -5, -n 5, -19
+                    r'|(?=\s*(?:$|[|;&\n])))')                # bare: defaults to 10
 _MERGE = re.compile(r'2>\s*&\s*1')
 
 

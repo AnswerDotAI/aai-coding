@@ -16,6 +16,16 @@ def test_bash_guard():
     assert bash_guard_msg('pytest -q | tail -50') is None
     assert bash_guard_msg('head -3 file.txt') is None      # no pipe: a file slice, not output truncation
     assert bash_guard_msg('ls') is None
+    # bare head/tail default to 10 lines, so they truncate exactly as hard as `-10`
+    assert bash_guard_msg('ls ~ | head')
+    assert bash_guard_msg('ls ~ | tail')
+    assert bash_guard_msg('cat big.log | head | wc -l')
+    assert bash_guard_msg('ls | head; echo done')
+    assert bash_guard_msg('ls | head && echo ok')
+    assert bash_guard_msg('ls | head\necho next')
+    assert bash_guard_msg('ls | header') is None           # a command that merely starts with `head`
+    assert bash_guard_msg('tail -f app.log') is None       # no pipe, and follow mode truncates nothing
+    assert bash_guard_msg('cat f | head -c 200') is None   # bytes, not lines: out of scope either way
     assert bash_guard_msg('pytest -q 2>&1 | tail -20')
     assert bash_guard_msg('maturin develop 2>&1')
     assert bash_guard_msg('foo 2> &1')
