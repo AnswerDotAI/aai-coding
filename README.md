@@ -6,7 +6,9 @@ The Answer.AI coding harness: the shared configuration, skills, and tooling that
 
 You do not need an Answer.AI account or our existing workspace. [SETUP.md](SETUP.md) starts with a workspace in a directory you choose, managed by [fastws](https://github.com/AnswerDotAI/fastws), then walks through configuring the harness. The workspace holds separate Git checkouts sharing one uv environment; its Python projects are installed editably, so changes in a checkout are available without reinstalling it.
 
-The copyable [repos.txt](repos.txt) supplies a small starter workspace for the setup below, not our full collection of projects. It includes aai-coding, fastws, the kernel startup and editing tools, and the tools used by the Claude hooks. Other Python dependencies are installed as packages; add their repos when you want editable source checkouts too.
+Start with `uvx --from 'fastws-cli>=0.0.14' ws-setup AnswerDotAI/aai-ws ~/aai-ws`, then activate the new environment and follow [SETUP.md](SETUP.md). The public [aai-ws baseline](https://github.com/AnswerDotAI/aai-ws) includes aai-coding, fastws, the kernel startup and editing tools, and the tools used by the Claude hooks. Other Python dependencies are installed as packages; add their repos when you want editable source checkouts too. The copyable [repos.txt](repos.txt) supplies the same starter selection for a custom workspace.
+
+Answer.AI team members use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. Both workspace repos receive shared baseline updates through `ws-sync`. In either setup, `repos.txt` holds the baseline, gitignored `repos-local.txt` holds personal extras, and fastws creates and maintains the workspace's untracked `pyproject.toml`. Reuse existing workspaces rather than running `ws-setup` on them; see the [team migration instructions](https://github.com/AnswerDotAI/private-ws#migrating-an-existing-workspace).
 
 ## The system in one paragraph
 
@@ -19,7 +21,7 @@ The Claude Code setup and one codex setup are kernel-centric: native file tools 
 - `plugins/safecmd/` - a Claude Code plugin that auto-approves allowlisted Bash commands via the `safecmd` package, so the deny-heavy permission setup stays livable.
 - `prompts/` - shared prompt text. `core.md` holds harness-neutral behavioral rules: codex reads it natively via a `~/.codex/AGENTS.md` symlink, and Claude Code can append it. `sysp.md` is a full replacement for Claude Code's default system prompt, tuned against the default's consultant and action biases; install it as a `~/.claude/sysp` symlink and launch with `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md` (replacement drops the default prompt's prose but tool schemas survive; the dynamic environment block and scratchpad path are the known losses).
 - `SETUP.md` - the setup runbook, written as a prompt for an LLM session rather than an installer script.
-- `repos.txt` - a starter repo list to copy into your workspace root, then extend with your own projects.
+- `repos.txt` - a public starter baseline to copy into your workspace root; personal additions go in `repos-local.txt`.
 
 ## Design decisions, and why
 

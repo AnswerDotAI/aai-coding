@@ -8,7 +8,7 @@ This runbook targets macOS; the workspace commands use Bash/Zsh syntax. Do not a
 
 ## 0. Create a fastws workspace
 
-Outcome: a workspace with the starter repos cloned, its shared uv environment activated, and the harness packages installed. If the user already has a fastws workspace, reuse it: merge missing entries from this repo's `repos.txt` into the workspace's list instead of copying over it, keep its Python version unless a dependency requires a change, and skip creation commands for things that already exist. Do not duplicate or move an existing aai-coding checkout without agreeing its location first.
+Outcome: a workspace with the starter repos cloned, its shared uv environment activated, and the harness packages installed. If the user already has a fastws workspace, reuse it: check its combined `repos.txt` and `repos-local.txt`, add missing harness repos to the local list rather than changing a shared baseline, keep its Python version unless a dependency requires a change, and skip creation commands for things that already exist. Do not duplicate or move an existing aai-coding checkout without agreeing its location first.
 
 ### Prerequisites
 
@@ -19,7 +19,21 @@ Outcome: a workspace with the starter repos cloned, its shared uv environment ac
 
 ### Create, clone, and sync
 
-For a new workspace, the following example uses `~/coding-ws`; choose a different directory as needed. Run the commands in the same shell. Clone aai-coding first to obtain the starter list, then let fastws clone the remaining repos:
+Use fastws-cli 0.0.14 or later for `ws-setup`. Shared/local repo lists and cloning during sync are also supported. Run the commands in the same shell, choosing the appropriate starting point below.
+
+**Public workspace:** bootstrap the public Answer.AI baseline. The destination must not already exist.
+
+```bash
+uvx --from 'fastws-cli>=0.0.14' ws-setup AnswerDotAI/aai-ws ~/coding-ws
+cd ~/coding-ws
+source .venv/bin/activate
+```
+
+**Answer.AI team workspace:** use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. It contains the larger team baseline and requires private-repo access. A user's fork or another team's workspace repo can be substituted too. Existing team workspaces should follow the [migration instructions](https://github.com/AnswerDotAI/private-ws#migrating-an-existing-workspace), not create a second workspace.
+
+`ws-setup` clones the chosen repo, creates its `.venv`, installs fastws into that environment, and runs its `ws-sync`. It isolates the new environment even if another workspace is active. It prints activation instructions but does not change shell startup files or configure the coding harness. A failed step leaves the new directory in place for inspection; do not delete it or retry setup over it blindly.
+
+**Custom workspace without a base repo:** clone aai-coding to obtain the copyable starter list, then let fastws clone the remaining repos:
 
 ```bash
 mkdir -p ~/coding-ws
@@ -28,12 +42,13 @@ git clone git@github.com:AnswerDotAI/aai-coding.git
 cp aai-coding/repos.txt repos.txt
 uv venv --python 3.13
 source .venv/bin/activate
-uv pip install fastws-cli
-ws-clone
+uv pip install 'fastws-cli>=0.0.14'
 ws-sync
 ```
 
-`ws-clone` skips existing directories: inspect its output and check that every listed checkout exists, rather than treating an exit code as proof. `ws-sync` creates the workspace metadata and installs its Python projects editably in the shared environment. It also pulls updates; it is not just an install command. No clone of Answer.AI's workspace or hand-written workspace `pyproject.toml` is needed. See [fastws's documentation](https://github.com/AnswerDotAI/fastws) for the full command reference.
+The examples use `~/coding-ws`; any new directory works. `ws-sync` first pulls the workspace repo if it has an upstream, reads the combined repo lists, clones missing repos, and pulls project updates before installing packages. A failed root pull or clone stops the sync. It creates a missing `pyproject.toml` from `pyproject.tmpl` if available, otherwise generates a minimal one, and installs workspace projects editably. It is not just an install command. See [fastws's documentation](https://github.com/AnswerDotAI/fastws) for the full command reference.
+
+For your own workspace Git repo, track `repos.txt` as your shared baseline and gitignore `repos-local.txt`, the root `pyproject.toml`, `pyrightconfig.json`, `uv.lock`, and `.cargo/`, along with project checkout directories. Keep optional starting defaults in `pyproject.tmpl`; changes to it do not overwrite existing generated configuration. An existing workspace that tracks generated files should back them up before pulling a change that untracks them, then restore its local copies.
 
 The starter list is deliberately small:
 
@@ -48,7 +63,7 @@ The starter list is deliberately small:
 | `AnswerDotAI/safecmd` | Command approval tool used by the Claude setup; not an aai-coding package dependency. |
 | `AnswerDotAI/slopometer` | Prose scoring tool used by the Claude hooks; not an aai-coding package dependency. |
 
-This is a starter for the documented setup, not a strict minimum for each harness mode. Dependencies such as clikernel, pyskills, and aidialog are installed through package dependencies rather than all needing source checkouts. The workspace's `repos.txt` is your own copy: add your projects to it through fastws, and do not symlink it back to this repo's starter list.
+This is a starter for the documented setup, not a strict minimum for each harness mode. Dependencies such as clikernel, pyskills, and aidialog are installed through package dependencies rather than all needing source checkouts. Keep personal extras in `repos-local.txt`: `ws-add` and automatic discovery write there, leaving the baseline alone. A clone of either workspace base receives baseline updates through Git. A starter list copied into a custom workspace is independent and does not receive those updates automatically.
 
 ### Check the environment
 
@@ -170,7 +185,8 @@ In a fresh hybrid codex session: `clikernel-workflow` and `notebook-dialog-editi
 Activate `<venv>/bin/activate` in your shell, then `cd` into a project checkout to work or launch the harness. Each checkout remains a separate Git repo, but the Python projects share one environment. Run project commands and tests there as usual; importing another workspace package uses its editable checkout.
 
 - **Inspect:** `ws-status` shows uncommitted changes and unpushed commits across repos. Review these before updating; preserve local work and resolve any pull conflicts normally.
-- **Update:** `ws-sync` pulls repos, refreshes workspace metadata, and installs dependencies. It also upgrades dependencies at most once per day; `ws-sync --upgrade` forces that upgrade pass. Restart running harness sessions and kernels after updates so they pick up changed skills and imported code.
-- **Add:** `ws-add owner/repo` clones a repo, records it in the workspace's `repos.txt`, and syncs. For a repo already cloned immediately inside the workspace, use `ws-add directory-name`. Adding a dependency's repo makes it editable too.
+- **Update:** `ws-sync` pulls the workspace's baseline first, clones newly listed repos, pulls project updates, refreshes workspace metadata, and installs dependencies. It also upgrades dependencies at most once per day; `ws-sync --upgrade` forces that upgrade pass. Restart running harness sessions and kernels after updates so they pick up changed skills and imported code.
+- **Add:** `ws-add owner/repo` clones a repo, records it in the workspace's gitignored `repos-local.txt`, and syncs. For a repo already cloned immediately inside the workspace, use `ws-add directory-name`. Adding a dependency's repo makes it editable too.
+- **Remove:** `ws-remove owner/repo` handles personal repos, with safety checks and confirmation before deleting a checkout. It refuses shared baseline members. Removing a repo from the shared list never deletes anyone's checkout; existing root checkouts become local additions on sync.
 
 With the workspace environment activated, `ws-sync` can find the workspace from other directories. Run the commands from the workspace root when in doubt. Keep personal instructions and settings separate from the shared prompts; updates should not require reapplying personal edits to this repo.
