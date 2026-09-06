@@ -7,9 +7,11 @@ description: "Use CLI tools to inspect Python APIs and find, understand, view, a
 
 Use these commands instead of manipulating notebook JSON. Read each command's `--help` only when its use case arises; use `pyskills-doc` for the underlying Python contract when help is not enough.
 
+Start by reading a summary of every cell with `aidialog-summary PATH`.
+
 ## Before any notebook edit
 
-**Always run `pyskills-doc nbdev.skill` before editing any notebook.** It defines the notebook-as-source workflow, the required full read, lesson-cell conventions, export rules, and finish checks. This applies to ordinary `.ipynb` files and especially to nbdev source notebooks.
+Before editing any notebook, ensure `nbdev.skill` is in the current context. It defines the notebook-as-source workflow, lesson-cell conventions, export rules, and finish checks. This applies to ordinary `.ipynb` files and especially to nbdev source notebooks.
 
 ## Choose by use case
 

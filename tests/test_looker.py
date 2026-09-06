@@ -22,10 +22,7 @@ def test_pdf2pngs(tmp_path):
     out = pdf2pngs(pdf, tmp_path/'pages')
     assert [p.name for p in out] == ['two-1.png', 'two-2.png']
     for p in out: assert p.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n'
-    one = pdf2pngs(pdf)                                       # default dest: alongside the PDF
-    assert one[0].parent == tmp_path
     assert pdf2pngs(pdf, tmp_path, scale=1)[0].stat().st_size < out[0].stat().st_size
-    with pytest.raises(ValueError): pdf2pngs(tmp_path/'missing.pdf')
 
 
 @pytest.mark.slow

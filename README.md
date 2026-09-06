@@ -25,3 +25,5 @@ The Claude Code setup and one codex setup are kernel-centric: native file tools 
 ## Using and changing it
 
 Day to day there is nothing to operate. Kernel-centric sessions bootstrap through `persistent-python`; hybrid codex sessions use `clikernel-workflow` for Python, `notebook-dialog-editing` for notebooks and aidialog dialogs, and the native tools otherwise. Both discover Python tooling through the pyskills catalog and read it with `doc()` or `pyskills-doc`. To change a skill, edit its source in this checkout and let the team pick it up by pulling; releases go through the standard fastship flow (`ship-release`), with the version in `aai_coding/__init__.py` bumped after each release.
+
+Tests cover substantive logic where hidden errors are realistic: event ordering, accumulated state, duplicate suppression, and PDF rendering. Do not add tests for prompt wording, straightforward dispatch, or trivial configuration branches. Run the retained tests with `pytest`.

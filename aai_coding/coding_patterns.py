@@ -19,9 +19,9 @@ Knowing why a construct is needed does not mean waiting for someone to ask for i
 The same applies to prose in code: almost never add comments (only when the code is truly unclear), and don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
 Only write a code comment to state a constraint the code itself can't show, never to say where it came from, what the next line does, or why your change is correct. That's you talking to the reviewer, not the next reader, and it's noise the moment the PR merges.
 
-## Plain Commands: Flags, Redirects, and Pipes Are for Exceptions
+## Trust Tool Defaults
 
-The same principle applies to running commands. The bare invocation is the contract: `pytest tests -q`, `cargo fmt`, `maturin develop`. Project config exists precisely so the plain command does the right thing, and then every invocation is short, identical, and instantly readable. A flag, redirect, or pipe is a statement ("this one call has a requirement the defaults don't cover"), and used that way it carries information: the reader stops, asks why, and there's an answer. Sprinkled defensively on every call, decorations destroy that signal: every command looks exceptional so none is, and the one deliberate flag is indistinguishable from habit. Transcripts compound the damage, since each decorated call teaches later calls to decorate too.
+All our tooling has carefully chosen defaults. Use them unless an exceptional, task-specific requirement makes the default unsuitable. This applies to CLI flags, Python arguments, and tool-call options. An override must address that requirement—not reflect habit or an assumed improvement over the default.
 
 - Wanting the same flag on every run means it's a missing config line: promote it and go back to the bare command (`pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`).
 - Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.
