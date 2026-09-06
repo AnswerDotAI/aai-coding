@@ -2,9 +2,15 @@
 
 The Answer.AI coding harness: the shared configuration, skills, and tooling that make a Claude Code or codex session work the way our team works. If you are an LLM reading this, you are probably either setting the harness up (follow `SETUP.md`, but read this file first) or working inside it and wanting to understand why it is shaped this way, so you can give your user informed advice.
 
+## Getting started
+
+You do not need an Answer.AI account or our existing workspace. [SETUP.md](SETUP.md) starts with a workspace in a directory you choose, managed by [fastws](https://github.com/AnswerDotAI/fastws), then walks through configuring the harness. The workspace holds separate Git checkouts sharing one uv environment; its Python projects are installed editably, so changes in a checkout are available without reinstalling it.
+
+The copyable [repos.txt](repos.txt) supplies a small starter workspace for the setup below, not our full collection of projects. It includes aai-coding, fastws, the kernel startup and editing tools, and the tools used by the Claude hooks. Other Python dependencies are installed as packages; add their repos when you want editable source checkouts too.
+
 ## The system in one paragraph
 
-The Claude Code setup and one codex setup are kernel-centric: native file tools are denied, and file reading, editing, searching, and Python execution go through one persistent IPython kernel (clikernel) loaded with curated tooling discovered via `pyskills`. Codex can instead use a hybrid setup: normal `apply_patch` and Bash for files and shell work, with a quiet clikernel reserved for Python-specific work. The kernel-centric setup uses two host-level bootstrap skills, `persistent-python` and `pyskills`; the hybrid setup uses `clikernel-workflow` to define the boundary and `notebook-dialog-editing` for safe kernel-free notebook and aidialog work. Everything else that would conventionally be a host skill is a pyskill in this package: skill text lives in module docstrings, read with `doc()`, listed by `list_pyskills()`, and versioned, released, and installed like any other Python code.
+The Claude Code setup and one codex setup are kernel-centric: native file tools are denied, and file reading, editing, searching, and Python execution go through one persistent IPython kernel (clikernel) loaded with curated tooling discovered via `pyskills`. Codex can instead use a hybrid setup: normal `apply_patch` and Bash for files and shell work, with a quiet clikernel reserved for Python-specific work. The kernel-centric setup uses two host-level bootstrap skills, `persistent-python` and `pyskills`; the hybrid setup uses `clikernel-workflow` to define the boundary and `notebook-dialog-editing` as the CLI adapter for the required `aidialog.dlgskill` entry point. That adapter overrides pyskill tool preferences for local files: use native tools within allowed editing locations. Everything else that would conventionally be a host skill is a pyskill in this package: skill text lives in module docstrings, read with `doc()`, listed by `list_pyskills()`, and versioned, released, and installed like any other Python code.
 
 ## What is in here
 
@@ -13,6 +19,7 @@ The Claude Code setup and one codex setup are kernel-centric: native file tools 
 - `plugins/safecmd/` - a Claude Code plugin that auto-approves allowlisted Bash commands via the `safecmd` package, so the deny-heavy permission setup stays livable.
 - `prompts/` - shared prompt text. `core.md` holds harness-neutral behavioral rules: codex reads it natively via a `~/.codex/AGENTS.md` symlink, and Claude Code can append it. `sysp.md` is a full replacement for Claude Code's default system prompt, tuned against the default's consultant and action biases; install it as a `~/.claude/sysp` symlink and launch with `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md` (replacement drops the default prompt's prose but tool schemas survive; the dynamic environment block and scratchpad path are the known losses).
 - `SETUP.md` - the setup runbook, written as a prompt for an LLM session rather than an installer script.
+- `repos.txt` - a starter repo list to copy into your workspace root, then extend with your own projects.
 
 ## Design decisions, and why
 
@@ -24,6 +31,8 @@ The Claude Code setup and one codex setup are kernel-centric: native file tools 
 
 ## Using and changing it
 
-Day to day there is nothing to operate. Kernel-centric sessions bootstrap through `persistent-python`; hybrid codex sessions use `clikernel-workflow` for Python, `notebook-dialog-editing` for notebooks and aidialog dialogs, and the native tools otherwise. Both discover Python tooling through the pyskills catalog and read it with `doc()` or `pyskills-doc`. To change a skill, edit its source in this checkout and let the team pick it up by pulling; releases go through the standard fastship flow (`ship-release`), with the version in `aai_coding/__init__.py` bumped after each release.
+Activate the workspace's `.venv`, then work in a project checkout. Use `ws-status` to inspect local changes, `ws-sync` to pull and install updates, and `ws-add owner/repo` to add a project. See [the workspace workflow](SETUP.md#using-the-workspace) for details, including what syncing changes.
+
+The harness itself needs no manual startup each day. Kernel-centric sessions bootstrap through `persistent-python`; hybrid codex sessions use `clikernel-workflow` for Python, `notebook-dialog-editing` for notebooks and aidialog dialogs, and the native tools otherwise. Both discover Python tooling through the pyskills catalog and read it with `doc()` or `pyskills-doc`. To change a skill, edit its source in this checkout and let others pick it up by pulling; releases go through the standard fastship flow (`ship-release`), with the version in `aai_coding/__init__.py` bumped after each release.
 
 Tests cover substantive logic where hidden errors are realistic: event ordering, accumulated state, duplicate suppression, and PDF rendering. Do not add tests for prompt wording, straightforward dispatch, or trivial configuration branches. Run the retained tests with `pytest`.
