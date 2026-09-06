@@ -1,40 +1,84 @@
 # aai-coding
 
-The Answer.AI coding harness: the shared configuration, skills, and tooling that make a Claude Code or codex session work the way our team works. If you are an LLM reading this, you are probably either setting the harness up (follow `SETUP.md`, but read this file first) or working inside it and wanting to understand why it is shaped this way, so you can give your user informed advice.
+`aai-coding` contains Answer.AI's shared configuration, skills, and tools for Claude Code and Codex. It defines the team's coding and writing guidance, tool permissions, and Python workflows. An LLM setting up the harness should read this README before following `SETUP.md`. The design decisions below also provide context for advising users of an existing setup.
 
 ## Getting started
 
-You do not need an Answer.AI account or our existing workspace. [SETUP.md](SETUP.md) starts with a workspace in a directory you choose, managed by [fastws](https://github.com/AnswerDotAI/fastws), then walks through configuring the harness. The workspace holds separate Git checkouts sharing one uv environment; its Python projects are installed editably, so changes in a checkout are available without reinstalling it.
+You do not need an Answer.AI account or our existing workspace. [SETUP.md](SETUP.md) starts with a workspace in a directory you choose, managed by [fastws](https://github.com/AnswerDotAI/fastws). It then covers harness configuration.
 
-Start with `uvx --from 'fastws-cli>=0.0.14' ws-setup AnswerDotAI/aai-ws ~/aai-ws`, then activate the new environment and follow [SETUP.md](SETUP.md). The public [aai-ws baseline](https://github.com/AnswerDotAI/aai-ws) includes aai-coding, fastws, the kernel startup and editing tools, and the tools used by the Claude hooks. Other Python dependencies are installed as packages; add their repos when you want editable source checkouts too. The copyable [repos.txt](repos.txt) supplies the same starter selection for a custom workspace.
+The workspace holds separate Git checkouts sharing one uv environment. Its Python projects use editable installs. Changes in a checkout are available without reinstalling it.
 
-Answer.AI team members use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. Both workspace repos receive shared baseline updates through `ws-sync`. In either setup, `repos.txt` holds the baseline, gitignored `repos-local.txt` holds personal extras, and fastws creates and maintains the workspace's untracked `pyproject.toml`. Reuse existing workspaces rather than running `ws-setup` on them; see the [team migration instructions](https://github.com/AnswerDotAI/private-ws#migrating-an-existing-workspace).
+Start with:
 
-## The system in one paragraph
+```bash
+uvx --from 'fastws-cli>=0.0.14' ws-setup AnswerDotAI/aai-ws ~/aai-ws
+```
 
-The Claude Code setup and one codex setup are kernel-centric: native file tools are denied, and file reading, editing, searching, and Python execution go through one persistent IPython kernel (clikernel) loaded with curated tooling discovered via `pyskills`. Codex can instead use a hybrid setup: normal `apply_patch` and Bash for files and shell work, with a quiet clikernel reserved for Python-specific work. The kernel-centric setup uses two host-level bootstrap skills, `persistent-python` and `pyskills`; the hybrid setup uses `clikernel-workflow` to define the boundary and `notebook-dialog-editing` as the CLI adapter for the required `aidialog.dlgskill` entry point. That adapter overrides pyskill tool preferences for local files: use native tools within allowed editing locations. Everything else that would conventionally be a host skill is a pyskill in this package: skill text lives in module docstrings, read with `doc()`, listed by `list_pyskills()`, and versioned, released, and installed like any other Python code.
+Activate the new environment and follow [SETUP.md](SETUP.md). The public [aai-ws baseline](https://github.com/AnswerDotAI/aai-ws) includes aai-coding, fastws, kernel startup and editing tools, and tools used by the Claude hooks. Other Python dependencies install as packages. Add their repos when you also need editable source checkouts. Copy [repos.txt](repos.txt) to use the same starter selection in a custom workspace.
+
+Answer.AI team members use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. Both workspace repos receive shared baseline updates through `ws-sync`. In either setup:
+
+- `repos.txt` holds the shared baseline.
+- Gitignored `repos-local.txt` holds personal extras.
+- fastws creates and maintains the workspace's untracked `pyproject.toml`.
+
+Reuse existing workspaces. Do not run `ws-setup` on them. See the [team migration instructions](https://github.com/AnswerDotAI/private-ws#migrating-an-existing-workspace).
+
+## Tool workflows
+
+Claude Code uses a kernel-centric setup. Codex supports both kernel-centric and hybrid setups.
+
+The kernel-centric setup denies native file tools. File reading, editing, searching, and Python execution use one persistent IPython kernel through clikernel. The `persistent-python` and `pyskills` host skills bootstrap this setup. `pyskills` provides discovery and documentation for the kernel's tools.
+
+The hybrid setup uses native `apply_patch` and Bash for files and shell work. It reserves a quiet clikernel for Python-specific work. Its `clikernel-workflow` host skill defines when to use the kernel. `notebook-dialog-editing` provides CLI access to the notebook tools documented in `aidialog.dlgskill`. This adapter overrides pyskill tool preferences for local files. Use native tools within allowed editing locations.
+
+Task guidance lives in pyskills rather than host skills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
 
 ## What is in here
 
-- `aai_coding/` - the pyskills. `coding_patterns` (style, testing judgment, and team policy; part of the kernel startup doc round), `write_prose` (anti-slop rules for narrative prose), `write_docs` (the voiceless register for docstrings, READMEs, and PRs), `harness_docs` (how to find official harness docs via llms.txt), and `harness` (not a skill: the `aai-hook` CLI that implements both harnesses' hooks).
-- `skills/` - the harness-level SKILL.md sources, symlinked into `~/.claude/skills` or `~/.codex/skills`. `persistent-python` and `pyskills` bootstrap the kernel-centric setup; `clikernel` and `notebook-dialog-editing` support the hybrid codex setup.
-- `plugins/safecmd/` - a Claude Code plugin that auto-approves allowlisted Bash commands via the `safecmd` package, so the deny-heavy permission setup stays livable.
-- `prompts/` - shared prompt text. `core.md` holds harness-neutral behavioral rules: codex reads it natively via a `~/.codex/AGENTS.md` symlink, and Claude Code can append it. `sysp.md` is a full replacement for Claude Code's default system prompt, tuned against the default's consultant and action biases; install it as a `~/.claude/sysp` symlink and launch with `claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md` (replacement drops the default prompt's prose but tool schemas survive; the dynamic environment block and scratchpad path are the known losses).
-- `SETUP.md` - the setup runbook, written as a prompt for an LLM session rather than an installer script.
-- `repos.txt` - a public starter baseline to copy into your workspace root; personal additions go in `repos-local.txt`.
+The repository contains:
+
+- `aai_coding/`: Python pyskills and the hook implementation, listed below.
+- `skills/`: host-level `SKILL.md` sources, symlinked into `~/.claude/skills` or `~/.codex/skills`. `persistent-python` and `pyskills` support the kernel-centric setup. `clikernel` and `notebook-dialog-editing` support the hybrid Codex setup.
+- `plugins/safecmd/`: a Claude Code plugin that auto-approves allowlisted Bash commands using the `safecmd` package.
+- `prompts/`: shared behavioural rules and a replacement Claude Code system prompt, described below.
+- `SETUP.md`: a setup runbook written as a prompt for an LLM session. It is not an installer script.
+- `repos.txt`: a public starter baseline to copy into your workspace root. Put personal additions in `repos-local.txt`.
+
+### Python modules
+
+- `coding_patterns` covers coding style, testing judgment, and team policy. Kernel startup includes reading it.
+- `write_prose` covers anti-slop rules for narrative prose.
+- `write_docs` covers plain reference prose for docstrings, READMEs, and PRs.
+- `harness_docs` explains how to find official harness documentation through `llms.txt`.
+- `harness` implements both harnesses' hooks through the `aai-hook` CLI. It is not a pyskill.
+
+### Prompts
+
+`prompts/core.md` contains harness-neutral behavioural rules. Codex reads it through a `~/.codex/AGENTS.md` symlink. Claude Code can append it to its system prompt.
+
+`prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Install it as a `~/.claude/sysp` symlink and launch with:
+
+```bash
+claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md
+```
+
+Replacement removes the default prompt's prose. Tool schemas remain available. The default prompt's dynamic environment block and scratchpad path are lost.
 
 ## Design decisions, and why
 
-- **Task skills are pyskills.** In a kernel-centric harness the native skill list stops being the discovery surface; `list_pyskills()` is. Docstrings-as-skill-text means nothing depends on the harness's skill machinery. It also lets skill text live beside its executable companions in one module. The hybrid codex workflow remains a host skill because it tells codex when to cross into the kernel at all.
-- **Hooks are a CLI.** Every hook body is a subcommand of `aai-hook` (`aai_coding/harness.py`): versioned, unit-tested Python instead of shell one-liners scattered through settings files. Harness configs only register command names.
-- **Everything installs by symlink.** Like the workspace's editable installs, config points into the checkout, so `git pull` updates every machine and there is no copy to drift. The only exceptions are settings files that must be merged (Claude Code's `settings.json`, codex's `config.toml`), which is why setup is a runbook and not a script: merging into someone's existing configuration takes judgment and conversation, which an LLM has and an installer does not.
-- **Per-harness differences are data, not templates.** Where Claude Code and codex genuinely differ, a module carries both facts (a `dict` keyed by harness, or two adjacent bullets); nothing is rendered or generated.
-- **Team-agreeable versus personal.** This repo holds only what any team member would nod at. Personal preferences (model choice, sounds people disagree about, individual workflow like release management) belong in each person's own CLAUDE.md, settings, and local skills, and the runbook is explicit about which is which.
+- Task skills use Python's packaging and discovery rather than a harness's skill machinery. Their instructions and executable tools can share a module. The hybrid Codex workflow remains a host skill because it must explain when to enter the kernel.
+- Hooks are subcommands of `aai-hook` in `aai_coding/harness.py`. Their implementations are versioned, unit-tested Python. Harness settings register command names instead of containing shell implementations.
+- Symlinks point configuration at the checkout. Pulling updates on a machine updates that configuration without copying files. Claude Code's `settings.json` and Codex's `config.toml` are exceptions: setup must merge them with existing settings. The runbook calls for discussing these choices with the user.
+- Modules record differences between harnesses directly, using a dictionary keyed by harness or adjacent bullets. There are no generated per-harness templates.
+- This repo contains agreed team guidance. Model choice, sounds, and personal workflows such as release management belong in each person's `CLAUDE.md`, settings, and local skills. The runbook identifies which settings are shared and which are personal.
 
 ## Using and changing it
 
 Activate the workspace's `.venv`, then work in a project checkout. Use `ws-status` to inspect local changes, `ws-sync` to pull and install updates, and `ws-add owner/repo` to add a project. See [the workspace workflow](SETUP.md#using-the-workspace) for details, including what syncing changes.
 
-The harness itself needs no manual startup each day. Kernel-centric sessions bootstrap through `persistent-python`; hybrid codex sessions use `clikernel-workflow` for Python, `notebook-dialog-editing` for notebooks and aidialog dialogs, and the native tools otherwise. Both discover Python tooling through the pyskills catalog and read it with `doc()` or `pyskills-doc`. To change a skill, edit its source in this checkout and let others pick it up by pulling; releases go through the standard fastship flow (`ship-release`), with the version in `aai_coding/__init__.py` bumped after each release.
+The harness needs no manual startup each day. Sessions use the skills described in [Tool workflows](#tool-workflows). Both setups discover Python tools through the pyskills catalog and read their documentation with `doc()` or `pyskills-doc`.
+
+To change a skill, edit its source in this checkout. Others receive the changes by pulling. Releases use the standard fastship command, `ship-release`. Bump the version in `aai_coding/__init__.py` after each release.
 
 Tests cover substantive logic where hidden errors are realistic: event ordering, accumulated state, duplicate suppression, and PDF rendering. Do not add tests for prompt wording, straightforward dispatch, or trivial configuration branches. Run the retained tests with `pytest`.
