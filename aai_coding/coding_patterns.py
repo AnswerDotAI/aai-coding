@@ -89,7 +89,7 @@ myproject/
 
 In nbdev projects (most projects here) there are no test cells: tests ARE the documentation, changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added (see `doc(nbdev.skill)`). Coverage is never a goal.
 
-All code has writing, maintenance, and readability costs, and tests most of all: every test must be kept passing forever, gets read by every future contributor, and must be revised whenever the behavior it pins changes. So never write a test as a reflex. A test earns its place only when:
+All code has writing, maintenance, and readability costs, and tests most of all: every test must be kept passing forever, gets read by every future contributor, and must be revised whenever the behavior it pins changes. So never write a test as a reflex. You may ONLY add a test when:
 
 - it documents an idea, or
 - the logic is intricate enough that you had to think carefully to get it right (edge cases, parsing, arithmetic, tricky conditionals: the places a future change could silently break it), or
