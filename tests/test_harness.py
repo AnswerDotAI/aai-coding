@@ -82,6 +82,25 @@ def test_drop_sentinel(tmp_path, monkeypatch, capsys):
     assert 'thinking blocks in a row' in json.loads(out())['hookSpecificOutput']['additionalContext']   # new turn: count restarts
 
 
+def test_desktop_relaxed(tmp_path, monkeypatch, capsys):
+    "Desktop sessions keep native Write/Edit (never NotebookEdit) and get core.md instead of the bootstrap gate; terminal sessions enforce both"
+    from aai_coding.harness import claude_block_native_edit, claude_session_start
+    monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(tmp_path))
+    (tmp_path/'pyproject.toml').write_text('')
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'claude-desktop')
+    claude_block_native_edit(dict(tool_name='Edit'))
+    with pytest.raises(SystemExit): claude_block_native_edit(dict(tool_name='NotebookEdit'))   # its writer's escape churn corrupts notebooks
+    for source in ('startup', 'resume', 'compact'):
+        claude_session_start(dict(source=source, session_id='s1'))
+        out = capsys.readouterr().out
+        assert 'final text message' in out and 'dojo' not in out
+    monkeypatch.setenv('CLAUDE_CODE_ENTRYPOINT', 'cli')
+    with pytest.raises(SystemExit): claude_block_native_edit(dict(tool_name='Edit'))
+    claude_session_start(dict(source='startup', session_id='s1'))
+    out = capsys.readouterr().out
+    assert 'NEVER touch local files' in out and 'final text message' not in out
+
+
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
 def test_slop(tmp_path, monkeypatch, capsys):
     "Buffer message deltas, score only the final message, and report it once"
@@ -89,7 +108,7 @@ def test_slop(tmp_path, monkeypatch, capsys):
     def disp(mid, txt, final=True, **kw): claude_slop(dict(hook_event_name='MessageDisplay', session_id='s1', message_id=mid, delta=txt, final=final, **kw))
     def psub(**kw): claude_slop(dict(hook_event_name='UserPromptSubmit', session_id='s1', **kw))
     def out(): return capsys.readouterr().out
-    sloppy = "This isn't just a linter - it's a comprehensive paradigm that will streamline your workflow. " * 3
+    sloppy = "This isn't just a linter - it's a comprehensive paradigm that will streamline your workflow. " * 12
     disp('m1', 'a mid-turn note that nobody should score')
     disp('m2', sloppy[:40], final=False)
     disp('m2', sloppy[40:])
@@ -99,3 +118,61 @@ def test_slop(tmp_path, monkeypatch, capsys):
     assert 'previous turn' in r['additionalContext'] and 'splice' in r['additionalContext']
     psub()
     assert out() == ''                                      # the same message reports once
+
+
+@pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
+def test_codex_slop(tmp_path, monkeypatch, capsys):
+    "Codex Stop captures the final reply; the next prompt reports it once and handles the punctuation notices"
+    from aai_coding.harness import codex_slop
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    def stop(tid, txt): codex_slop(dict(hook_event_name='Stop', session_id='s1', turn_id=tid, last_assistant_message=txt))
+    def psub(prompt='hi'): codex_slop(dict(hook_event_name='UserPromptSubmit', session_id='s1', prompt=prompt))
+    def out(): return capsys.readouterr().out
+    sloppy = "This isn't just a linter - it's a comprehensive paradigm that will streamline your workflow. " * 12
+    stop('t1', sloppy)
+    assert json.loads(out()) == {}
+    psub()
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'previous turn' in ctx and 'splice' in ctx
+    psub()
+    assert out() == ''
+    stop('t2', 'The parser rejects malformed input. ' * 10)
+    assert json.loads(out()) == {}
+    psub(';')
+    ctx = json.loads(out())['hookSpecificOutput']['additionalContext']
+    assert 'did not understand' in ctx and 'previous turn' not in ctx
+
+
+@pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
+def test_slop_short_report():
+    "The scorer can decline a message above the hook's local word threshold."
+    from aai_coding.harness import _slop_report
+    assert _slop_report('The parser rejects malformed input. ' * 10) == []
+
+
+def test_browser_prompt_shortcuts(tmp_path, monkeypatch, capsys):
+    "Browser context must not hide a punctuation request or become the request itself."
+    from aai_coding.harness import codex_slop, codex_prompt_submit
+    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
+    wrapper = '''
+<in-app-browser-context source="ambient-ui-state">
+This block is automatically supplied ambient UI state, not part of the user's request.
+# In app browser:
+- Current URL: http://127.0.0.1:5197/?pr=example
+</in-app-browser-context>
+
+## My request:
+'''
+    annotation = '# Response annotations:\n<response-annotations>[]</response-annotations>\n## My request:\n'
+    for prefix in ('', wrapper, annotation):
+        codex_slop(dict(hook_event_name='UserPromptSubmit', session_id='browser', prompt=prefix+';\n'))
+        expected = 'selected text' if prefix == annotation else 'did not understand'
+        assert expected in json.loads(capsys.readouterr().out)['hookSpecificOutput']['additionalContext']
+        codex_prompt_submit(dict(prompt=prefix+"'\n"))
+        assert 'caveat' in json.loads(capsys.readouterr().out)['hookSpecificOutput']['additionalContext']
+    for prompt in (wrapper+'Explain the semicolon ;', 'Quoted example:\n'+wrapper+';'):
+        codex_slop(dict(hook_event_name='UserPromptSubmit', session_id='browser', prompt=prompt))
+        assert capsys.readouterr().out == ''
+    codex_slop(dict(hook_event_name='UserPromptSubmit', session_id='browser', prompt=annotation+'; Why does this happen?'))
+    ctx = json.loads(capsys.readouterr().out)['hookSpecificOutput']['additionalContext']
+    assert 'selected text' in ctx and 'answer' in ctx and 'question' in ctx

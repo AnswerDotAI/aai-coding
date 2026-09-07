@@ -27,8 +27,16 @@ BTW_NOTICE = 'This prompt begins with `BTW ` and is a side request. Answer it fi
 SLOP_CAVEAT = 'The user sent a bare "\'": your previous reply appears to end with an unnecessary caveat. Identify what you meant: a concrete obstacle requiring a user decision, an ordinary implementation or testing task, or an unsupported hypothetical concern. If it requires a decision, explain the obstacle, its consequence, and the decision needed. If it is routine work, say so without implying the plan’s feasibility is uncertain. If it is unsupported or irrelevant to the question, withdraw it. Do not invent a justification for having included it.'
 
 
+def _user_prompt(prompt):
+    "Read the request after browser or response-annotation context."
+    if not prompt.lstrip().startswith(('<in-app-browser-context', '# Response annotations:')): return prompt
+    _, sep, request = prompt.partition('## My request:\n')
+    return request if sep else prompt
+
+
 def prompt_notices(prompt, q_notice=Q_NOTICE):
     "Notices for questions, reading requests, bare approvals, BTW side-requests, and the apostrophe caveat check"
+    prompt = _user_prompt(prompt)
     out = []
     if prompt.rstrip().endswith('?'): out.append(q_notice)
     if 'please read' in prompt.lower(): out.append(READ_NOTICE)
@@ -61,16 +69,25 @@ NBDEV_MSG = '**This is an nbdev project: notebooks in `nbs/` are the source of t
 BLOCK_EDIT_MSG = 'Native file write/edit tools are blocked in this environment: make the edit via the clikernel session instead (exhash / %%exhash, pyskills.edit, pyskills.ipynb).'
 
 
+def _desktop():
+    "True in a Claude desktop app session, which runs the relaxed harness: the desktop can neither replace the system prompt nor start dojo-preloaded"
+    return os.environ.get('CLAUDE_CODE_ENTRYPOINT') == 'claude-desktop'
+
+
+CORE_MD = Path(__file__).parent.parent/'prompts'/'core.md'
+
+
 def claude_session_start(o):
-    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda"
+    "SessionStart: orientation notice by source, then Python-project bootstrap and nbdev addenda; the desktop app gets core.md instead of the bootstrap gate"
     d = Path(os.environ.get('CLAUDE_PROJECT_DIR') or os.getcwd())
     src = o.get('source', '')
     if src in ('resume', 'compact'): print(f'[{src} at {datetime.now():%H:%M:%S}]')
-    if src == 'compact':
-        print(COMPACT_MSG)
-    elif src == 'resume' and synthetic_resume(o.get('transcript_path', '')): print(SYNTH_MSG)
-    elif src == 'resume' and (d/'pyproject.toml').is_file(): print(RESUME_MSG)
-    if (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
+    if _desktop(): print(CORE_MD.read_text())
+    else:
+        if src == 'compact': print(COMPACT_MSG)
+        elif src == 'resume' and synthetic_resume(o.get('transcript_path', '')): print(SYNTH_MSG)
+        elif src == 'resume' and (d/'pyproject.toml').is_file(): print(RESUME_MSG)
+        if (d/'pyproject.toml').is_file(): print(BOOTSTRAP_MSG)
     try: nb = any(l.startswith('[tool.nbdev]') for l in (d/'pyproject.toml').open())
     except OSError: nb = False
     if nb: print(NBDEV_MSG)
@@ -100,7 +117,8 @@ def claude_bash_guard(o):
 
 
 def claude_block_native_edit(o):
-    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling"
+    "PreToolUse(Write|Edit|NotebookEdit): route edits to the kernel tooling. Desktop sessions keep Write and Edit but never NotebookEdit: its writer saves non-ASCII as JSON escapes, churning every notebook it touches"
+    if _desktop() and o.get('tool_name') != 'NotebookEdit': return
     print(BLOCK_EDIT_MSG, file=sys.stderr)
     sys.exit(2)
 
@@ -211,6 +229,11 @@ def _slop_state(f):
     if not isinstance(st, dict): st = {}
     return {k: st.get(k, d) for k, d in _SLOP_KEYS.items()}
 
+def _slop_save(f, st):
+    tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+    tmp.write_text(json.dumps(st))
+    tmp.replace(f)
+
 def _slop_report(txt):
     "Zero or one scored-message notices for `txt`, applying the env-tunable thresholds"
     if len(txt.split()) < int(os.environ.get('SLOP_WORDS', SLOP_WORDS)): return []
@@ -220,6 +243,7 @@ def _slop_report(txt):
     r = subprocess.run(['slopometer', '--json'], input=txt, capture_output=True, text=True, timeout=60)
     if r.returncode: return []
     j = json.loads(r.stdout)
+    if j.get('too_short'): return []
     worst_min = int(os.environ.get('SLOP_WORST', SLOP_WORST))
     dens_min = float(os.environ.get('SLOP_DENSITY', SLOP_DENSITY))
     if not (j['worst'] >= worst_min or j['density'] >= dens_min): return []
@@ -228,6 +252,21 @@ def _slop_report(txt):
         return f"[{f['weight']}] {f['rule']}{tl}: {f['text']!r}"
     rows = '\n'.join(row(f) for f in j['findings'][:SLOP_TOP])
     return [SLOP_MSG.format(d=j['density'], t=dens_min, w=j['worst'], rows=rows)]
+
+
+def _slop_prompt(o, f, st):
+    raw = o.get('prompt') or ''
+    prompt = _user_prompt(raw).strip()
+    notes = []
+    if ';' in prompt and '<response-annotations>' in raw: notes.append('Rewrite the selected text in plain English. Also answer any question in the user request.')
+    elif prompt == ';': notes.append(SLOP_RESTATE)
+    txt, fresh = st['last'], st['lastmid'] != st['done']
+    if txt and fresh:
+        st['done'] = st['lastmid']
+        _slop_save(f, st)
+        notes += _slop_report(txt)
+    if notes: print(json.dumps(dict(hookSpecificOutput=dict(
+        hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
 
 
 def claude_slop(o):
@@ -240,22 +279,26 @@ def claude_slop(o):
             if o.get('message_id') != st['mid']: st.update(mid=o.get('message_id'), buf='')
             st['buf'] += o.get('delta') or ''
             if o.get('final'): st['last'], st['lastmid'] = st['buf'], st['mid']
-            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-            tmp.write_text(json.dumps(st))
-            tmp.replace(f)
+            _slop_save(f, st)
             return
-        notes = []
-        if (o.get('prompt') or '').strip() == ';': notes.append(SLOP_RESTATE)
-        txt, fresh = st['last'], st['lastmid'] != st['done']
-        if txt and fresh:
-            st['done'] = st['lastmid']
-            tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-            tmp.write_text(json.dumps(st))
-            tmp.replace(f)
-            notes += _slop_report(txt)
-        if notes: print(json.dumps(dict(hookSpecificOutput=dict(
-            hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
+        _slop_prompt(o, f, st)
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
+def codex_slop(o):
+    "Stop/UserPromptSubmit: store the final assistant message, then report its score with the next prompt"
+    try:
+        f = _state_file('slop', o.get('session_id', ''))
+        st = _slop_state(f)
+        if o['hook_event_name'] == 'Stop':
+            st['last'], st['lastmid'] = o.get('last_assistant_message') or '', o.get('turn_id') or ''
+            _slop_save(f, st)
+            print('{}')
+            return
+        _slop_prompt(o, f, st)
+    except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
 def codex_orientation(o):
     "codex PostCompact/SessionStart/PreToolUse: one-shot post-compaction reorientation"
     state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))
