@@ -11,7 +11,7 @@ def respond(decision, reason):
     sys.exit(0)
 
 try: from safecmd import validate, DisallowedError
-except ImportError as e: respond("defer", f"safecmd import failed: {e}")
+except ImportError: sys.exit(0)   # no opinion: exit 0 with no output falls through to the normal permission flow
 
 def main():
     try: hook_input = json.load(sys.stdin)
@@ -24,6 +24,6 @@ def main():
         validate(cmd)
         respond("allow", "safecmd: validated")
     except DisallowedError:
-        respond("defer", "Not on safecmd allowlist")
+        sys.exit(0)   # off-allowlist: no opinion, normal permission flow ("defer" means resume-later and ends the run in the desktop app)
 
 if __name__ == "__main__": main()
