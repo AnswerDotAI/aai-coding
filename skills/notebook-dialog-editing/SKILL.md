@@ -1,6 +1,6 @@
 ---
-name: notebook-dialog-editing
-description: "Use CLI tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs without a Python kernel. Trigger for .ipynb or dialog work using shell-accessible tools."
+name: cli-notebook-editing
+description: "Use CLI tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs without a Python kernel."
 ---
 
 # Notebook and dialog editing

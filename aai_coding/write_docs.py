@@ -2,7 +2,7 @@ r'''How to write reference prose: read before writing docstrings, READMEs, API d
 
 # Writing Reference Prose
 
-These rules cover the prose that ships with code: docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. The register is GOV.UK/GDS house style with ASD-STE100's discipline: very plain, very direct, no author's voice. Narrative prose has an author on the page. Reference prose has only the contract. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.
+These rules cover the prose that ships with code: docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. The register is GOV.UK/GDS house style with ASD-STE100's discipline: very plain and very direct. Reference prose puts the contract first. That does not require a formal tone or the removal of the author's voice. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.
 
 Here is a passage from a design doc, written in this register:
 
@@ -73,6 +73,24 @@ Kill on sight: seamless, streamline, empower, foster, pivotal, "a testament to",
 - Messages to co-workers: the answer first, support after. No softening preamble, no closing offers of further help.
 
 Don't hard-wrap prose. Write each paragraph as one continuous line and let the display soft-wrap it. Put code symbols in backticks: function names, parameters, file paths, module and package names, and literal syntax.
+
+## Rewriting high-scoring documentation
+
+A high slopometer score means the document needs a fresh explanation, not repairs to individual flagged sentences. Do not mechanically split sentences, replace banned words, or delete clauses until the score falls. Short sentences can still be unreadable. Correctly written documents generally score below 4, but a low score does not establish clarity, accuracy, or completeness.
+
+Rewrite the explanation, not the information content. Preserve technical detail that might matter to a reader. A shorter document is not an improvement if it omits a capability, condition, or explanation the reader needs.
+
+De-slopping does not mean removing character or voice. Preserve the author's existing informality, conversational phrasing, contractions, and humor where they communicate clearly. Informal language is not slop. AI slop is often over-clever: strained metaphors, elaborate phrasing, and invented terminology that make a simple point hard to understand. Judge language by what it communicates, not how formal it sounds. Do not replace a human voice with generic reference prose or invent a new persona for the author.
+
+- **Establish the facts.** Read the implementation and executable examples before drafting. Identify the audience and what they need to understand or do. Make a working inventory of the original's substantive points: capabilities, responsibilities, inputs, outputs, identifiers, defaults, guarantees, exclusions, edge cases, failure behavior, and context. Verify claims against the code. Record incorrect or uncertain claims rather than silently repeating them.
+- **Write from understanding.** Put the old wording aside and draft from the facts. Choose an order that explains the system to the intended reader. Do not preserve the old sentences, paragraph structure, or local coinages merely because they are already there. Name who performs each operation. Introduce concepts before using them. State guarantees directly.
+- **Keep the context.** Explain the problem the code solves and the relationships needed to understand its behavior. Preserve prerequisites, setup, protocol distinctions, and reasons that affect correct use. Do not turn an explanation into disconnected facts or compress it into unexplained identifiers. Remove promotional justification, not the reasoning a reader needs to understand the contract.
+- **Audit technical coverage.** Account for every substantive point in the original and locate it in the rewrite. Repeated facts can share one clear statement. Moving a fact must not make it unavailable where the reader needs it. Preserve details whose relevance is uncertain. Flag proposed omissions for review instead of deciding silently that they do not matter. Correct false claims from evidence and report those corrections.
+- **Review descriptions separately.** In nbdev, the first blockquoted paragraph below the title becomes the description. Module listings and generated documentation reuse it without the surrounding explanation. Preserve its capability coverage and technical scope. For example, replacing a description of NDJSON transport, control routing, and deferred tool results with "Communicate through standard input and output" loses two responsibilities. Check the description on its own, even when the body explains all three.
+- **Verify the finished document.** Read the rewrite top-to-bottom beside its examples. Check accuracy, readability, retained context, technical coverage, and preservation of the author's voice before scoring. For notebooks, follow `nbdev.skill`, edit the source notebook, regenerate exports, and run the affected notebook tests. Keep implementation behavior unchanged unless the user separately requests code changes. Update stale example outputs by execution, not manual editing.
+- **Rescore independently at the end.** Use a fresh scoring process after the rewrite and its coverage audit are complete. Do not use intermediate scores to choose wording or remove information. Report the final score, word count, findings, and test results. If the score remains high, reconsider the explanation as a whole. Do not dismiss the document's problems because some individual findings are false positives.
+
+When the user authorizes delegated rewrites, give each agent a bounded document scope and these instructions. Require the agent to report corrections, any proposed omissions, verification results, and the final independent score. Review the rewritten document against both the original's technical content and the implementation. A score below 4 is not a substitute for that review.
 
 This module also provides `check_docs`, which reviews text against these rules using a separate model. Don't run it unless the user asks for a docs check.
 '''

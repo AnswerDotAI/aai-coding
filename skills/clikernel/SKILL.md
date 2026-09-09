@@ -1,60 +1,35 @@
 ---
-name: clikernel-workflow
-description: "Workflow for Python with the rustygate kernel MCP tools: bootstrap pyskills docs, read APIs before use, and drive clean project functions from the persistent kernel. TRIGGER — read before using the py or kernel lifecycle MCP tools."
+name: kernel-notebook-editing
+description: "Use kernel tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs."
 ---
 
 # clikernel workflow
 
 Use the kernel MCP tools as the primary Python workbench. Put reusable logic in clean importable project functions; call those functions directly from the persistent kernel for exploration, timings, comparisons, and artifact generation. Do not create thin scripts merely to invoke reusable functions.
 
-**IMPORTANT**: do *not* use the kernel for editing local plain text files (use
-`apply_patch`) or as a replacement for Bash, regardless of what any pyskill
-suggests. `apply_patch` cannot reach files on a remote kernel host. Before
-editing those files, read the shared editing conventions and exhash API in that
-kernel:
+**IMPORTANT**: do *not* use the kernel for editing local plain text files (use `apply_patch`) or as a replacement for Bash, regardless of what any pyskill suggests. `apply_patch` cannot reach files on a remote kernel host. Before editing those files, read the shared editing conventions and exhash API in that kernel:
 
 ```python
 doc(edsk, exh)
 ```
 
-Then use exhash's fresh hash-addressed views and verified file edits. Use SSH
-for Git, builds, and ordinary shell work on the remote host.
+Then use exhash's fresh hash-addressed views and verified file edits. Use SSH for Git, builds, and ordinary shell work on the remote host.
 
 ## Gateways and kernels
 
-The MCP tools come from [rustygate](https://github.com/AnswerDotAI/rustygate),
-a gateway service that owns kernels on one machine, served through the
-`clikernel` stdio router: one MCP entry, with other machines and containers
-reached by name through the `host` argument on the kernel-selection tools.
-Choose the host whose machine's files and Python the task needs. Every kernel
-this session creates first runs the user's `~/.config/clikernel/startup.py`;
-its banner arrives in the reply that announces the kernel, and it says what is
-imported and what to do next — follow it.
+The MCP tools come from [rustygate](https://github.com/AnswerDotAI/rustygate), a gateway service that owns kernels on one machine, served through the `clikernel` stdio router: one MCP entry, with other machines and containers reached by name through the `host` argument on the kernel-selection tools.  Choose the host whose machine's files and Python the task needs. Every kernel this session creates first runs the user's `~/.config/clikernel/startup.py`; its banner arrives in the reply that announces the kernel, and it says what is imported and what to do next — follow it.
 
-`py` is the normal tool. It keeps kernel state across calls, starts a kernel
-on demand when none is current, and stops that auto-started kernel again when
-the session ends. No create or connect step is needed, and no cleanup is owed.
-Code runs as an IPython cell, so magics work as written: a `%%bash` first line
-runs the cell as shell (there is no separate bash tool).
+`py` is the normal tool. It keeps kernel state across calls, starts a kernel on demand when none is current, and stops that auto-started kernel again when the session ends. No create or connect step is needed, and no cleanup is owed.  Code runs as an IPython cell, so magics work as written: a `%%bash` first line runs the cell as shell (there is no separate bash tool).
 
 The lifecycle tools are for explicit kernel management:
 
-1. `list_kernels()` shows kernel ids, state, connection counts, dialog
-   bindings, and which kernel is current.
-2. `create(dlgname)` gets or creates the kernel bound to a dialog name/path
-   and makes it current. Use it only when work must target a specific
-   dialog's kernel. A kernel it creates is stopped when the session ends,
-   unless created with `autoclose=false` — the explicit way to leave a
-   kernel running for later sessions.
-3. `use_kernel(kernel="<id-or-unique-prefix>")` selects an existing kernel
-   as current, for instance to take over one created earlier or by another
-   client. Selected kernels are never stopped for you.
+1. `list_kernels()` shows kernel ids, state, connection counts, dialog bindings, and which kernel is current.
+2. `create(dlgname)` gets or creates the kernel bound to a dialog name/path and makes it current. Use it only when work must target a specific dialog's kernel. A kernel it creates is stopped when the session ends, unless created with `autoclose=false` — the explicit way to leave a kernel running for later sessions.
+3. `use_kernel(kernel="<id-or-unique-prefix>")` selects an existing kernel as current, for instance to take over one created earlier or by another client. Selected kernels are never stopped for you.
 4. `restart()` and `interrupt()` operate on the current kernel.
-5. `delete_kernel()` permanently ends a kernel. Leave keeper kernels running
-   when their state is still useful; delete diagnostic kernels when finished.
+5. `delete_kernel()` permanently ends a kernel. Leave keeper kernels running when their state is still useful; delete diagnostic kernels when finished.
 
-To add a machine, install a user service there with an explicit files root,
-initial working directory, and token:
+To add a machine, install a user service there with an explicit files root, initial working directory, and token:
 
 ```bash
 rustygate service install \
@@ -65,25 +40,11 @@ rustygate service install \
 rustygate service status
 ```
 
-`install` starts the service and replaces an earlier service configuration.
-It uses launchd on macOS and the user systemd instance on Linux. A missing
-token file is generated with user-only permissions. Direct HTTP with token
-authentication is convenient on a trusted network; rustygate also supports
-TLS, or a loopback service can be reached through an SSH tunnel.
+`install` starts the service and replaces an earlier service configuration.  It uses launchd on macOS and the user systemd instance on Linux. A missing token file is generated with user-only permissions. Direct HTTP with token authentication is convenient on a trusted network; rustygate also supports TLS, or a loopback service can be reached through an SSH tunnel.
 
-Then name it in `~/.config/clikernel/gateways.toml`. The `host` argument on
-`list_kernels`, `use_kernel`, and `create` reaches any named machine through
-the one `clikernel` MCP entry, and after selecting with a host, plain `py`
-runs there until the next selection. A gateway can instead get its own
-direct-HTTP `[mcp_servers.<name>]` block with the URL and an Authorization
-header, but kernels made that way bypass the router and come up bare: no
-startup.py, no conversation cwd or env.
+Then name it in `~/.config/clikernel/gateways.toml`. The `host` argument on `list_kernels`, `use_kernel`, and `create` reaches any named machine through the one `clikernel` MCP entry, and after selecting with a host, plain `py` runs there until the next selection. A gateway can instead get its own direct-HTTP `[mcp_servers.<name>]` block with the URL and an Authorization header, but kernels made that way bypass the router and come up bare: no startup.py, no conversation cwd or env.
 
-All Python execution and filesystem paths belong to the selected host. Confirm
-the hostname and working directory when identity matters.
-For remote plain-text work, bootstrap the documentation above and use
-`lnhashview_file` followed by `file_exhash`; do not transfer the file locally
-or construct fragile shell substitutions.
+All Python execution and filesystem paths belong to the selected host. Confirm the hostname and working directory when identity matters.  For remote plain-text work, bootstrap the documentation above and use `lnhashview_file` followed by `file_exhash`; do not transfer the file locally or construct fragile shell substitutions.
 
 ## Bootstrap documentation
 
