@@ -48,6 +48,7 @@ The repository contains:
 ### Python modules
 
 - `coding_patterns` covers coding style, testing judgment, and team policy. Kernel startup includes reading it.
+- `nbreview` guides notebook style reviews, including chkstyle findings, method extraction, lessons, and testing judgment. It builds on `nbdev.skill` and `coding_patterns`.
 - `write_prose` covers anti-slop rules for narrative prose.
 - `write_docs` covers plain reference prose for docstrings, READMEs, and PRs.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.

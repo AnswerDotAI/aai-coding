@@ -19,6 +19,7 @@ dependencies = ["llmdojo>=0.0.3"]
 
 [project.entry-points.pyskills]
 coding_patterns = "aai_coding.coding_patterns"
+nbreview = "aai_coding.nbreview"
 write_prose = "aai_coding.write_prose"
 write_docs = "aai_coding.write_docs"
 write_summary = "aai_coding.write_summary"
