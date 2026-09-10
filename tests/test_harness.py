@@ -3,7 +3,18 @@ import json
 import pytest
 from shutil import which
 
-from aai_coding.harness import claude_air, claude_drop_sentinel, claude_slop, synthetic_resume
+from aai_coding.harness import bash_guard_msg, claude_air, claude_drop_sentinel, claude_slop, synthetic_resume
+
+
+def test_bash_guard_bare_head_tail():
+    "A countless head/tail keeps 10 lines, the same cut as the -10 form the guard already rejects"
+    assert bash_guard_msg('tar tzf x.tgz | head')
+    assert bash_guard_msg('ls ~ | tail')
+    assert bash_guard_msg('cat big.log | head | wc -l')
+    assert bash_guard_msg('ls | head; echo done')
+    assert bash_guard_msg('ls | header') is None           # merely starts with those four letters
+    assert bash_guard_msg('cat f | head -c 200') is None   # bytes, not lines
+    assert bash_guard_msg('git status | head -30') is None
 
 
 def test_synthetic_resume(tmp_path):
