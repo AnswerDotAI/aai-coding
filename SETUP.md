@@ -90,7 +90,7 @@ Codex has two supported modes. This choice applies only to codex; Claude Code re
 
 ## 1. Kernel server
 
-Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `execute`, `connect`, `restart`, and `interrupt` tools.
+Outcome: the clikernel MCP server is registered. Claude Code: a user-scope server named `clikernel` running `<venv>/bin/clikernel-mcp`. Kernel-centric codex: a `[mcp_servers.clikernel]` block in `~/.codex/config.toml` with `command` set to that binary, `startup_timeout_sec = 30`, `tool_timeout_sec = 3600`, and `approval_mode = "approve"` for its `py`, `use_kernel`, `restart`, and `interrupt` tools.
 
 Hybrid codex: use the following configuration, replacing `<venv>` with the absolute workspace environment path:
 
@@ -101,19 +101,22 @@ args = ["--quiet"]
 env_vars = ["GITHUB_TOKEN"]
 omit_tools_from = ["deferred"]
 
-[mcp_servers.clikernel.tools.execute]
+[mcp_servers.clikernel.tools.py]
 approval_mode = "approve"
 
 [mcp_servers.clikernel.tools.list_kernels]
 approval_mode = "approve"
 
-[mcp_servers.clikernel.tools.stop_kernel]
+[mcp_servers.clikernel.tools.delete_kernel]
 approval_mode = "approve"
 
 [mcp_servers.clikernel.tools.restart]
 approval_mode = "approve"
 
-[mcp_servers.clikernel.tools.connect]
+[mcp_servers.clikernel.tools.use_kernel]
+approval_mode = "approve"
+
+[mcp_servers.clikernel.tools.create]
 approval_mode = "approve"
 
 [mcp_servers.clikernel.tools.interrupt]
@@ -138,7 +141,7 @@ Settle first: existing non-symlink files at those paths.
 
 Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse matcher `Write|Edit|NotebookEdit` runs `aai-hook claude-block-native-edit`; PreToolUse matcher `Bash` runs `aai-hook claude-bash-guard`; UserPromptSubmit runs `aai-hook claude-prompt-submit`; SessionStart runs `aai-hook claude-session-start`; UserPromptSubmit, MessageDisplay, and PostToolBatch each also run `aai-hook claude-air` (the come-up-for-air nudge: after 8 tool-call rounds with no text response of 100+ chars, it injects a reminder to surface and reassess, repeating every 5 further rounds). The air nudge is Claude-only: codex has no message-level hook event, so it cannot observe the "text happened" reset condition - the codex-shaped substitute is a sentence in AGENTS.md; revisit if codex grows one. PostToolBatch and Stop also each run `aai-hook claude-drop-sentinel`, a Python port of podlayer/message-drop-sentinel (MIT): it detects the thinking-sandwich message-drop platform bug from the transcript scar (two adjacent thinking blocks) and tells the agent its text was probably eaten: restate it in the turn-final message, or say it now and end the turn if the user needs it immediately. Retire the sentinel entries when the upstream bug is fixed (re-test recipe and issue links in that repo's README). UserPromptSubmit and MessageDisplay also each run `aai-hook claude-slop`: MessageDisplay buffers each displayed assistant message, and at the next prompt the hook scores the previous turn's final message with the `slopometer` CLI, injecting the flagged patterns as context. A prompt that is a bare `;` means the user did not understand the previous reply, and the hook injects an instruction to restate it in plain English. Bare `aai-hook` resolves because the user's shell profile puts the workspace venv on PATH; if it does not, use the absolute venv path.
 
-Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__execute` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
+Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__py` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
 
 Check: `aai-hook claude-prompt-submit` fed `{"prompt": "test?"}` on stdin prints the question notice.
 
