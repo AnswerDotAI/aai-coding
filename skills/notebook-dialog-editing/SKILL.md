@@ -1,6 +1,6 @@
 ---
 name: cli-notebook-editing
-description: "Use CLI tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs without a Python kernel."
+description: "Use CLI tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs without a Python kernel. Do not use unless explicitly requested to not use a kernel."
 ---
 
 # Notebook and dialog editing

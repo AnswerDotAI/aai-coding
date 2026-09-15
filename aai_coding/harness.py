@@ -200,7 +200,7 @@ def claude_drop_sentinel(o):
 
 SLOP_WORST, SLOP_DENSITY, SLOP_WORDS, SLOP_TOP = 10, 10, 40, 8
 SLOP_MSG = "slopometer: your previous turn's final message scored density {d} (flag threshold {t}), worst finding {w}. The rows below apply to your own prose only: a span that is a quoted example, discussed text, or a title needs no change. Write your reply to the prompt above in the reference register, avoiding these patterns.\n{rows}"
-SLOP_RESTATE = 'The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: short sentences, named actors, plain words, no joins, and define every term you keep.'
+SLOP_RESTATE = 'The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: short sentences, named actors, plain words, no joins, and define every term you keep. Use code snippets, symbol and route names, etc instead of prosaic descriptions or invented terms.'
 
 
 _SLOP_KEYS = dict(mid='', buf='', last='', lastmid='', done='')
