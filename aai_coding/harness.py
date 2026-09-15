@@ -198,9 +198,9 @@ def claude_drop_sentinel(o):
     except Exception as e: print(f'[drop-sentinel] fail-open: {e!r}', file=sys.stderr)
 
 
-SLOP_WORST, SLOP_DENSITY, SLOP_WORDS, SLOP_TOP = 10, 10, 40, 8
-SLOP_MSG = "slopometer: your previous turn's final message scored density {d} (flag threshold {t}), worst finding {w}. The rows below apply to your own prose only: a span that is a quoted example, discussed text, or a title needs no change. Write your reply to the prompt above in the reference register, avoiding these patterns.\n{rows}"
-SLOP_RESTATE = 'The user sent a bare ";": they did not understand your previous reply. Restate it in simple precise English: short sentences, named actors, plain words, no joins, and define every term you keep. Use code snippets, symbol and route names, etc instead of prosaic descriptions or invented terms.'
+SLOP_WORST, SLOP_DENSITY, SLOP_WORDS, SLOP_TOP = 15, 15, 40, 8
+SLOP_MSG = "Your previous turn's final message was marked as likely unacceptable and unreadable by slopometer. It scored density {d} (flag threshold {t}), worst finding {w}. If you have not done so yet, read the docs writing pyskill and stick to it rigorously in the future.\n{rows}"
+SLOP_RESTATE = 'The user sent a bare ";": they did not understand your previous reply, possibly because it has AI slop characteristics. Restate it in simple precise English: short sentences, named actors, plain words, no joins, and define every term. Use code snippets, symbol and route names, etc instead of prosaic descriptions or invented terms.'
 
 
 _SLOP_KEYS = dict(mid='', buf='', last='', lastmid='', done='')
@@ -217,7 +217,7 @@ def _slop_report(txt):
     from shutil import which
     if not which('slopometer'): return []
     import subprocess
-    r = subprocess.run(['slopometer', '--json'], input=txt, capture_output=True, text=True, timeout=60)
+    r = subprocess.run(['slopometer', '--json', '--min-words', '0'], input=txt, capture_output=True, text=True, timeout=60)
     if r.returncode: return []
     j = json.loads(r.stdout)
     worst_min = int(os.environ.get('SLOP_WORST', SLOP_WORST))

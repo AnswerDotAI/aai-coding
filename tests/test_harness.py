@@ -96,6 +96,6 @@ def test_slop(tmp_path, monkeypatch, capsys):
     assert out() == ''                                      # display tracking is silent
     psub()
     r = json.loads(out())['hookSpecificOutput']
-    assert 'previous turn' in r['additionalContext'] and 'splice' in r['additionalContext']
+    assert 'previous turn' in r['additionalContext'] and 'notxbuty' in r['additionalContext']
     psub()
     assert out() == ''                                      # the same message reports once
