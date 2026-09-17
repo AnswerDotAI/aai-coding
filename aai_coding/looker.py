@@ -1,6 +1,6 @@
 """Answer questions about images and PDFs by asking a separate codex process to look at them, which keeps large files out of this session (macOS only). Use it to verify rendered output: PDFs, screenshots, captured windows.
 
-`look` sends the images to a fresh, ephemeral gpt-5.6-luna thread whose only context is the checker charter, your question, and the images, and returns its answer. `pdf2pngs` is the pure-Quartz page renderer it uses, independently useful wherever a PDF needs to become images (no CLI tools, no permissions, no size limit worries in *your* context). Needs `openai-codex` and PyObjC (workspace installs have both). `mdhtml2docx.word.win_pic` is one producer of window captures to check."""
+`look` sends the images to a fresh, ephemeral gpt-5.6-luna thread whose only context is the checker charter, your question, and the images, and returns its answer. `pdf2pngs` is the pure-Quartz page renderer it uses, independently useful wherever a PDF needs to become images (no CLI tools, no permissions, no size limit worries in *your* context). Needs `openai-codex` and PyObjC (workspace installs have both). `macscript.word.win_pic` is one producer of window captures to check."""
 from pathlib import Path
 import Quartz
 from Foundation import NSURL
