@@ -26,7 +26,7 @@ All our tooling has carefully chosen defaults. Use them unless an exceptional, t
 - Wanting the same flag on every run means it's a missing config line: promote it and go back to the bare command (`pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`).
 - Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.
 - Run commands bare and read their output. Never pipe through truncating filters (`| tail -20`, `| grep PASS`): truncation is decided before the output exists, and it hides exactly the surprises worth seeing. Never merge stderr into stdout with `2>&1`: separated, a crash is unmissable.
-- On the rare occasion output genuinely can't come back inline (far too large), redirect the streams separately (`>meta/stdout.txt 2>meta/stderr.txt`) and read the files from the kernel.
+- NEVER use shell redirection without explicit, direct approval. Approval to run a command does not imply approval to redirect its output. Redirection breaks harness approval systems.
 - A real one-off requirement gets its flag once, with the reason stated alongside, and disappears again on the next call.
 
 ## Docments
