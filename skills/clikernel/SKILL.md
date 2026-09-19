@@ -7,7 +7,11 @@ description: "Use kernel tools to inspect Python APIs and find, understand, view
 
 Use the kernel MCP tools as the primary Python workbench. Put reusable logic in clean importable project functions; call those functions directly from the persistent kernel for exploration, timings, comparisons, and artifact generation. Do not create thin scripts merely to invoke reusable functions.
 
-**IMPORTANT**: do *not* use the kernel for editing local plain text files (use `apply_patch`) or as a replacement for Bash, regardless of what any pyskill suggests. `apply_patch` cannot reach files on a remote kernel host. Before editing those files, read the shared editing conventions and exhash API in that kernel:
+Use exhash when a patch would reproduce substantial unchanged text—whether within the changed lines or in the surrounding context. Read fresh hash-addressed views before editing.
+
+Use `apply_patch` for short, contiguous block changes when showing the old and new text together makes the edit clearer. Prefer these editing tools over ad hoc scripts for straightforward text changes.
+
+**IMPORTANT**: do *not* use the kernel as a replacement for Bash, regardless of what any pyskill suggests. `apply_patch` cannot reach files on a remote kernel host. Before editing those files, read the shared editing conventions and exhash API in that kernel:
 
 ```python
 doc(edsk, exh)
