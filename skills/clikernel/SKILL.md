@@ -65,7 +65,7 @@ Use exhash's fresh hash-addressed views and verified edits for changing text wit
 
 ## Payload literals
 
-In non-magic kernel calls, always write payload text arguments as raw triple-single-quoted strings: `r'''...'''`. Most importantly, write real multiline payloads with literal line breaks rather than encoding them with `\n`; the call then shows exactly the text the helper receives. This applies to edit patterns and replacements, message bodies, code strings, and similar text carried into a helper. It also avoids interpolation and escaping, and—unlike ordinary quoted strings—does not silently concatenate around embedded quote characters.
+In non-magic kernel calls, always write non-trivial (i.e >2 word) payload text arguments as raw triple-single-quoted strings: `r'''...'''`. Most importantly, write real multiline payloads with literal line breaks rather than encoding them with `\n`; the call then shows exactly the text the helper receives. This applies to edit patterns and replacements, message bodies, code strings, and similar text carried into a helper. It also avoids interpolation and escaping, and—unlike ordinary quoted strings—does not silently concatenate around embedded quote characters.
 
 ```python
 add_msg(r'''The first line of the message.
