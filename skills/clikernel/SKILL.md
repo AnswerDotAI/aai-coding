@@ -89,7 +89,7 @@ The idiomatic form preserves the payload exactly:
 pat = r'''kc\.execute\("'FOREIGN'"\)'''
 cell_exhash(
     r'''nbs/00_core.ipynb''', r'''54276565''',
-    (r'''1|5bf6|''', 's', pat, r'''foreign_id = kc.execute("'FOREIGN'")''')
+    (r'''1|v2|''', 's', pat, r'''foreign_id = kc.execute("'FOREIGN'")''')
 )
 ```
 

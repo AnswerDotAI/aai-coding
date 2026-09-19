@@ -22,4 +22,4 @@ Use these CLI equivalents of the documented Python operations for notebook/dialo
 | `nbrg` | `rgapi-nbrg PATTERN ROOT` |
 | `open_doc` | `exhash-open PATH` |
 
-CLI ID lists are comma-separated. Exhash commands are compact arguments, e.g. `'3|beef|s/old/new/'`; one multiline `a`/`i`/`c` command can take literal stdin through EOF. For a missing structural operation, extend the owning CLI.
+CLI ID lists are comma-separated. Exhash commands are compact arguments, e.g. `'3|7v|s/old/new/'`; one multiline `a`/`i`/`c` command can take literal stdin through EOF. For a missing structural operation, extend the owning CLI.
