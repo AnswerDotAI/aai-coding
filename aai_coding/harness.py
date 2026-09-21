@@ -22,7 +22,7 @@ READ_NOTICE = 'This prompt appears to contain a request to read something. If it
 APPROVAL_NOTICE = 'This bare approval covers exactly what was explicitly agreed, nothing more. Before acting, check that each thing you are about to do was confirmed by the user - not merely proposed, listed, or summarized by you. If approval of any item is uncertain, it is not approved: ask.'
 
 
-Q_NOTICE_CODEX = 'This prompt ends with a question mark, so it seems to be a question. Answer it directly, making only the tool calls needed to get the answer, before and instead of any further work.'
+Q_NOTICE_CODEX = 'This looks like a question. Answer it directly, before and instead of any further work. Most questions need no tool call.'
 BTW_NOTICE = 'This prompt begins with `BTW ` and is a side request. Answer it first, then resume the previously active task if it still has unfinished items. Do not treat the side request as replacing or cancelling that task unless the user explicitly says so.'
 SLOP_CAVEAT = 'The user sent a bare "\'": your previous reply appears to end with an unnecessary caveat. Identify what you meant: a concrete obstacle requiring a user decision, an ordinary implementation or testing task, or an unsupported hypothetical concern. If it requires a decision, explain the obstacle, its consequence, and the decision needed. If it is routine work, say so without implying the plan’s feasibility is uncertain. If it is unsupported or irrelevant to the question, withdraw it. Do not invent a justification for having included it.'
 
