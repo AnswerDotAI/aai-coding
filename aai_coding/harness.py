@@ -17,7 +17,7 @@ def bash_guard_msg(cmd):
     return NO_TRUNCATE if _TRUNC.search(cmd) else None
 
 
-Q_NOTICE = 'This prompt ends with a question mark, so it seems to be a question. Claude Code bug: a tool call after your answer text hides the answer. Do all your tool calls first, as many as the question needs, then write the answer and stop.'
+Q_NOTICE = 'This looks like a question. Claude Code bug: a tool call after answer text hides the answer. End the turn with the answer. Most questions need no tool call.'
 READ_NOTICE = 'This prompt appears to contain a request to read something. If it could reasonably be interpreted that way, read the target in full NOW, before composing any response: a notebook via summary_dlg then view_dlg/find_msgs as needed; a .py or other text file in full. Never respond from assumed or remembered contents.'
 APPROVAL_NOTICE = 'This bare approval covers exactly what was explicitly agreed, nothing more. Before acting, check that each thing you are about to do was confirmed by the user - not merely proposed, listed, or summarized by you. If approval of any item is uncertain, it is not approved: ask.'
 
@@ -149,7 +149,7 @@ def claude_air(o):
 # `thinking -> text -> thinking -> tool_use` drops the text upstream - never rendered, never in the
 # transcript, gone from the agent's replayed context - leaving two ADJACENT thinking blocks as a scar.
 # Retire when fixed; upstream reports and the re-test recipe are in that repo's README.
-DROP_MSG_BATCH = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If the user should see it, say it again in your turn-final message; if the user may need it NOW, say it now and immediately end the turn.'
+DROP_MSG_BATCH = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If the user needs it (a result or decision, not a slip you already fixed), say it again in your turn-final message; if the user may need it NOW, say it now and immediately end the turn.'
 DROP_MSG_STOP = 'Two thinking blocks in a row appeared in this turn: text you emitted mid-turn may have been silently dropped (it reached neither the user nor the transcript, and will not be in your future context). If your turn-final message already contains everything the user needs, reply with exactly "ok" and nothing else - do not re-summarize. Only if something important appears nowhere in your final message should you state that missing thing now: just the missing part, not a recap.'
 
 
