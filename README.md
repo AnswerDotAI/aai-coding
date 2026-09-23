@@ -1,6 +1,6 @@
 # aai-coding
 
-`aai-coding` contains Answer.AI's shared configuration, skills, and tools for Claude Code and Codex. It defines the team's coding and writing guidance, tool permissions, and Python workflows. An LLM setting up the harness should read this README before following `SETUP.md`. The design decisions below also provide context for advising users of an existing setup.
+`aai-coding` contains Answer.AI's shared configuration, skills, and tools for Claude Code, Codex, and Pi. It defines the team's coding and writing guidance, tool permissions, and Python workflows. An LLM setting up the harness should read this README before following `SETUP.md`. The design decisions below also provide context for advising users of an existing setup.
 
 ## Getting started
 
@@ -26,11 +26,13 @@ Reuse existing workspaces. Do not run `ws-setup` on them. See the [team migratio
 
 ## Tool workflows
 
-Claude Code uses a kernel-centric setup. Codex supports both kernel-centric and hybrid setups.
+Claude Code uses a kernel-centric setup. Codex supports both kernel-centric and hybrid setups. Pi uses the hybrid setup in an isolated agent profile.
 
 The kernel-centric setup denies native file tools. File reading, editing, searching, and Python execution use one persistent IPython kernel through clikernel. The `persistent-python` and `pyskills` host skills bootstrap this setup. `pyskills` provides discovery and documentation for the kernel's tools.
 
 The hybrid setup uses native `apply_patch` and Bash for files and shell work. It reserves a quiet clikernel for Python-specific work. Its `clikernel-workflow` host skill defines when to use the kernel. `notebook-dialog-editing` provides CLI access to the notebook tools documented in `aidialog.dlgskill`. This adapter overrides pyskill tool preferences for local files. Use native tools within allowed editing locations.
+
+Pi's isolated profile keeps the user's normal Pi configuration unchanged. The `aai-pi` launcher selects it through `PI_CODING_AGENT_DIR`. The profile may share authentication with normal Pi, but keeps its settings, packages, sessions, instructions, and skills separate.
 
 Task guidance lives in pyskills rather than host skills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
 
@@ -41,6 +43,7 @@ The repository contains:
 - `aai_coding/`: Python pyskills and the hook implementation, listed below.
 - `skills/`: host-level `SKILL.md` sources, symlinked into `~/.claude/skills` or `~/.codex/skills`. `persistent-python` and `pyskills` support the kernel-centric setup. `clikernel` and `notebook-dialog-editing` support the hybrid Codex setup.
 - `plugins/safecmd/`: a Claude Code plugin that auto-approves allowlisted Bash commands using the `safecmd` package.
+- `plugins/pi/`: Pi extensions used by the isolated AAI profile.
 - `prompts/`: shared behavioural rules and a replacement Claude Code system prompt, described below.
 - `SETUP.md`: a setup runbook written as a prompt for an LLM session. It is not an installer script.
 - `repos.txt`: a public starter baseline to copy into your workspace root. Put personal additions in `repos-local.txt`.
@@ -56,7 +59,7 @@ The repository contains:
 
 ### Prompts
 
-`prompts/core.md` contains harness-neutral behavioural rules. Codex reads it through a `~/.codex/AGENTS.md` symlink. Claude Code can append it to its system prompt.
+`prompts/core.md` contains harness-neutral behavioural rules. Codex and the isolated Pi profile read it through an `AGENTS.md` symlink. Claude Code can append it to its system prompt.
 
 `prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Install it as a `~/.claude/sysp` symlink and launch with:
 

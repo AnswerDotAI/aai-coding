@@ -1,10 +1,10 @@
 # Setting up the Answer.AI harness
 
-This file is a runbook for an LLM session, not a script. It sets up our way of working without requiring an Answer.AI account or a copy of our workspace. If you are a person: start with step 0 to create a workspace and get this repo, then open Claude Code or codex in the workspace and say "follow aai-coding/SETUP.md". If you already have the checkout, you can ask a session to follow this file from there, including step 0.
+This file is a runbook for an LLM session, not a script. It sets up our way of working without requiring an Answer.AI account or a copy of our workspace. If you are a person: start with step 0 to create a workspace and get this repo, then open Claude Code, codex, or Pi in the workspace and say "follow aai-coding/SETUP.md". If you already have the checkout, you can ask a session to follow this file from there, including step 0.
 
 If you are the session: first read `README.md` in this repo in full, since the steps below change your user's configuration and the README's design context is what lets you merge, recommend, and answer questions in an informed way. Then work through the steps in order, checking existing setup before making changes. Make no change beyond the stated outcomes without asking. Where the user's existing configuration overlaps, merge and never replace: show them each conflict and agree a resolution.
 
-This runbook targets macOS; the workspace commands use Bash/Zsh syntax. Do not apply the macOS sound hooks on other systems. Before harness configuration, at least one harness (Claude Code or codex) must be installed and signed in. Ask which harnesses to set up and where the workspace should live. No particular workspace name is required. Below, `<workspace>` means its absolute path, `<venv>` means `<workspace>/.venv`, and `<this repo>` means `<workspace>/aai-coding`. Resolve those placeholders before writing configuration; neither `~` nor shell variables are a substitute for an absolute path in config files.
+This runbook targets macOS; the workspace commands use Bash/Zsh syntax. Do not apply the macOS sound hooks on other systems. Before harness configuration, at least one harness (Claude Code, codex, or Pi) must be installed and signed in. Ask which harnesses to set up and where the workspace should live. No particular workspace name is required. Below, `<workspace>` means its absolute path, `<venv>` means `<workspace>/.venv`, and `<this repo>` means `<workspace>/aai-coding`. Resolve those placeholders before writing configuration; neither `~` nor shell variables are a substitute for an absolute path in config files.
 
 ## 0. Create a fastws workspace
 
@@ -87,6 +87,84 @@ Codex has two supported modes. This choice applies only to codex; Claude Code re
 
 1. **Kernel-centric:** do file, shell, and Python work through clikernel, complete the llmdojo bootstrap, and discover tools through pyskills. This is the existing Answer.AI harness workflow and most closely matches the Claude Code setup.
 2. **Hybrid:** use codex's `apply_patch` and Bash tools normally, and use `clikernel-mcp --quiet` only for Python-specific work. This keeps persistent Python state and pyskills without replacing codex's native file and shell workflow.
+
+Pi uses the hybrid workflow. Configure it as a separate agent profile so the user's normal Pi setup remains available. Settle the profile directory and launcher name before changing files. The examples below use an absolute `<pi-profile>` path and `aai-pi`.
+
+## Pi isolated profile
+
+Outcome: `pi` keeps its existing configuration, while `aai-pi` starts Pi with `PI_CODING_AGENT_DIR=<pi-profile>` and `<venv>/bin` first on `PATH`. The profile has separate settings, packages, sessions, instructions, extensions, and skills.
+
+Settle first:
+
+- Existing files at `<pi-profile>` and at the proposed launcher path.
+- Whether to share the normal Pi profile's authentication. Sharing authentication means symlinking only its credential files or provider-owned credential directory. Never copy credentials.
+- Any provider package required to use those credentials. Install it into the isolated profile and explain that package's behavior before proceeding.
+
+Create the profile with these resources:
+
+- `AGENTS.md` symlinked to `<this repo>/prompts/core.md`.
+- `extensions/aai-prompt.ts` symlinked to `<this repo>/plugins/pi/aai-prompt.ts`.
+- `skills/clikernel` symlinked to `<this repo>/skills/clikernel`.
+- `skills/notebook-dialog-editing` symlinked to `<this repo>/skills/notebook-dialog-editing`.
+- `auth.json` symlinked to the normal profile's `auth.json` only when approved. Link any provider-specific auth directory separately when its provider requires one.
+
+Install the pinned MCP adapter into the isolated profile:
+
+```bash
+PI_CODING_AGENT_DIR=<pi-profile> pi install npm:pi-mcp-adapter@2.37.0
+```
+
+Write `<pi-profile>/mcp.json` with the resolved clikernel executable:
+
+```json
+{
+  "settings": {
+    "disableProxyTool": true
+  },
+  "mcpServers": {
+    "clikernel": {
+      "command": "<venv>/bin/clikernel-mcp",
+      "args": ["--quiet"],
+      "lifecycle": "eager",
+      "directTools": true,
+      "toolPrefix": "none",
+      "includeTools": [
+        "py",
+        "list_kernels",
+        "delete_kernel",
+        "restart",
+        "use_kernel",
+        "create",
+        "interrupt"
+      ]
+    }
+  }
+}
+```
+
+The adapter is a third-party extension running with the user's permissions. Pin its reviewed version. Upgrade it only after reviewing its release and source changes.
+
+Create a launcher equivalent to:
+
+```bash
+#!/bin/sh
+export PI_CODING_AGENT_DIR=<pi-profile>
+export PATH=<venv>/bin:$PATH
+exec pi "$@"
+```
+
+Use absolute paths for `<pi-profile>` and `<venv>`. Put the launcher in an existing user executable directory. Do not change the `pi` command.
+
+For `@howaboua/pi-codex-conversion`, use `executionMode: "normal"`. Its Code and Notebook modes hide ordinary Pi extension tools behind their own runtime, while normal mode exposes clikernel's direct tools alongside the Codex-shaped shell and patch tools.
+
+Check:
+
+```bash
+aai-pi list
+PI_CODING_AGENT_DIR=<pi-profile> pi --list-models
+```
+
+Then start `aai-pi`. Confirm the expected provider is authenticated, the AAI skills appear, and `py` returns `2` for `1+1`. Start plain `pi` afterward and confirm its original resources and settings remain active.
 
 ## 1. Kernel server
 
