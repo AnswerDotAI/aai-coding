@@ -14,7 +14,7 @@ Start with:
 uvx --from 'fastws-cli>=0.0.14' ws-setup AnswerDotAI/aai-ws ~/aai-ws
 ```
 
-Activate the new environment and follow [SETUP.md](SETUP.md). The public [aai-ws baseline](https://github.com/AnswerDotAI/aai-ws) includes aai-coding, fastws, kernel startup and editing tools, and tools used by the Claude hooks. Other Python dependencies install as packages. Add their repos when you also need editable source checkouts. Copy [repos.txt](repos.txt) to use the same starter selection in a custom workspace.
+Activate the new environment and follow [SETUP.md](SETUP.md). The public [aai-ws baseline](https://github.com/AnswerDotAI/aai-ws) includes aai-coding, fastws, kernel startup and editing tools, and tools used by the Claude hooks. Other Python dependencies install as packages.
 
 Answer.AI team members use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. Both workspace repos receive shared baseline updates through `ws-sync`. In either setup:
 
@@ -43,7 +43,6 @@ The repository contains:
 - `plugins/safecmd/`: a Claude Code plugin that auto-approves allowlisted Bash commands using the `safecmd` package.
 - `prompts/`: shared behavioural rules and a replacement Claude Code system prompt, described below.
 - `SETUP.md`: a setup runbook written as a prompt for an LLM session. It is not an installer script.
-- `repos.txt`: a public starter baseline to copy into your workspace root. Put personal additions in `repos-local.txt`.
 
 ### Python modules
 

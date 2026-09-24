@@ -29,6 +29,7 @@ theory = "aai_coding.theory"
 
 [project.scripts]
 aai-hook = "aai_coding.harness:main"
+claudesub = "aai_coding.claudesub:main"
 
 [project.optional-dependencies]
 dev = [

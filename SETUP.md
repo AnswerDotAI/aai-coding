@@ -29,8 +29,6 @@ cd ~/coding-ws
 source .venv/bin/activate
 ```
 
-**Answer.AI team workspace:** use `AnswerDotAI/private-ws` instead of `AnswerDotAI/aai-ws` in that command. It contains the larger team baseline and requires private-repo access. A user's fork or another team's workspace repo can be substituted too. Existing team workspaces should follow the [migration instructions](https://github.com/AnswerDotAI/private-ws#migrating-an-existing-workspace), not create a second workspace.
-
 `ws-setup` clones the chosen repo, creates its `.venv`, installs fastws into that environment, and runs its `ws-sync`. It isolates the new environment even if another workspace is active. It prints activation instructions but does not change shell startup files or configure the coding harness. A failed step leaves the new directory in place for inspection; do not delete it or retry setup over it blindly.
 
 **Custom workspace without a base repo:** clone aai-coding to obtain the copyable starter list, then let fastws clone the remaining repos:
