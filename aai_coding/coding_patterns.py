@@ -21,13 +21,13 @@ Only write a code comment to state a constraint the code itself can't show, neve
 
 ## Trust Tool Defaults
 
-All our tooling has carefully chosen defaults. Use them unless an exceptional, task-specific requirement makes the default unsuitable. This applies to CLI flags, Python arguments, and tool-call options. An override must address that requirement—not reflect habit or an assumed improvement over the default.
+Our tools have carefully chosen defaults that give correct, readable output. Use the defaults unless the task has a specific requirement they can't meet. This applies to CLI flags, Python arguments, and tool-call options. Don't override from habit or an assumed improvement. Report noisy or wrong output as a tool bug.
 
-- Wanting the same flag on every run means it's a missing config line: promote it and go back to the bare command (`pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`).
+- If you want the same flag on every run, move it into config and return to the bare command: `pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`.
 - Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.
-- Run commands bare and read their output. Never pipe through truncating filters (`| tail -20`, `| grep PASS`): truncation is decided before the output exists, and it hides exactly the surprises worth seeing. Never merge stderr into stdout with `2>&1`: separated, a crash is unmissable.
-- NEVER use shell redirection without explicit, direct approval. Approval to run a command does not imply approval to redirect its output. Redirection breaks harness approval systems.
-- A real one-off requirement gets its flag once, with the reason stated alongside, and disappears again on the next call.
+- Run commands bare and read their output before working around a problem you expect. Never pipe through truncating filters (`| tail -20`, `| grep PASS`). They drop output before you see it. Never merge stderr into stdout with `2>&1`: separated, a crash is unmissable.
+- NEVER use shell redirection without explicit, direct approval. Approval to run a command doesn't cover redirecting its output. Redirection breaks harness approval systems.
+- For a real one-off requirement, pass the flag once with the reason, then drop it on the next call.
 
 ## Docments
 
@@ -102,7 +102,7 @@ Pytest is for checks that don't fit as a readable notebook lesson and are too co
 - Prefer as few tests as possible: a single test that walks through many checks is more readable and faster than many small ones
 - A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative (each one both documents what we needed to know and keeps guarding it), so they stay as example cells. In a pytest file, an exploratory check survives only if it meets one of the criteria above
 - Assert the logic, not incidentals: check what the behavior guarantees, never byte-exact renderings, exact reprs, or field order. A test that compares a whole output string locks in formatting decisions that were never the point (e.g. assert the content appears in a markdown display block, not the display's exact text). NEVER use tests to "lock in" behavior, unless that exact behavior really is a key part of the logic or contract that must always be true forever
-- Use `pytest -q` (not `python -m pytest`, which prompts for permission). nbdev projects use `nbdev-test` on the changed notebook, but some notebooks are slow or hit live services, so check with the user before running one you don't know is safe (known safe: all of pyskills)
+- Use `pytest -q` (not `python -m pytest`, which prompts for permission). nbdev projects use `nbdev-test` on the changed notebook. Ask first only if a run (including `eval: false` cells) may take >~2 mins or reach authenticated external services.
 - Don't run slow-marked tests until finishing a session, or after a change likely to directly impact them
 
 ## One-liner Patterns

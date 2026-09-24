@@ -9,8 +9,6 @@ ALWAYS use the `clikernel` MCP server for ALL Python work: writing code, editing
 
 The server's `py` tool runs code in one persistent IPython session, so imports, variables, monkeypatches, and cached objects carry across calls. Check the clikernel MCP server instructions already in your context before the first call. The first `py` creates the kernel, and its reply opens with the startup banner: what is imported, and which cells to run next. Follow it. If the banner reports that project imports were skipped, or no banner appears, report that to the user before other work. Then run the guarded import block from `$XDG_CONFIG_HOME/clikernel/startup.py` (default `~/.config/clikernel/startup.py`) as one `py` call. That file is the single source of truth for bootstrap imports; never retype them from memory.
 
-Complete every practice task named in the server instructions (the llmdojo round started by `dojo_start()`) before any other work. This gate applies in every session, including tasks that only read files or search directories.
-
 The server instructions and startup docs cover the tools, notebook magics, output shape, interaction rules, reload gotchas, and pyskills workflow, so this skill does not repeat them. `list_pyskills()` shows the available tooling. Prefer a relevant pyskill over ad hoc code.
 
 ## Environment specifics

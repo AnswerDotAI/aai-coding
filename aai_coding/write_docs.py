@@ -1,5 +1,7 @@
 r'''How to write reference prose. Read this before writing docstrings, READMEs, API docs, PR descriptions, commit messages, or messages to co-workers.
 
+Every edit you make with this guide MUST improve the prose for its reader. The numbered tells below are symptoms of unclear writing, not lint rules. NEVER fix a tell mechanically, such as by swapping punctuation or deleting a flagged word. When a passage shows tells, work out what its reader needs from it, then explain that again from the start, following "Rewriting high-scoring documentation" below.
+
 # Writing Reference Prose
 
 Reference prose is the writing that goes with code. It covers docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. Readers scan it for the fact they came for, then leave. Write it plainly and directly, in the style of GOV.UK/GDS and ASD-STE100. Start with what the code does. Plain does not mean formal, and the author's voice can stay. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.

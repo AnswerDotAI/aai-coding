@@ -1,19 +1,21 @@
-import pytest
+import pytest, pypdfium2 as pdfium
 
 from aai_coding.looker import look, pdf2pngs
 
 
 def _mk_pdf(path, npages=2):
-    "A tiny multi-page PDF drawn with CoreGraphics: page n carries n black bars"
-    import Quartz
-    from Foundation import NSURL
-    ctx = Quartz.CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(str(path)), Quartz.CGRectMake(0, 0, 200, 100), None)
+    "A tiny multi-page PDF drawn with pypdfium2: page n carries n black bars"
+    raw = pdfium.raw
+    pdf = pdfium.PdfDocument.new()
     for n in range(1, npages + 1):
-        Quartz.CGPDFContextBeginPage(ctx, None)
-        Quartz.CGContextSetRGBFillColor(ctx, 0, 0, 0, 1)
-        for i in range(n): Quartz.CGContextFillRect(ctx, Quartz.CGRectMake(20, 10 + 25*i, 160, 12))
-        Quartz.CGPDFContextEndPage(ctx)
-    Quartz.CGPDFContextClose(ctx)
+        page = pdf.new_page(200, 100)
+        for i in range(n):
+            r = raw.FPDFPageObj_CreateNewRect(20, 10 + 25*i, 160, 12)
+            raw.FPDFPageObj_SetFillColor(r, 0, 0, 0, 255)
+            raw.FPDFPath_SetDrawMode(r, raw.FPDF_FILLMODE_WINDING, False)
+            raw.FPDFPage_InsertObject(page.raw, r)
+        page.gen_content()
+    pdf.save(path)
 
 
 def test_pdf2pngs(tmp_path):
@@ -29,6 +31,8 @@ def test_pdf2pngs(tmp_path):
 def test_look(tmp_path):
     pdf = tmp_path/'bars.pdf'
     _mk_pdf(pdf, npages=3)
+    svg = tmp_path/'word.svg'
+    svg.write_text(r'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60"><text x="20" y="40" font-family="sans-serif" font-size="24">LOOKER</text></svg>')
     import asyncio
-    res = asyncio.run(look('These are 3 PDF pages, each showing some black horizontal bars. How many bars are on each page? Answer with just the three counts.', pdf))
-    assert '3' in res
+    res = asyncio.run(look('The first 3 images are PDF pages, each showing some black horizontal bars. The last image shows one word. How many bars are on each page, and what is the word? Answer with just the three counts and the word.', pdf, svg))
+    assert '3' in res and 'LOOKER' in res.upper()
