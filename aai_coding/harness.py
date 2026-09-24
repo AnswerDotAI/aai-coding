@@ -59,13 +59,9 @@ def synthetic_resume(path):
         return datetime.fromisoformat(bt.replace('Z', '+00:00')).timestamp() if bt else datetime.now().timestamp()
 
 
-# COMPACT_MSG = '**Post-compaction: your context was rewritten — doc() output is gone and skill texts are stale snapshots — but the kernel process survived untouched: namespace, imports, and current-notebook defaults are all still live, so do not re-run startup or re-import.** Read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now — the live SKILL.md always wins over a replayed snapshot. You will need to redo the dojo. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
 COMPACT_MSG = '**Post-compaction: your context was rewritten — doc() output is gone and skill texts are stale snapshots — but the kernel process survived untouched: namespace, imports, and current-notebook defaults are all still live, so do not re-run startup or re-import.** Read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now — the live SKILL.md always wins over a replayed snapshot. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
-# SYNTH_MSG = '**Post-compaction resume: the conversation context was rewritten and the kernel restarted with a clean namespace.** Tool documentation and skill text shown in the reconstructed history may be truncated or stale: read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now, and rebuild variables, current-notebook defaults, and monkeypatches on demand. Keep any dojo completion id from your context. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
 SYNTH_MSG = '**Post-compaction resume: the conversation context was rewritten and the kernel restarted with a clean namespace.** Tool documentation and skill text shown in the reconstructed history may be truncated or stale: read doc(f) again before using any tooling function whose docs you no longer hold. Re-invoke `persistent-python` now, and rebuild variables, current-notebook defaults, and monkeypatches on demand. The summary\'s "resume directly / pick up the last task" instruction applies only when it records work actually in flight: if the last user message was already answered and no task is open, do not re-answer or resume anything from before the compact — reply with one short line and wait for the next message.'
-# RESUME_MSG = '**Post-resume: your context is exactly as it was when the app closed — everything you can still see (doc() output, dojo completion id) remains valid — but the kernel restarted with a clean namespace (startup.py re-ran, so its imports are back).** Rebuild other session state on demand (variables, set_dlg, monkeypatches), and pass a dojo completion id from your context to dojo_start(id) before file work.'
 RESUME_MSG = '**Post-resume: your context is exactly as it was when the app closed — everything you can still see (doc() output) remains valid — but the kernel restarted with a clean namespace (startup.py re-ran, so its imports are back).** Rebuild other session state on demand (variables, set_dlg, monkeypatches).'
-# BOOTSTRAP_MSG = '**NEVER touch local files or run code before completing the bootstrap. "Touch" means any file read, edit, search, or listing (Read/Edit/Grep/Glob, Bash, `fd`/`rg`), any clikernel `py`, and any subagent that would do these on your behalf — however small it looks: one quick read counts, one search counts, "just checking one thing" counts. Bootstrap = invoke the `persistent-python` skill, run `from llmdojo.dojo import *; dojo_start()` and complete every task it prints (if a completion id from a clean round is in your context, `dojo_start(id)` replays it instantly). Work that never reaches for the filesystem — pure discussion, web research, browser automation — never hits the trigger and needs no bootstrap. Why: this project runs on a persistent Python workbench with curated pyskills, and unbootstrapped sessions reliably regress to ad-hoc Bash and one-off scripts that cost more to review than the dojo costs to run.** After bootstrapping, map each task to a pyskill from the `list_pyskills()` catalog before reaching for Bash, and read the project `README.md` and `DEV.md` before starting work.'
 BOOTSTRAP_MSG = '**NEVER touch local files or run code before completing the bootstrap. "Touch" means any file read, edit, search, or listing (Read/Edit/Grep/Glob, Bash, `fd`/`rg`), any clikernel `py`, and any subagent that would do these on your behalf — however small it looks: one quick read counts, one search counts, "just checking one thing" counts. Bootstrap = invoke the `persistent-python` skill and follow its startup steps. Work that never reaches for the filesystem — pure discussion, web research, browser automation — never hits the trigger and needs no bootstrap. Why: this project runs on a persistent Python workbench with curated pyskills, and unbootstrapped sessions reliably regress to ad-hoc Bash and one-off scripts that cost more to review than the bootstrap costs to run.** After bootstrapping, map each task to a pyskill from the `list_pyskills()` catalog before reaching for Bash, and read the project `README.md` and `DEV.md` before starting work.'
 NBDEV_MSG = '**This is an nbdev project: notebooks in `nbs/` are the source of truth, and the exported `.py` files are autogenerated. Never edit them.** Before any work on this project, including reading and reviewing, you MUST read doc(nbdev.skill). If its output is not visible in your current context, you have not read it. Read it even if you know nbdev: it documents where this house\'s style differs from your priors. Working here without it is the same class of error as editing a generated `.py`. Search notebooks by cell id (not line numbers) with the notebook-aware search pyskill. Read, search and diff the notebooks, never the generated `.py`. Edit cells through the hash-verified edit pyskill.'
 BLOCK_EDIT_MSG = 'Native file write/edit tools are blocked in this environment: make the edit via the clikernel session instead (exhash / %%exhash, pyskills.edit, pyskills.ipynb).'
@@ -155,59 +151,6 @@ def claude_air(o):
     tmp.replace(f)
 
 
-# Port of podlayer/message-drop-sentinel (MIT). Workaround for a live platform bug: mid-turn
-# `thinking -> text -> thinking -> tool_use` drops the text upstream - never rendered, never in the
-# transcript, gone from the agent's replayed context - leaving two ADJACENT thinking blocks as a scar.
-# Retire when fixed; upstream reports and the re-test recipe are in that repo's README.
-DROP_MSG_BATCH = 'Two thinking blocks in a row appeared in this turn: you probably just emitted text that the platform silently ate (it reached neither the user nor the transcript, and will not be in your future context). If the user needs it (a result or decision, not a slip you already fixed), say it again in your turn-final message; if the user may need it NOW, say it now and immediately end the turn.'
-DROP_MSG_STOP = 'Two thinking blocks in a row appeared in this turn: text you emitted mid-turn may have been silently dropped (it reached neither the user nor the transcript, and will not be in your future context). If your turn-final message already contains everything the user needs, reply with exactly "ok" and nothing else - do not re-summarize. Only if something important appears nowhere in your final message should you state that missing thing now: just the missing part, not a recap.'
-
-
-def _is_user_prompt(r):
-    "A real user prompt record: non-meta, plain text content, not a tool_result carrier"
-    if r.get('type') != 'user' or r.get('isMeta'): return False
-    c = (r.get('message') or {}).get('content')
-    if isinstance(c, str): return True
-    return isinstance(c, list) and any(b.get('type') == 'text' for b in c) and not any(b.get('type') == 'tool_result' for b in c)
-
-
-def count_scars(transcript_path):
-    "`(scars, prompt_uuid)` for the current turn: adjacent thinking-block pairs mark where a dropped text used to be"
-    recs = []
-    for line in Path(transcript_path).open():
-        try: recs.append(json.loads(line))
-        except ValueError: pass   # blank or malformed line
-    start = 0
-    for i, r in enumerate(recs):
-        if _is_user_prompt(r): start = i
-    types = [b.get('type') for r in recs[start:] if r.get('type') == 'assistant' and isinstance((r.get('message') or {}).get('content'), list)
-        for b in r['message']['content']]
-    scars = sum(1 for a, b in zip(types, types[1:]) if a == b == 'thinking')
-    return scars, (recs[start].get('uuid') if recs else None)
-
-
-def claude_drop_sentinel(o):
-    "PostToolBatch/Stop: detect thinking-sandwich message drops via the transcript scar, and prompt a pinned restate"
-    try:
-        if o.get('agent_id'): return   # a subagent's deliverable is its turn-final message: the shape the bug never touches
-        tp = o.get('transcript_path')
-        if not tp or not Path(tp).is_file(): return
-        scars, uid = count_scars(tp)
-        f = _state_file('drop-sentinel', o.get('session_id', ''))
-        try: st = json.loads(f.read_text())
-        except (OSError, ValueError): st = {}
-        done = st.get('reported', 0) if isinstance(st, dict) and st.get('prompt_uuid') == uid else 0
-        if scars <= done: return   # whichever boundary reports first claims the holes
-        tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-        tmp.write_text(json.dumps(dict(prompt_uuid=uid, reported=scars)))
-        tmp.replace(f)
-        if o['hook_event_name'] == 'PostToolBatch':
-            print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='PostToolBatch',
-                additionalContext=DROP_MSG_BATCH))))
-        else: print(json.dumps(dict(decision='block', reason=DROP_MSG_STOP)))
-    except Exception as e: print(f'[drop-sentinel] fail-open: {e!r}', file=sys.stderr)
-
-
 SLOP_WORST, SLOP_DENSITY, SLOP_WORDS, SLOP_TOP = 15, 15, 40, 8
 SLOP_MSG = "Your previous turn's final message was marked as likely unacceptable and unreadable by slopometer. It scored density {d} (flag threshold {t}), worst finding {w}. If you have not done so yet, read the docs writing pyskill and stick to it rigorously in the future.\n{rows}"
 
@@ -270,11 +213,7 @@ def codex_orientation(o):
     markers = state/'compact'
     marker = markers/f"{o['session_id']}.json"
     event = o['hook_event_name']
-    import llmdojo
-    # message = 'Context was compacted, so the clikernel documentation is no longer in context. Read the startup documentation in two separate calls: first `doc(clik,pysk,edsk)`, then `doc(dsk,exh,rgsk)`. Run `doc()` for anything else you need as you continue. Do not rerun the dojo. After running the two `doc()` calls, retry your last tool call; it should now work. Then continue your existing task if it is not complete.'
     message = 'Context was compacted, so the clikernel documentation is no longer in context. Read the startup documentation in two separate calls: first `doc(clik,pysk,edsk)`, then `doc(dsk,exh,rgsk)`. Run `doc()` for anything else you need as you continue. After running the two `doc()` calls, retry your last tool call; it should now work. Then continue your existing task if it is not complete.'
-    sample = (Path(llmdojo.__file__).parent/'dojo_data/codexdojo_sample.md').read_text()
-    message += '\n\nThe following is a sample usage session from before compaction. Treat it as reference for correct tool usage; do not repeat or score it.\n\n' + sample
     if event == 'PostCompact':
         markers.mkdir(parents=True, exist_ok=True)
         marker.write_text(json.dumps(dict(turn_id=o.get('turn_id'))))

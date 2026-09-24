@@ -55,8 +55,8 @@ The starter list is deliberately small:
 | Repo | Why it is included |
 |---|---|
 | `AnswerDotAI/fastws` | Workspace commands, kept up to date alongside the harness. The distribution name is `fastws-cli`. |
-| `AnswerDotAI/aai-coding` | Skills, prompts, and plugins linked from this checkout, plus the `aai-hook` CLI. |
-| `AnswerDotAI/llmdojo` | Kernel startup files linked in step 2, and the kernel-centric bootstrap. |
+| `AnswerDotAI/aai-coding` | Skills, prompts, plugins, and the kernel startup file linked from this checkout, plus the `aai-hook` CLI. |
+| `AnswerDotAI/llmdojo` | The `claudedojo` and `codexdojo` launchers, and `claudesub`. |
 | `AnswerDotAI/ipykernel-helper` | Startup helpers, plus the IPython and ipykernel dependencies needed to run Python kernels. |
 | `AnswerDotAI/exhash` | Hash-verified editing tools imported by startup and used by the notebook CLI workflow. |
 | `AnswerDotAI/rgapi` | Search tools imported by startup, including the notebook search CLI. |
@@ -74,10 +74,10 @@ command -v python ws-sync aai-hook clikernel-mcp pyskills-doc safecmd slopometer
 command -v aidialog-summary exhash-cell lnhashview-cell exhash-open rgapi-nbrg
 uv pip check
 pyskills-doc aai_coding.coding_patterns
-python llmdojo/claude/startup.py
+python aai-coding/kernel/startup.py
 ```
 
-Run these from the workspace root. The commands should resolve inside `<venv>/bin`, package dependencies should be consistent, and the skill documentation should render. Running the startup script should import its tooling and print the bootstrap instructions; it does not run the dojo or replace the live kernel checks in steps 7–8. Resolve missing dependencies or commands before installing hooks: another environment on PATH can otherwise hide an incomplete setup.
+Run these from the workspace root. The commands should resolve inside `<venv>/bin`, package dependencies should be consistent, and the skill documentation should render. Running the startup script should import its tooling and print the bootstrap instructions. It does not replace the live kernel checks in steps 7–8. Resolve missing dependencies or commands before installing hooks: another environment on PATH can otherwise hide an incomplete setup.
 
 In each new shell, activate the workspace environment before launching the harness. Ask before adding `source <venv>/bin/activate` to the user's shell startup file; global auto-activation is convenient but not required. GUI-launched harnesses may not inherit the shell's PATH, so use absolute executable paths in configuration and ensure hook subprocesses can find the workspace tools too.
 
@@ -129,9 +129,9 @@ Check: deferred to step 7, where a kernel round trip must work.
 
 Settle first: whether a server named `clikernel` already exists.
 
-## 2. Kernel startup files
+## 2. Kernel startup file
 
-Outcome: `~/.config/clikernel/startup.py` and `startup.txt` are symlinks into `<workspace>/llmdojo/claude/`.
+Outcome: `~/.config/clikernel/startup.py` is a symlink to `<workspace>/aai-coding/kernel/startup.py`. Remove any older `startup.py` and `startup.txt` symlinks into `llmdojo/claude/`.
 
 Check: deferred to step 7; the startup notice printing is the check.
 
@@ -139,7 +139,7 @@ Settle first: existing non-symlink files at those paths.
 
 ## 3. Hooks
 
-Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse matcher `Write|Edit|NotebookEdit` runs `aai-hook claude-block-native-edit`; PreToolUse matcher `Bash` runs `aai-hook claude-bash-guard`; UserPromptSubmit runs `aai-hook claude-prompt-submit`; SessionStart runs `aai-hook claude-session-start`; UserPromptSubmit, MessageDisplay, and PostToolBatch each also run `aai-hook claude-air` (the come-up-for-air nudge: after 8 tool-call rounds with no text response of 100+ chars, it injects a reminder to surface and reassess, repeating every 5 further rounds). The air nudge is Claude-only: codex has no message-level hook event, so it cannot observe the "text happened" reset condition - the codex-shaped substitute is a sentence in AGENTS.md; revisit if codex grows one. PostToolBatch and Stop also each run `aai-hook claude-drop-sentinel`, a Python port of podlayer/message-drop-sentinel (MIT): it detects the thinking-sandwich message-drop platform bug from the transcript scar (two adjacent thinking blocks) and tells the agent its text was probably eaten: restate it in the turn-final message, or say it now and end the turn if the user needs it immediately. Retire the sentinel entries when the upstream bug is fixed (re-test recipe and issue links in that repo's README). UserPromptSubmit and MessageDisplay also each run `aai-hook claude-slop`: MessageDisplay buffers each displayed assistant message, and at the next prompt the hook scores the previous turn's final message with the `slopometer` CLI, injecting the flagged patterns as context. Bare `aai-hook` resolves because the user's shell profile puts the workspace venv on PATH; if it does not, use the absolute venv path.
+Outcome, Claude Code, in `~/.claude/settings.json` under `hooks`: PreToolUse matcher `Write|Edit|NotebookEdit` runs `aai-hook claude-block-native-edit`; PreToolUse matcher `Bash` runs `aai-hook claude-bash-guard`; UserPromptSubmit runs `aai-hook claude-prompt-submit`; SessionStart runs `aai-hook claude-session-start`; UserPromptSubmit, MessageDisplay, and PostToolBatch each also run `aai-hook claude-air` (the come-up-for-air nudge: after 8 tool-call rounds with no text response of 100+ chars, it injects a reminder to surface and reassess, repeating every 5 further rounds). The air nudge is Claude-only: codex has no message-level hook event, so it cannot observe the "text happened" reset condition - the codex-shaped substitute is a sentence in AGENTS.md; revisit if codex grows one. UserPromptSubmit and MessageDisplay also each run `aai-hook claude-slop`: MessageDisplay buffers each displayed assistant message, and at the next prompt the hook scores the previous turn's final message with the `slopometer` CLI, injecting the flagged patterns as context. Bare `aai-hook` resolves because the user's shell profile puts the workspace venv on PATH; if it does not, use the absolute venv path.
 
 Outcome, kernel-centric codex, in `~/.codex/hooks.json`: PostCompact, SessionStart with matcher `compact`, and PreToolUse with matcher `mcp__clikernel__py` each run `<venv>/bin/aai-hook codex-orientation`; UserPromptSubmit runs `<venv>/bin/aai-hook codex-prompt-submit`. Hybrid codex does not install `codex-orientation`, since it does not run the dojo; it may still install `codex-prompt-submit`. codex asks the user to trust hooks on the first start after any `hooks.json` change; tell them to expect that prompt.
 

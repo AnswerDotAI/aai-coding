@@ -3,7 +3,7 @@ import json
 import pytest
 from shutil import which
 
-from aai_coding.harness import claude_air, claude_drop_sentinel, claude_slop, synthetic_resume
+from aai_coding.harness import claude_air, claude_slop, synthetic_resume
 
 
 def test_synthetic_resume(tmp_path):
@@ -42,44 +42,6 @@ def test_claude_air(tmp_path, monkeypatch, capsys):
     claude_air(dict(hook_event_name='UserPromptSubmit', session_id='s1', prompt='hi'))
     batch()
     assert out() == ''                                      # new prompt reset
-
-
-def _transcript(path, blocks_per_msg, prompt_uuid='u1'):
-    "Write a transcript: one user prompt, then one assistant record per list of block types"
-    recs = [dict(type='user', uuid=prompt_uuid, message=dict(content='do the thing'))]
-    recs += [dict(type='assistant', message=dict(content=[dict(type=t) for t in bs])) for bs in blocks_per_msg]
-    path.write_text('\n'.join(json.dumps(r) for r in recs))
-
-
-def test_drop_sentinel(tmp_path, monkeypatch, capsys):
-    "Report new scars once across batch and stop events, resetting the count for each turn"
-    monkeypatch.setenv('LLMDOJO_STATE_DIR', str(tmp_path))
-    tp = tmp_path/'t.jsonl'
-    def fire(ev='PostToolBatch', **kw): claude_drop_sentinel(dict(hook_event_name=ev, session_id='s1', transcript_path=str(tp), **kw))
-    def out(): return capsys.readouterr().out
-    _transcript(tp, [['thinking', 'text', 'tool_use'], ['thinking', 'tool_use']])
-    fire()
-    assert out() == ''                                      # clean turn: no adjacent thinking
-    _transcript(tp, [['thinking', 'thinking', 'tool_use']])
-    fire()
-    r = json.loads(out())['hookSpecificOutput']
-    assert r['hookEventName'] == 'PostToolBatch' and 'thinking blocks in a row' in r['additionalContext'] and 'end the turn' in r['additionalContext']
-    fire()
-    assert out() == ''                                      # already claimed: silent
-    fire('Stop')
-    assert out() == ''                                      # backstop silent after the batch boundary reported
-    _transcript(tp, [['thinking', 'thinking', 'tool_use'], ['thinking', 'thinking', 'tool_use']])
-    fire()
-    assert 'thinking blocks in a row' in json.loads(out())['hookSpecificOutput']['additionalContext']   # only the fresh hole
-    _transcript(tp, [['thinking', 'thinking', 'tool_use']]*3)
-    fire('Stop')
-    r = json.loads(out())
-    assert r['decision'] == 'block' and 'thinking blocks in a row' in r['reason'] and 'state that missing thing now' in r['reason']
-    fire('Stop')
-    assert out() == ''                                      # blocks once, not forever
-    _transcript(tp, [['thinking', 'thinking', 'tool_use']], prompt_uuid='u2')
-    fire()
-    assert 'thinking blocks in a row' in json.loads(out())['hookSpecificOutput']['additionalContext']   # new turn: count restarts
 
 
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
