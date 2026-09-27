@@ -15,7 +15,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
 ]
 
-dependencies = ["pypdfium2>=5", "pyvips[binary]>=3"]
+dependencies = ["pypdfium2>=5", "pyvips[binary]>=3", "python-fastllm>=0.0.63"]
 
 [project.entry-points.pyskills]
 coding_patterns = "aai_coding.coding_patterns"

@@ -51,7 +51,7 @@ The repository contains:
 - `write_prose` covers anti-slop rules for narrative prose.
 - `write_docs` covers plain reference prose for docstrings, READMEs, and PRs.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.
-- `vision` describes and transcribes images and PDFs in isolated agents. `look` answers questions; `transcribe` saves Markdown.
+- `vision` describes and transcribes images and PDFs through fastllm, without tools. `look` answers questions; `transcribe` saves Markdown and returns usage, timing and cost.
 - `harness` implements both harnesses' hooks through the `aai-hook` CLI. It is not a pyskill.
 
 ### Prompts
