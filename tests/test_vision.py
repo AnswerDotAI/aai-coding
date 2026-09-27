@@ -1,6 +1,6 @@
-import pytest, pypdfium2 as pdfium
+import pytest, pypdfium2 as pdfium, pyvips
 
-from aai_coding.looker import look, pdf2pngs
+from aai_coding.vision import look, pdf2pngs, _img2png
 
 
 def _mk_pdf(path, npages=2):
@@ -25,6 +25,19 @@ def test_pdf2pngs(tmp_path):
     assert [p.name for p in out] == ['two-1.png', 'two-2.png']
     for p in out: assert p.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n'
     assert pdf2pngs(pdf, tmp_path, scale=1)[0].stat().st_size < out[0].stat().st_size
+    selected = pdf2pngs(pdf, tmp_path/'selected', pages=[2])
+    assert [p.name for p in selected] == ['two-2.png']
+    assert selected[0].read_bytes() == out[1].read_bytes()
+    with pytest.raises(ValueError): pdf2pngs(pdf, tmp_path, pages=[0])
+
+
+def test_image_resolution(tmp_path):
+    source = tmp_path/'image.png'
+    pyvips.Image.black(2000, 2000, bands=3).write_to_file(source)
+    for limit, size in [(None, 2000), (1e6, 1000)]:
+        dest = _img2png(source, tmp_path/f'{size}.png', max_pixels=limit)
+        img = pyvips.Image.new_from_file(dest)
+        assert (img.width, img.height) == (size, size)
 
 
 @pytest.mark.slow
