@@ -22,7 +22,7 @@ Do not write like that. Nothing in it is false, and a blog post could get away w
 
 The numbers in brackets mark examples of the tells listed below. Where a number appears in both passages, the second passage shows the problem and the first passage shows the fix.
 
-1. Splices. Clauses joined with em dashes, semicolons, colons, ", and", or ", which". Write one idea in each sentence, then end the sentence. Narrative prose can use an occasional join. Reference prose should not.
+1. Splices. Clauses joined with em dashes, semicolons, colons, ", and", or ", which". Write one idea per sentence. Splitting at the join is not enough. Narrative prose can use an occasional join. Reference prose should not.
 2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Also say what the system never does. Readers rely on that as much as on what it does.
 3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
 4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. STE calls this "one meaning per term".
