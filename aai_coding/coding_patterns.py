@@ -89,7 +89,9 @@ myproject/
 
 In nbdev projects (most projects here) there are no test cells: tests ARE the documentation, changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added (see `doc(nbdev.skill)`). Coverage is never a goal.
 
-All code has writing, maintenance, and readability costs, and tests most of all: every test must be kept passing forever, gets read by every future contributor, and must be revised whenever the behavior it pins changes. So never write a test as a reflex. You may ONLY add a test when:
+Only add tests to resolve meaningful uncertainty or check substantive logic. Many changes should therefore have no new or changed tests.
+
+A test is justified when:
 
 - it documents an idea, or
 - the logic is intricate enough that you had to think carefully to get it right (edge cases, parsing, arithmetic, tricky conditionals: the places a future change could silently break it), or
@@ -97,7 +99,7 @@ All code has writing, maintenance, and readability costs, and tests most of all:
 
 Wiring and orchestration get zero tests: re-exports, delegations, one-line glue, functions that only sequence calls to other tools. A test there only asserts that Python works, and pins down internals we may want to change. Strong tell: if a test needs recording fakes or mock collaborators to reach the code, it's testing a transcript of the implementation, not logic. Extract the logic into a small pure function and test that, or don't test at all.
 
-Pytest is for checks that don't fit as a readable notebook lesson and are too complex or distracting even for a `#|hide` cell; there, ALWAYS work red-green: write the test FIRST, run it to see it fail, THEN make the change, then run it again to see it pass.
+Pytest is for checks that don't fit as a readable notebook lesson and are too complex or distracting even for a `#|hide` cell. If a new test is needed (which it often doesn't, if it's trivial logic), use red-green so you know the test works. If the test is longer than the implementation changes, think carefully whether the test should be removed, simplified, or merged into an existing test.
 
 - Prefer as few tests as possible: a single test that walks through many checks is more readable and faster than many small ones
 - A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative (each one both documents what we needed to know and keeps guarding it), so they stay as example cells. In a pytest file, an exploratory check survives only if it meets one of the criteria above
