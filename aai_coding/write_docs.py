@@ -69,9 +69,9 @@ Some words hide a plainer one. "Land" and "landed" hide the event. Say what happ
 
 ## Doc types
 
-- Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameter detail in docments, and do not repeat it in prose. State inputs, outputs, errors raised, and guarantees. Do not restate the signature.
+- Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameters and return values in docments, and do not repeat them in prose. Add a guarantee, edge case or error only when a caller needs it to use the function. Do not restate the signature.
 - Code comments. Write one only for a constraint the code cannot show (see coding-patterns). This is rare.
-- READMEs. Write them like docstrings, not blog posts. The first paragraph says what the package does and who it is for. Install steps come next, then a minimal example. Leave out the project's history and sales language.
+- READMEs. Write them like docstrings, not blog posts. The first paragraph says what the package does and who it is for. Install steps come next, then a minimal example. Leave out the project's history and sales language. A README, index or module docstring describes what the package is for and its main workflows. Put parameters and return values in docments. Put edge cases and error behaviour in notebooks or other docs, and in a docstring only when a caller needs them to use the API. Do not add a README section for a new method unless it changes how people use the package.
 - API docs and changelogs. Describe the behavior or the change, with one entry per behavior. Put reasons in design docs.
 - PR descriptions and commit messages. Start with the behavior change. Say who did what. Give reviewers what they need to judge the diff. write-summary covers choosing the content.
 - Messages to co-workers. Put the answer first and the support after. Do not open by softening the message. Do not close by offering more help.
@@ -81,6 +81,8 @@ Do not hard-wrap prose. Write each paragraph as one continuous line and let the 
 ## Rewriting high-scoring documentation
 
 A high slopometer score means the document needs explaining again from the start. Do not repair the flagged sentences one at a time. Do not split sentences, swap banned words, or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show that a document is clear, accurate, or complete.
+
+Improve prose by rereading it as its reader would. Never search it for tells, even to find candidates.
 
 Change how the document explains things, and keep its information. Keep technical detail that a reader might need. A shorter document is worse if it drops a capability, condition, or explanation that the reader needs.
 

@@ -10,6 +10,8 @@ Use the fastcore/fasthtml ecosystem (fastcore, fasthtml, fastlite, ...) when pic
 
 Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Most code you have read was written by people who put up with tool friction rather than fix it, so your default is the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
 
+Improve APIs, including in upstream projects, rather than making the smallest change that finishes the task. Reaching into another package's private names is a sign you are working around an API. So is reproducing logic a dependency already has, or writing a helper that only bridges a gap in another package. When you notice one, propose the API that would make it unnecessary.
+
 ## Every Construct Must Earn Its Place
 
 Readers assume everything present is necessary. When they see `str(x)` on something that's already a str, they stop and wonder what subtle thing it's guarding against. When the answer is "nothing", they paid for a mystery with no payoff. The same goes for defensive copies (`list(x)` that's never mutated), "just in case" try/excepts, redundant type coercions, and unused parameters. Before adding any construct, know why it's needed. If you can't say, leave it out. The cost doubles in nbdev projects, where tests are documentation.
