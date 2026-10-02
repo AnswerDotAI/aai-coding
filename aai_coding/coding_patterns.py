@@ -2,13 +2,13 @@ r'''Jeremy's coding style and conventions: read before writing, reviewing, or as
 
 # Coding Patterns
 
-Based on the fastai style guide and Jeremy's 3 decades of coding experience, and used across all of his projects, not only fastai ones.
+These conventions come from the fastai style guide and Jeremy's three decades of coding experience. They apply across all of his projects, not only fastai ones.
 
 Use the fastcore/fasthtml ecosystem (fastcore, fasthtml, fastlite, ...) when picking libraries. These are Jeremy's own, editable-installed as siblings, and preferred over heavier third-party alternatives.
 
 ## Improving Tooling Pays Off Exponentially
 
-Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Most code you have read was written by people who put up with tool friction rather than fix it, so your default is the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
+Making our tools marvellous matters more than the task in hand. A finished task helps once. A better tool helps every later task, every later session, and the whole team. Ergonomics count as much as capability. Most code you have read was written by people who put up with tool friction rather than fix it. Your default is therefore the workaround. Here the tools are ours and one edit away. When something grates, fix it or raise it. Never quietly work around it.
 
 Improve APIs, including in upstream projects, rather than making the smallest change that finishes the task. Reaching into another package's private names is a sign you are working around an API. So is reproducing logic a dependency already has, or writing a helper that only bridges a gap in another package. When you notice one, propose the API that would make it unnecessary.
 
@@ -18,12 +18,12 @@ Readers assume everything present is necessary. When they see `str(x)` on someth
 
 Knowing why a construct is needed does not mean waiting for someone to ask for it. An open source user who finds a gap concludes the library cannot do it and moves on. Judge a library feature by whether the design calls for it and users would expect it.
 
-The same applies to prose in code: almost never add comments (only when the code is truly unclear), and don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
-Only write a code comment to state a constraint the code itself can't show, never to say where it came from, what the next line does, or why your change is correct. That's you talking to the reviewer, not the next reader, and it's noise the moment the PR merges.
+The same applies to prose in code. Add comments almost never: only when the code is truly unclear. Don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
+Write a code comment only to state a constraint the code itself can't show. Never use one to say where the code came from, what the next line does, or why your change is correct. That comment is you talking to the reviewer, not the next reader. It becomes noise the moment the PR merges.
 
 ## One Home for Each Fact
 
-Every fact, constant and piece of logic lives in exactly one place. When you see duplication, remove all of it in one pass, including in templates, tests and docs. Never fix the copies one at a time, and never leave a duplicate you have noticed.
+Every fact, constant and piece of logic lives in exactly one place. When you see duplication, remove all of it in one pass, including in templates, tests and docs. Never fix the copies one at a time. Never leave a duplicate you have noticed.
 
 ## Trust Tool Defaults
 
@@ -37,7 +37,7 @@ Our tools have carefully chosen defaults that give correct, readable output. Use
 
 ## Docments
 
-Docments are trailing comments on function parameters that fastcore uses for documentation. A signature with docments (or any long signature) uses this layout: `(` stays on the def line, each parameter on its own line indented 4, and `):` alone on its own line at def indent:
+Docments are trailing comments on function parameters that fastcore uses for documentation. A signature with docments, or any long signature, uses this layout. The `(` stays on the def line. Each parameter goes on its own line, indented 4. The `):` sits alone on its own line, at the def's indent:
 
 ```python
 @delegates(start_kernel)
@@ -54,11 +54,11 @@ When `**kwargs` passes through to a known callee, decorate with `@delegates(call
 
 ## Raw Strings
 
-Write any non-trivial string literal as a raw string (`r"..."` / `r"""..."""`): regexes, text you pass to tools, code or markup inside strings, anything multi-line or containing backslashes. In plain strings a stray `\n` or `\d` either errors or silently corrupts, and each miss costs a round trip to diagnose plus another to fix. Raw strings are WYSIWYG, so the first attempt matches what you meant. The `r` costs nothing when no escapes are present, so make it the default, not the exception.
+Write any non-trivial string literal as a raw string (`r"..."` / `r"""..."""`). That covers regexes, text you pass to tools, code or markup inside strings, and anything multi-line or containing backslashes. In a plain string, a stray `\n` or `\d` either errors or silently corrupts the text. Each miss costs a round trip to diagnose plus another to fix. Raw strings are WYSIWYG: the first attempt matches what you meant. The `r` costs nothing when no escapes are present. Make it the default, not the exception.
 
 ## Style Checker (chkstyle)
 
-Run `chkstyle {path}` to check fastai style (only include path if needed). But use judgment. chkstyle is a hint, not gospel.
+Run `chkstyle {path}` to check fastai style. Include the path only if needed. Use judgment: chkstyle is a hint, not gospel.
 In nbdev projects, point it at the notebooks (`chkstyle nbs/00_core.ipynb`), not the exported `.py`. The notebook run also checks example and test cells, which never reach the module.
 
 ## Config Patterns
@@ -93,7 +93,7 @@ myproject/
 
 ## Testing
 
-In nbdev projects (most projects here) there are no test cells: tests ARE the documentation, changes revise lesson cells, and the red-green check applies only to an assertion you actually revised or added (see `doc(nbdev.skill)`). Coverage is never a goal.
+Most projects here are nbdev projects. They have no test cells: their tests ARE the documentation, and a change revises lesson cells instead. The red-green check applies only to an assertion you actually revised or added (see `doc(nbdev.skill)`). Coverage is never a goal.
 
 Only add tests to resolve meaningful uncertainty or check substantive logic. Many changes should therefore have no new or changed tests.
 
@@ -101,14 +101,14 @@ A test is justified when:
 
 - it documents an idea, or
 - the logic is intricate enough that you had to think carefully to get it right (edge cases, parsing, arithmetic, tricky conditionals: the places a future change could silently break it), or
-- the code assumes something about an external system (a file format, an API's response shape, another tool's behavior) that is somewhat likely to change one day, and we want to hear about it when the assumption is violated. These must exercise the real thing (a mock merely re-states our assumption), so they're usually the slow-marked tests
+- the code assumes something about an external system, such as a file format, an API's response shape or another tool's behavior. The assumption is somewhat likely to break one day, and we want to hear about it when it does. These tests must exercise the real thing, because a mock merely restates our assumption. That usually makes them the slow-marked tests
 
-Wiring and orchestration get zero tests: re-exports, delegations, one-line glue, functions that only sequence calls to other tools. A test there only asserts that Python works, and pins down internals we may want to change. Strong tell: if a test needs recording fakes or mock collaborators to reach the code, it's testing a transcript of the implementation, not logic. Extract the logic into a small pure function and test that, or don't test at all.
+Wiring and orchestration get zero tests: re-exports, delegations, one-line glue, functions that only sequence calls to other tools. A test there only asserts that Python works, and pins down internals we may want to change. A test that needs recording fakes or mock collaborators to reach the code is a strong tell. It tests a transcript of the implementation, not logic. Extract the logic into a small pure function and test that, or don't test at all.
 
-Pytest is for checks that don't fit as a readable notebook lesson and are too complex or distracting even for a `#|hide` cell. If a new test is needed (which it often doesn't, if it's trivial logic), use red-green so you know the test works. If the test is longer than the implementation changes, think carefully whether the test should be removed, simplified, or merged into an existing test.
+Pytest is for checks that don't fit as a readable notebook lesson and are too complex or distracting even for a `#|hide` cell. Many changes need no new test, especially when the logic is trivial. When a change does need one, use red-green so you know the test works. If the test is longer than the implementation changes, think carefully whether the test should be removed, simplified, or merged into an existing test.
 
 - Prefer as few tests as possible: a single test that walks through many checks is more readable and faster than many small ones
-- A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative (each one both documents what we needed to know and keeps guarding it), so they stay as example cells. In a pytest file, an exploratory check survives only if it meets one of the criteria above
+- A check worth keeping goes in a real test file or notebook cell, never left as an ad-hoc command. In a notebook, the checks made while exploring often ARE the narrative. Each one documents what we needed to know and keeps guarding it, and it stays as an example cell. In a pytest file, an exploratory check survives only if it meets one of the criteria above
 - Assert the logic, not incidentals: check what the behavior guarantees, never byte-exact renderings, exact reprs, or field order. A test that compares a whole output string locks in formatting decisions that were never the point (e.g. assert the content appears in a markdown display block, not the display's exact text). NEVER use tests to "lock in" behavior, unless that exact behavior really is a key part of the logic or contract that must always be true forever
 - Use `pytest -q` (not `python -m pytest`, which prompts for permission). nbdev projects use `nbdev-test` on the changed notebook. Ask first only if a run (including `eval: false` cells) may take >~2 mins or reach authenticated external services.
 - Don't run slow-marked tests until finishing a session, or after a change likely to directly impact them
@@ -139,7 +139,7 @@ from pathlib import Path
 from fastcore.utils import *
 ```
 
-`from fastcore.utils import *` already provides `os`, `Path`, and much of the stdlib, so don't re-import those alongside it.
+`from fastcore.utils import *` already provides `os`, `Path`, and much of the stdlib. Don't re-import those alongside it.
 '''
 
 __all__ = []
