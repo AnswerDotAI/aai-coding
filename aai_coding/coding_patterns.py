@@ -21,6 +21,10 @@ Knowing why a construct is needed does not mean waiting for someone to ask for i
 The same applies to prose in code: almost never add comments (only when the code is truly unclear), and don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
 Only write a code comment to state a constraint the code itself can't show, never to say where it came from, what the next line does, or why your change is correct. That's you talking to the reviewer, not the next reader, and it's noise the moment the PR merges.
 
+## One Home for Each Fact
+
+Every fact, constant and piece of logic lives in exactly one place. When you see duplication, remove all of it in one pass, including in templates, tests and docs. Never fix the copies one at a time, and never leave a duplicate you have noticed.
+
 ## Trust Tool Defaults
 
 Our tools have carefully chosen defaults that give correct, readable output. Use the defaults unless the task has a specific requirement they can't meet. This applies to CLI flags, Python arguments, and tool-call options. Don't override from habit or an assumed improvement. Report noisy or wrong output as a tool bug.
