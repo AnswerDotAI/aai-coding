@@ -28,7 +28,7 @@ Here is the same briefing, summarized the way summaries usually fail:
 
 Do NOT summarize like that. Its prose is mostly clean, with no banned words and short sentences. Nothing in it would trip write-docs. A summary can pass every sentence-level rule and still fail completely. This one fails because of what it chose to say.
 
-The numbers below refer to the [bracketed] markers in both passages. Where a number appears in each, the two markers show the failing and the working version of the same thing. Tell 7 has no marker in the minutes because its working version is an absence. The real minutes give the methodology chatter no space at all.
+The numbers below refer to the [bracketed] markers in both passages. Where a number appears in each, the two markers show the failing and the working version of the same thing. Tell 7 has no marker in the good sample, because the fix is to leave something out. The real minutes never mention the twenty-minute methodology discussion.
 
 1. Walking the source: the summary follows the source's own order, turn by turn through a conversation, file by file through a diff, section by section through a paper. Order by subject instead. A spine of subjects is fine. The minutes have one, since "turned first to" follows the briefing's agenda. What fails is the clock. "The briefing opened with" and "toward the end of the briefing" record when things were said. The reader never needed to know that.
 

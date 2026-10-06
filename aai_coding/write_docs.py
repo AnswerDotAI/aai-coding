@@ -8,7 +8,7 @@ Reference prose is the writing that goes with code. It covers docstrings, code c
 
 Here is a passage from a design doc, written in this style:
 
-> `GatewayKernel` ties the three lower layers together. The ready-wait runs once per kernel, in `start`.[1][3] `watch` polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status.[1] Three missed heartbeats[4] mark the kernel `unresponsive` in its model, with the next echo clearing the mark.
+> `GatewayKernel` ties the three lower layers together. The ready-wait runs once per kernel, in `start`.[1][3] `watch` polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status.[1] After three missed heartbeats,[4] the gateway marks the kernel `unresponsive` in its model. It clears the mark when the next echo arrives.
 >
 > The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
@@ -20,63 +20,59 @@ Here is the same passage before editing:
 
 Do not write like that. Nothing in it is false, and a blog post could get away with it. It is hard to use as reference. Each sentence carries more than one fact. An aside holds the most important rule. The final state gets a flourish where its name should be. The first sentence announces the section. A question delays a fact the reader came for.
 
-The numbers in brackets mark examples of the tells listed below. Where a number appears in both passages, the second passage shows the problem and the first passage shows the fix.
+{markers} The passages are too short to show tells 7-12, 14, 17, 22 and 24-26.
 
-1. Splices. Clauses joined with em dashes, semicolons, colons, ", and", or ", which". Write one idea per sentence. Splitting at the join is not enough. Narrative prose can use an occasional join. Reference prose should not.
-2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Also say what the system never does. Readers rely on that as much as on what it does.
+1. {splices} Write one idea per sentence. Narrative prose can use an occasional join. Reference prose should not.
+2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Say what the system never does when a reader would be surprised by it.
 3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
 4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. STE calls this "one meaning per term".
 5. Flourish over identifier. "A fresh welcome-backed ready kernel" when the real status is `starting`. Use the actual identifier, state, value, or number. The reader will search for it, test against it, and see it in logs.
-6. Consequence glue. A clause joined with ", so". The consequence often repeats the fact, adds detail the reader does not need (", so the channel set is rebuilt"), or does not follow. Delete it. If the consequence matters, give it its own sentence.
-7. Hedging. "may", "might", "potentially", "in some cases", "should generally". Say what the code does. If behavior is unspecified or untested, say that directly, for example "behavior with concurrent writers is undefined" or "not benchmarked".
-8. Noting fillers. "note that", "it's worth noting", "importantly", "keep in mind". If the fact matters, state it early and plainly. Delete the filler.
-9. Restatement. A heading repeated by the first line under it. A lead sentence that summarizes its paragraph. A closing line that summarizes its section. State each fact once, where it fits best. A summary is worth having only for a whole document. A README's first paragraph is one.
+6. {consequence_glue}
+7. {hedging}
+8. {noting_fillers}
+9. {restatement}
 10. Justification rider. A fact with a benefit attached, such as "kind-sorted so a collector stays legal wherever it came from" or "parses bools so flag values test correctly". The extra clause argues for the fact. Reference prose says what the code does. Reasons belong in design docs and narrative prose.
-11. Decorative verbs. A verb chosen for color when a plain verb names the event. Ids "ride" in rows. A note "lands" in the output. Ask whether you would say the verb at a whiteboard. An artifact can be the subject when it really acts, as in "`watch` polls the process". Its verb must still be the plain one.
-12. Audience misjudged. This goes wrong in two ways. One is explaining what every reader of the doc already knows, such as "the README documents the package". The other is using a term you coined, such as "the carrier", without defining it. Decide who the readers are. Cut what they know. Define your own terms at first use. Established terms from outside can stay, because readers can look them up. They cannot look up a term you coined.
-13. Throat-clearing. An opener that announces the document, such as "This section describes...", "The purpose of this document is...", or "This README covers...". Delete it. The first sentence states the first fact.
-14. Today's-world opener. "In today's fast-moving AI landscape...". This is the README form of throat-clearing, with marketing added. Start with what the package does.
-15. Announce-then-deliver. A label and a colon where a sentence should be, such as "The core mechanism: `watch`." or "The fix: retry on timeout." Write a full sentence, such as "Retrying on timeout fixes it."
-16. Not-X-but-Y. "isn't just a poller - it's the liveness authority", "not X, but Y". Say directly what the thing is. Rewrite the sentence every time.
-17. Teaser pivot. "but here's where it gets interesting", "the real story is". These hold back a fact to build suspense. State the facts in order.
+11. {decorative_verbs}
+12. Audience misjudged. Writing for the wrong reader takes two forms, explaining the known and undefined jargon. {audience_judgment}
+    - {explaining_known}
+    - {undefined_jargon}
+13. {throat_clearing}
+14. {todays_world} In a README, the subject is what the package does.
+15. {announce_deliver}
+16. {not_x_but_y}
+17. {teaser_pivot}
 18. Rhetorical questions. "So what does `restart` actually do?". Do not ask the reader questions, in headings or in prose. Write the statement that the question delays. GDS bans FAQ pages for the same reason.
-19. Filler transitions. "Furthermore", "Moreover", "Additionally", "In conclusion", "When it comes to". Use "and" or "also", or start with the subject.
-20. Forced symmetry. Three parallel adjectives, as in "fresh ports, fresh channels, and a fresh interpreter". Three pros and three cons. Sections padded to the same length. List items forced into one grammatical pattern. Let the material decide the count. Check any list of exactly three.
-21. Appraisal preamble. A clause that rates what comes next, such as "the distinction is worth being precise about", "the key point is", or "crucially". State the fact without it.
-22. Artifact-as-agent. "this PR introduces", "the change enables", "the design lets you". A person did the work. Name that person, as in "I added retry logic". Or state the new behavior, as in "`connect` now retries".
-23. Recipient-as-subject. The thing that benefits becomes the subject, with "gets", "gains", or "receives". The doer moves into a "via" or "through" phrase, as in "the kernel gains fresh ports via the new process". Name the doer and the action. Or state the result, as in "the new process listens on fresh ports".
-24. Decoration. Emoji, decorative unicode, and ornamental symbols. Use ASCII. Write "->", not an arrow glyph. Write words, not emoji.
-25. Over-structuring. Headers, tables, or bullets added to a document that fits on a screen. Headers are for navigation, and a short document needs none. Bullets hold parallel facts. Do not chop prose into bullets.
-26. False depth. Restating the problem in fancier words. Listing obvious considerations. Concluding "it depends". Give specifics, such as identifiers, numbers, edge cases, and failure modes.
+19. {filler_transitions}
+20. {forced_symmetry}
+21. {appraisal_preamble}
+22. {artifact_agent}
+23. {recipient_subject}
+24. {decoration}
+25. {over_structuring}
+26. {false_depth}
 
-The passages are too short to show tells 7-12, 14, 17, 22, and 24-26. When you add a tell, give it the next number. slopometer binds its rules to these numbers. Add a marked example to the second passage if a short sample can show the new tell.
+slopometer binds its rules to the tell numbers above. {new_tells}
 
 Address the reader as "you" and use the imperative. Write "Run the tests", not "The tests should be run". Prefer active voice. A passive sentence often hides who does the action, and the reader needs to know that.
 
 ## Banned words
 
-Use the plainest word that is still correct:
-
-- use, not "utilize" or "leverage"
-- improve, not "enhance" or "optimize" (unless something is literally being optimized)
-- complete, not "comprehensive"
-- strong, not "robust"
-- help, not "facilitate"
+{plain_words}
 
 Do not use these words: seamless, streamline, empower, foster, pivotal, "a testament to", realm, landscape (metaphorical), navigate (metaphorical), delve, myriad, plethora, paradigm, synergy, holistic, catalyze, juxtapose, tapestry, embark, endeavor, encompass, multifaceted, elucidate, nuanced (as filler), minted (metaphorical).
 
-Some words hide a plainer one. "Land" and "landed" hide the event. Say what happened, such as merged, committed, released, or appears. Replace a metaphorical "shape" or "shaped" with structure, format, or the actual event. Write "rule" or "guarantee" when that is what "invariant" means. Compounds ending in "-bearing", such as load-bearing or text-bearing, have plainer forms.
+{hidden_words}
 
 ## Doc types
 
 - Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameters and return values in docments, and do not repeat them in prose. Add a guarantee, edge case or error only when a caller needs it to use the function. Do not restate the signature.
-- Code comments. Write one only for a constraint the code cannot show (see coding-patterns). This is rare.
+- Code comments. Write one only to state something the code cannot show, next to the code it concerns (see coding-patterns). This is rare.
 - READMEs. Write them like docstrings, not blog posts. The first paragraph says what the package does and who it is for. Install steps come next, then a minimal example. Leave out the project's history and sales language. A README, index or module docstring describes what the package is for and its main workflows. Put parameters and return values in docments. Put edge cases and error behaviour in notebooks or other docs, and in a docstring only when a caller needs them to use the API. Do not add a README section for a new method unless it changes how people use the package.
 - API docs and changelogs. Describe the behavior or the change, with one entry per behavior. Put reasons in design docs.
 - PR descriptions and commit messages. Start with the behavior change. Say who did what. Give reviewers what they need to judge the diff. write-summary covers choosing the content.
 - Messages to co-workers. Put the answer first and the support after. Do not open by softening the message. Do not close by offering more help.
 
-Do not hard-wrap prose. Write each paragraph as one continuous line and let the display soft-wrap it. Put code symbols in backticks. This covers function names, parameters, file paths, module and package names, and literal syntax.
+{formatting}
 
 ## Rewriting high-scoring documentation
 
@@ -103,16 +99,12 @@ When the user authorizes delegated rewrites, give each agent one bounded documen
 This module also provides `check_docs`. It sends text and these rules to a separate model for review. Do not run it unless the user asks for a docs check.
 '''
 
+from ._writing import fill, charter
+__doc__ = fill(__doc__)
+
 __all__ = ['check_docs']
 
-_CHARTER = """You are a reference-prose checker called as a subagent: your output is parsed by another model, and no human reads it. Praise, hedging, overall verdicts, and commentary on the text's quality therefore serve nobody; emit flags or "Clean" and nothing else. The user message contains prose-style rules, an AUDIENCE line naming the intended readers, then the text to review under "TEXT UNDER REVIEW".
-- Sweep per tell: for each numbered tell, scan the ENTIRE text for it before moving to the next. Do not substitute one general pass.
-- Report each candidate violation as: the tell name and number, and the offending span quoted verbatim. Also flag banned words, em dashes, and hard-wrapped paragraphs.
-- Give extra attention to tell 11: question every verb whose subject is an artifact.
-- Judge tell 12 against the stated audience.
-- Err on the side of flagging: the caller applies judgment to your flags, so a missed tell costs more than a false positive. When a span merely resembles a tell, flag it and append "borderline".
-- Where the fix is not obvious from the flag itself, append a suggested replacement for the quoted span; never rewrite beyond that.
-- "Clean" is a valid answer when nothing matches. Never append a verdict to it, and never summarize or soften a flag list."""
+_CHARTER = charter('reference-prose', '11 and 22', 'tell 12')
 
 
 async def check_docs(

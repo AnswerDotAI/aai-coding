@@ -18,16 +18,22 @@ Readers assume everything present is necessary. When they see `str(x)` on someth
 
 Knowing why a construct is needed does not mean waiting for someone to ask for it. An open source user who finds a gap concludes the library cannot do it and moves on. Judge a library feature by whether the design calls for it and users would expect it.
 
-The same applies to prose in code. Add comments almost never: only when the code is truly unclear. Don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
-Write a code comment only to state a constraint the code itself can't show. Never use one to say where the code came from, what the next line does, or why your change is correct. That comment is you talking to the reviewer, not the next reader. It becomes noise the moment the PR merges.
+The same applies to prose in code. Don't add type hints, docstrings, or boilerplate that pull no weight. Prefer concise, readable code over verbose "enterprise" style.
+Only write a code comment to state something the code itself can't show. Put it next to the code it concerns. Never use a comment to say where code came from, what the next line does, or why your change is correct. That comment is you talking to the reviewer, not the next reader. It becomes noise the moment the PR merges.
+
+## Keep Code Clean
+
+Refactor continually as you work, so the code stays as simple as the design allows. Unclean existing code never justifies more unclean code. Clean it up instead. Fix duplication and other unclean code you meet in passing. When a fix needs a design decision, report it rather than making it.
 
 ## One Home for Each Fact
 
-Every fact, constant and piece of logic lives in exactly one place. When you see duplication, remove all of it in one pass, including in templates, tests and docs. Never fix the copies one at a time. Never leave a duplicate you have noticed.
+Every fact, constant and piece of logic lives in exactly one place. When you see duplication, remove all of it in one pass, including in templates, tests and docs. Never fix the copies one at a time. Never leave a duplicate you have noticed. Never create new duplication without explicit agreement.
 
 ## Trust Tool Defaults
 
 Our tools have carefully chosen defaults that give correct, readable output. Use the defaults unless the task has a specific requirement they can't meet. This applies to CLI flags, Python arguments, and tool-call options. Don't override from habit or an assumed improvement. Report noisy or wrong output as a tool bug.
+
+You MUST run a project's documented build and test commands exactly as documented, and never add flags to them, unless explicitly requested.
 
 - If you want the same flag on every run, move it into config and return to the bare command: `pytest --timeout 300` on every run becomes `timeout = 60` under `[tool.pytest.ini_options]`.
 - Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.

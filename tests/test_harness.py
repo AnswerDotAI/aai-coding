@@ -3,7 +3,7 @@ import json
 import pytest
 from shutil import which
 
-from aai_coding.harness import claude_air, claude_slop, synthetic_resume
+from aai_coding.harness import claude_air, claude_slop, last_request, synthetic_resume
 
 
 def test_synthetic_resume(tmp_path):
@@ -42,6 +42,24 @@ def test_claude_air(tmp_path, monkeypatch, capsys):
     claude_air(dict(hook_event_name='UserPromptSubmit', session_id='s1', prompt='hi'))
     batch()
     assert out() == ''                                      # new prompt reset
+
+
+def test_last_request(tmp_path):
+    "Quote the person's latest message, skipping tool results, notifications and skill text, and add the answered message after a short reply"
+    t = tmp_path/'t.jsonl'
+    def user(c, **kw): return dict(type='user', message=dict(role='user', content=c), **kw)
+    def said(s): return dict(type='assistant', message=dict(content=[dict(type='text', text=s)]))
+    long = 'Please fix the parser so reference links resolve across blocks, then add a lesson that shows the old failure and the new result in the notebook'
+    rows = [user(long), said('Fixed it.'), user([dict(type='tool_result', content='ok')]),
+        user('<task-notification>done</task-notification>'), user([dict(type='text', text='skill text')], isMeta=True)]
+    t.write_text('\n'.join(map(json.dumps, rows)))
+    assert last_request(t) == f'"{long}"'
+    rows.append(dict(type='attachment', attachment=dict(type='queued_command', prompt='ok go')))
+    t.write_text('\n'.join(map(json.dumps, rows)))
+    assert last_request(t) == '"ok go" (replying to your message: "Fixed it.")'
+    t.write_text(json.dumps(user([dict(type='text', text='<fork-boilerplate>\nrules\nYour directive: Your part: item 3')])))
+    assert last_request(t) == '"Your part: item 3"'
+    assert last_request(tmp_path/'missing.jsonl') is None
 
 
 @pytest.mark.skipif(not which('slopometer'), reason='slopometer not installed')
