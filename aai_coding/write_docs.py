@@ -4,7 +4,7 @@ Every edit you make with this guide MUST improve the prose for its reader. The n
 
 # Writing Reference Prose
 
-Reference prose is the writing that goes with code. It covers docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. Readers scan it for the fact they came for, then leave. Write it plainly and directly, in the style of GOV.UK/GDS and ASD-STE100. Start with what the code does. Plain does not mean formal, and the author's voice can stay. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.
+Reference prose is the writing that goes with code. It covers docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. Readers scan it for the fact they came for, then leave. Write it plainly and directly in the author's own voice, following the style of GOV.UK/GDS and ASD-STE100. Start with what the code does. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.
 
 Here is a passage from a design doc, written in this style:
 
@@ -12,17 +12,17 @@ Here is a passage from a design doc, written in this style:
 >
 > The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
-Write like that. Each sentence states one fact. Each rule the reader relies on has its own sentence. The passage also says what the gateway never does. It gives every status its real name. Sentences this even would be dull in an essay. They suit a reader who is looking something up.
+Write like that. Each rule the reader relies on has its own sentence. The passage also says what the gateway never does. It gives every status its real name. Sentences this even would be dull in an essay. They suit a reader who is looking something up.
 
 Here is the same passage before editing:
 
-> This section describes how `GatewayKernel` manages the kernel lifecycle.[13] `GatewayKernel` ties the three lower layers together, and its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[15] It isn't just a poller - it's the liveness authority.[16] Furthermore,[19] it polls the process and the heartbeat: a process that dies unexpectedly broadcasts the synthesized `dead` status, and three missed beats[4] mark the kernel `unresponsive` in its model.[1] The distinction is worth being precise about.[21] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[18] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[20][23] so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
+> This section describes how `GatewayKernel` manages the kernel lifecycle.[13] `GatewayKernel` ties the three lower layers together. Its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[15] It isn't just a poller - it's the liveness authority.[16] Furthermore,[19] it polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status, which every client receives.[1] Three missed beats[4] mark the kernel `unresponsive` in its model. The distinction is worth being precise about.[21] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[18] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[20][23] so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
 
-Do not write like that. Nothing in it is false, and a blog post could get away with it. It is hard to use as reference. Each sentence carries more than one fact. An aside holds the most important rule. The final state gets a flourish where its name should be. The first sentence announces the section. A question delays a fact the reader came for.
+Do not write like that. Nothing in it is false, but its blog-post register makes it hard to use as reference. An aside holds the most important rule. The final state gets a flourish where its name should be. The first sentence announces the section. A question delays a fact the reader came for.
 
 {markers} The passages are too short to show tells 7-12, 14, 17, 22 and 24-26.
 
-1. {splices} Write one idea per sentence. Narrative prose can use an occasional join. Reference prose should not.
+1. {splices} In reference prose, a splice means the whole passage is in the wrong register. Work out from scratch what its reader needs, then write that.
 2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Say what the system never does when a reader would be surprised by it.
 3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
 4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. STE calls this "one meaning per term".
@@ -59,7 +59,7 @@ Address the reader as "you" and use the imperative. Write "Run the tests", not "
 
 {plain_words}
 
-Do not use these words: seamless, streamline, empower, foster, pivotal, "a testament to", realm, landscape (metaphorical), navigate (metaphorical), delve, myriad, plethora, paradigm, synergy, holistic, catalyze, juxtapose, tapestry, embark, endeavor, encompass, multifaceted, elucidate, nuanced (as filler), minted (metaphorical).
+{banned_words}
 
 {hidden_words}
 

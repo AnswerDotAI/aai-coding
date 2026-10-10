@@ -80,9 +80,9 @@ Read from standard locations rather than duplicating config:
 
 Jeremy bumps the version immediately after each release, as part of releasing and never as part of a change. The tree therefore always carries the next release's version. A sibling dep pin can name a version before it ships (`foo>=<foo's local version>`).
 
-A downstream pin is part of the change that creates the dependency. When a change makes one package consume another's new behavior or API, stamp the consumers' pins in the same session. A pin deferred to release time is a forgotten pin.
+A downstream pin is part of the change that creates the dependency. When a change makes one package consume another's new, unreleased behavior or API, stamp the consumers' pins in the same session. A pin deferred to release time is a forgotten pin.
 
-This convention is for Python projects. Other artifact types version at change time instead: for example, the Claude Code plugins in skill-plugins bump automatically when `./build.py` regenerates a changed output.
+This convention is for Python projects. Other artifact types version at change time instead.
 
 ## Project Layout
 

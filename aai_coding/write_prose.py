@@ -36,7 +36,7 @@ Do **NOT** write like that.
     - "deliberately"/"intentionally"/"carefully"/"thoughtfully": adverbs about the author's mental state rather than the thing. In a design doc every recorded choice is already deliberate, and the explanation that follows does the work. Keep one only when the reader would otherwise suspect an accident and no explanation follows ("the file is deliberately empty").
 6. {hedging} Hedging is the worst offender. The original commits: "saves lives", "could double".
 7. Inflated diction. Puffed-up words where plain ones exist: enhance/leverage for improve/use, plus seamlessly, fostering, pivotal, myriad, landscape, realm, empower, journey, tapestry, testament, navigate. The banned words lists below are the fuller reference.
-8. Sentence sprawl. One over-long sentence stacking clauses, chained with "so", "which", "but", and "and", each extending or qualifying the last. Write one idea per sentence. When a draft sentence joins two thoughts, work out what the reader needs from it and write that, instead of splitting at the join. Keep the join only when the connection itself is the point.
+8. Sentence sprawl. One over-long sentence stacking clauses, chained with "so", "which", "but", and "and", each extending or qualifying the last. Splitting it does not fix it. Work out what the reader needs, then write that from scratch. Keep a join only when the connection itself is the point.
 9. {artifact_agent} In the sloppy passage, the commitment "has reshaped the landscape" and "continues to empower". Really, people reached a commitment. In narrative prose this habit often comes stacked with two others, as in "Your tests shaped the ones that landed":
     - Oblique reference instead of naming. The object is pointed at through a relative clause or metaphor ("the ones that landed") instead of being named ("our new tests").
     - Narrative compression into a single transitive clause. A who-did-what story (I read your tests, adapted them, committed mine) is flattened into "X verbed Y". The result sounds polished, like an aphorism, because it discards the actors and the order of events. It is common as a sentence-final flourish.
@@ -52,7 +52,7 @@ Do **NOT** write like that.
 
     The mirror form is the closing sentence that summarizes the paragraph or piece it ends ("LLMs can now use the module with far fewer tokens", ending a paragraph whose second sentence said so). It is the taught essay shape, and the strongest LLM habit of the lot. End on the last fact. The same disease occurs within a sentence ("editing needs no kernel: cards echo through the outbound queue, which is kernel-independent", where the final clause restates the opening). Its listy form puts a category phrase, a colon, then a parallel list unpacking it ("it should see what you have been doing: the cells you ran, what they printed, the plots you drew, the errors you hit"). Cut whichever side of the colon says less. Ask whether deleting the phrase removes any information from the document. If not, delete it. Prefer the shorter phrasing of the same fact: "nothing new needs specifying", not "there is nothing new to learn and nothing new to specify".
 15. {decoration} Decorative bold and italics count too. Use them VERY sparingly in the body of a paragraph.
-16. {splices} Avoid em dashes entirely. Colons and semicolons should be rare in normal prose.
+16. {splices} Work out what the reader needs, then write it again from scratch. Avoid em dashes entirely. Colons and semicolons should be rare in normal prose.
 17. Monotone rhythm. Topic sentence, elaboration, example, wrap-up, paragraph after paragraph. The reader's eyes glaze over. Mix it up. Real writing is lumpy. Some sections run long because they need to. Others are two sentences because that's all there is to say.
 18. {false_depth}
 19. {recipient_subject} As in tell 9, the actor vanishes. Here the artifact moves from performing the action to receiving it.
@@ -74,14 +74,13 @@ Tells 1, 2, 11, 13, and 24, along with tell 5's noting fillers, are all metadisc
 
 {plain_words}
 
-These are statistically overrepresented in AI output. Replace or delete on sight:
+{banned_words}
 
-- **Kill on sight:** seamless, streamline, empower, foster, pivotal, delve, utilize, leverage (verb), facilitate, elucidate, embark, endeavor, encompass, multifaceted, tapestry, "a testament to", paradigm, synergy, holistic, catalyze, juxtapose, nuanced (as filler), realm, landscape (metaphorical), navigate (metaphorical), shape/shaped (as loose jargon), myriad, plethora, minted (metaphorical, e.g. "minted fresh ids"), land/landed/lands (metaphorical), -bearing suffixes such as load-bearing and text-bearing
-- **Suspicious in clusters** (remove most of them): robust, comprehensive, cutting-edge, innovative, enhance, elevate, optimize, intricate, profound, resonate, underscore, harness, cultivate, bolster, cornerstone, game-changer, invariant
+Remove most of these when they cluster: cutting-edge, innovative, elevate, intricate, profound, resonate, underscore, harness, cultivate, bolster, cornerstone, game-changer.
 
 {hidden_words}
 
-Much of the clarity core above is also codified in ASD-STE100: one idea per sentence, active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution). Do not adopt its register. STE is voiceless and choppy by design, built for non-native mechanics under time pressure, and it would fail the standard the Economist passage sets. Borrow the discipline, not the sound. That sound is correct in reference prose. write-docs covers that register.
+ASD-STE100 codifies much of the clarity core above: active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution).
 
 {formatting}
 
