@@ -2,17 +2,17 @@ r'''How to write narrative prose that reads as though a person wrote it: read be
 
 # Writing Prose That Doesn't Sound Like AI
 
-Guidelines for narrative prose: blog posts, essays, announcements, talks, tutorials and explanatory guides, and any other writing where the author is present on the page. For reference prose (docstrings, READMEs, API docs, PR descriptions, commit messages, messages to co-workers) use write-docs instead. The same slop is banned there, but the register is voiceless. The standard here is The Economist's.
+The standard for narrative prose, including talks, is The Economist's. For voiceless reference prose (docstrings, READMEs, API docs, PR descriptions, commit messages, messages to co-workers), use write-docs. Both ban the same slop.
 
 Here is a passage from The Economist:
 
 > No form of emissions reduction, though, can quickly bend the current trajectory.[1][2] Endurance is what remains.[3][14] Making air conditioning more efficient, cheap and widespread[10] saves lives[6] and fits well with other policy goals, like making clean electricity cheap to produce and consume.[7] Ten years ago a commitment to phase out the fluorinated gases in cooling systems was reached in Kigali, the capital of Rwanda.[8][9] There is scope for extra international efforts to improve the machinery that uses them.[7][19] This could double the cooling benefit of phasing out the gases.[6]
 
-Each sentence sets out to say one thing, says it, and stops. It is simple plain English prose. It carries no byline and needs none. Plainness does the work. It's not trying to sell anything. It lets you figure out what the takeaways are.
+Each sentence says one thing in plain English and stops. It carries no byline and needs none. Plainness does the work without selling anything or telling readers what to take away.
 
 Write like that.
 
-Here, on the other hand, is a horrendous rewrite, as sloppy as possible:
+Here is the same passage rewritten as sloppily as possible:
 
 > In this piece, we'll dive deep into the fascinating world of cooling![1] 🌡️[15] Here's the thing:[2] emissions reduction alone **isn't going to cut it**. In today's rapidly-warming world,[4] it's not about quick fixes — it's about *endurance*.[3] When it comes to[5] air conditioning, a technology that cools indoor air,[20] one might argue[5] that a comprehensive, holistic approach — making units more efficient, more affordable, and more accessible[10] — could potentially help save countless lives in some cases,[6] while seamlessly aligning with broader policy goals like fostering[7] clean, affordable electricity for all, and also, it's worth noting,[5] building on the pivotal commitment to phase out fluorinated gases that was reached ten years ago in Kigali — the vibrant capital of Rwanda —[16] a commitment that has reshaped the landscape of cooling policy and continues to empower stakeholders[9] across the realm of climate diplomacy.[8]
 >
@@ -37,36 +37,36 @@ Do **NOT** write like that.
 6. {hedging} Hedging is the worst offender. The original commits: "saves lives", "could double".
 7. Inflated diction. Puffed-up words where plain ones exist: enhance/leverage for improve/use, plus seamlessly, fostering, pivotal, myriad, landscape, realm, empower, journey, tapestry, testament, navigate. The banned words lists below are the fuller reference.
 8. Sentence sprawl. One over-long sentence stacking clauses, chained with "so", "which", "but", and "and", each extending or qualifying the last. Splitting it does not fix it. Work out what the reader needs, then write that from scratch. Keep a join only when the connection itself is the point.
-9. {artifact_agent} In the sloppy passage, the commitment "has reshaped the landscape" and "continues to empower". Really, people reached a commitment. In narrative prose this habit often comes stacked with two others, as in "Your tests shaped the ones that landed":
-    - Oblique reference instead of naming. The object is pointed at through a relative clause or metaphor ("the ones that landed") instead of being named ("our new tests").
-    - Narrative compression into a single transitive clause. A who-did-what story (I read your tests, adapted them, committed mine) is flattened into "X verbed Y". The result sounds polished, like an aphorism, because it discards the actors and the order of events. It is common as a sentence-final flourish.
+9. {artifact_agent} In the sloppy passage, the commitment "has reshaped the landscape" and "continues to empower". Really, people reached a commitment. In narrative prose, "Your tests shaped the ones that landed" often combines this habit with two others:
+    - Oblique reference instead of naming. A relative clause or metaphor ("the ones that landed") points at the object instead of naming it ("our new tests").
+    - Narrative compression into a single transitive clause. Compressing the story (I read your tests, adapted them, committed mine) into "X verbed Y" discards actors and event order. That gives it an aphorism's polish, often as a sentence-final flourish.
 
     Rewrite as the actual events with the actual actors: "I took your tests as inspiration and added some updates based on these changes."
 10. {forced_symmetry} The original's list varies its forms.
 11. {teaser_pivot} It is a sibling of tell 3.
 12. Minimizing "just". Using it as a casual softener ("resets just that kata", "it's just a wrapper", "just works"). Be frugal with it. Usually delete it. When the restriction genuinely matters, "only" is plainer.
 13. Rhetorical wrap-up. A rhetorical question as a closing flourish.
-14. {restatement} The original says it once, in four words. Everything a lead summary says reappears, with more detail, in the sentences that follow. Delete it and nothing is lost:
+14. {restatement} The original says it once, in four words. A lead summary repeats facts the following sentences give in more detail. Delete it and nothing is lost:
 
     > ~~Failures are visible now too.~~ A startup failure used to print to the server log and leave a half-booted dialog that looked ready. It now raises, the user gets an error toast and a red status dot, and the dialog stays editable.
 
-    The mirror form is the closing sentence that summarizes the paragraph or piece it ends ("LLMs can now use the module with far fewer tokens", ending a paragraph whose second sentence said so). It is the taught essay shape, and the strongest LLM habit of the lot. End on the last fact. The same disease occurs within a sentence ("editing needs no kernel: cards echo through the outbound queue, which is kernel-independent", where the final clause restates the opening). Its listy form puts a category phrase, a colon, then a parallel list unpacking it ("it should see what you have been doing: the cells you ran, what they printed, the plots you drew, the errors you hit"). Cut whichever side of the colon says less. Ask whether deleting the phrase removes any information from the document. If not, delete it. Prefer the shorter phrasing of the same fact: "nothing new needs specifying", not "there is nothing new to learn and nothing new to specify".
+    A closing sentence can repeat its paragraph or piece: "LLMs can now use the module with far fewer tokens" repeats that paragraph's second sentence. This taught essay shape is the strongest LLM habit of the lot. End on the last fact. Within a sentence, "editing needs no kernel: cards echo through the outbound queue, which is kernel-independent" repeats its opening in the final clause. The list form names a category then unpacks it in a parallel list: "it should see what you have been doing: the cells you ran, what they printed, the plots you drew, the errors you hit". Cut whichever side of the colon says less. If deleting a phrase removes no information from the document, delete it. Prefer "nothing new needs specifying" to "there is nothing new to learn and nothing new to specify".
 15. {decoration} Decorative bold and italics count too. Use them VERY sparingly in the body of a paragraph.
-16. {splices} Work out what the reader needs, then write it again from scratch. Avoid em dashes entirely. Colons and semicolons should be rare in normal prose.
-17. Monotone rhythm. Topic sentence, elaboration, example, wrap-up, paragraph after paragraph. The reader's eyes glaze over. Mix it up. Real writing is lumpy. Some sections run long because they need to. Others are two sentences because that's all there is to say.
+16. {tacked_on} Avoid em dashes entirely. Colons and semicolons should be rare in normal prose.
+17. Monotone rhythm. Repeating topic sentence, elaboration, example, wrap-up makes readers glaze over. Mix it up. Real writing is lumpy. Some sections need length. Others need only two sentences.
 18. {false_depth}
 19. {recipient_subject} As in tell 9, the actor vanishes. Here the artifact moves from performing the action to receiving it.
 20. {explaining_known} Tell 14 is repeating yourself. This is repeating the reader.
 21. {decorative_verbs}
-22. Explanation colons. A colon gluing an assertion to its explanation, both halves full clauses ("the address layer has no semantic gaps: every failure is a verification failure"). A colon is for introducing a list, an example, or a definition. When the second half explains the first, rebuild the sentence around that relation: "the address layer has no semantic gaps because every failure is a verification failure". (Tell 2 is the label form of this, where the left half is a stub rather than a clause.) These accumulate one defensible instance at a time in dense technical prose, until every sentence has the same claim-colon-reason shape.
-23. {undefined_jargon} It is tell 20's twin. Where tell 20 repeats what the audience knows, this tell assumes what it doesn't. The two tells are one audience judgment. {audience_judgment}
+22. Explanation colons. A colon joins an assertion to its explanation as two full clauses ("the address layer has no semantic gaps: every failure is a verification failure"). A colon is for introducing a list, an example, or a definition. Rebuild an explanation around that relation: "the address layer has no semantic gaps because every failure is a verification failure". Tell 2's label form has a stub on the left, not a clause. In dense technical prose, individually defensible instances accumulate until every sentence has the same claim-colon-reason pattern.
+23. {undefined_jargon} Tell 20 repeats what the audience knows. This tell assumes what it doesn't. Both are one audience judgment. {audience_judgment}
 24. {appraisal_preamble} Where tell 2 announces with a label, this tell advertises with a compliment. Deliver content, never advertise it.
 25. {over_structuring} It is the document-scale form of tell 10's symmetry habit.
 26. {consequence_glue}
 
-Tells 9 and 19 are two faces of one device linguists call agent defocusing: grammar that pushes the true actor out of the subject seat (the passive is the third face). The positive rule is Williams's characters-and-actions principle: make the doer the subject and the deed the verb. A tool subject with a mechanical verb ("the parser rejects malformed input") is not defocusing. The tool really is that event's actor, though its verb must still pass tell 21. The tell fires when a person's deed is narrated with the person missing. Tell 21 is the neighbor rather than another face. There, no person exists, and the verb rather than the subject seat is what goes wrong.
+Tells 9 and 19 are two forms of what linguists call agent defocusing, as is the passive: grammar pushes the true actor out of the subject position. Williams's characters-and-actions principle says to make the doer the subject and the deed the verb. The tell fires when a person's deed is narrated with the person missing. A tool really performs the event in "the parser rejects malformed input". Its mechanical verb must still pass tell 21, but it isn't hiding a person's deed. Tell 21 concerns the verb, with no person to be hidden.
 
-Tells 1, 2, 11, 13, and 24, along with tell 5's noting fillers, are all metadiscourse: text about the text rather than about the subject. Openers advertise the piece, labels advertise the fact, pivots advertise excitement, closers advertise closure, preambles advertise importance. Signposting earns its place at document scale (a table of contents, an abstract), the same boundary tell 14 draws for summaries.
+Tells 1, 2, 11, 13 and 24, and tell 5's noting fillers, are metadiscourse: text about the text rather than its subject. Openers advertise the piece, labels the fact, pivots excitement, closers closure, preambles importance. Signposting earns its place at document scale (a table of contents, an abstract), the same boundary tell 14 draws for summaries.
 
 {new_tells}
 
@@ -80,17 +80,17 @@ Remove most of these when they cluster: cutting-edge, innovative, elevate, intri
 
 {hidden_words}
 
-ASD-STE100 codifies much of the clarity core above: active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution).
+ASD-STE100 codifies active voice with the doer as subject, one meaning per term, and plain words over inflated ones (utilize->use is a literal STE substitution).
 
 {formatting}
 
 ## What good prose sounds like
 
-Good writing has a voice. You read it and someone is there. They have opinions. They're occasionally wrong. They'll make a joke in the middle of a technical explanation and it works.
+Good writing has a voice. You hear someone with opinions, someone occasionally wrong who can make a joke work in a technical explanation.
 
-The sentences aren't all the same length. Most are short. An occasional longer one earns its length by carrying a single connected thought too big to split. That variation is what keeps a reader moving. AI can't do it. Every sentence comes out the same mid-length, the same mid-energy.
+Most sentences are short. An occasional longer one earns its length with a single connected thought too big to split. Variation keeps readers moving. AI can't do it. AI writes the same mid-length, mid-energy sentence.
 
-Say what you mean. "This is broken," not "there may be some areas for potential improvement." Say "use," not "utilize." If you can swap in a different topic and the paragraph still reads fine, you haven't said anything yet. Get specific. Not "improves developer productivity" but "saves me twenty minutes every deploy."
+Say what you mean. "This is broken," not "there may be some areas for potential improvement." A paragraph that still reads fine after swapping in a different topic says nothing. Get specific. Not "improves developer productivity" but "saves me twenty minutes every deploy."
 
 This module also provides `check_prose`. It sends text and these rules to a separate model for review. Do not run it unless the user asks for a prose check.
 '''

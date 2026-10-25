@@ -1,10 +1,10 @@
 r'''How to write reference prose. Read this before writing docstrings, READMEs, API docs, PR descriptions, commit messages, or messages to co-workers.
 
-Every edit you make with this guide MUST improve the prose for its reader. The numbered tells below are symptoms of unclear writing, not lint rules. NEVER fix a tell mechanically, such as by swapping punctuation or deleting a flagged word. When a passage shows tells, work out what its reader needs from it, then explain that again from the start, following "Rewriting high-scoring documentation" below.
+Every edit with this guide MUST improve the prose for its reader. The numbered tells are symptoms of unclear writing, not lint rules. NEVER fix a tell mechanically by splitting a sentence, swapping punctuation or deleting a flagged word. When a passage shows tells, establish its reader's needs and explain it again from the start, following "Rewriting high-scoring documentation" below.
 
 # Writing Reference Prose
 
-Reference prose is the writing that goes with code. It covers docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages, and messages to co-workers. Readers scan it for the fact they came for, then leave. Write it plainly and directly in the author's own voice, following the style of GOV.UK/GDS and ASD-STE100. Start with what the code does. For blog posts, essays, and announcements use write-prose. For choosing what a summary says, use write-summary.
+Reference prose accompanies code: docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages and messages to co-workers. Readers scan for a fact, then leave. Write plainly and directly in the author's own voice, following GOV.UK/GDS and ASD-STE100. Start with what the code does. Use write-prose for blog posts, essays and announcements, and write-summary for choosing a summary's content.
 
 Here is a passage from a design doc, written in this style:
 
@@ -12,17 +12,17 @@ Here is a passage from a design doc, written in this style:
 >
 > The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
-Write like that. Each rule the reader relies on has its own sentence. The passage also says what the gateway never does. It gives every status its real name. Sentences this even would be dull in an essay. They suit a reader who is looking something up.
+Write like that. Each rule has its own sentence. Every status has its real name. The passage says what the gateway never does. Even sentences suit readers looking things up, though they would be dull in an essay.
 
 Here is the same passage before editing:
 
 > This section describes how `GatewayKernel` manages the kernel lifecycle.[13] `GatewayKernel` ties the three lower layers together. Its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[15] It isn't just a poller - it's the liveness authority.[16] Furthermore,[19] it polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status, which every client receives.[1] Three missed beats[4] mark the kernel `unresponsive` in its model. The distinction is worth being precise about.[21] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[18] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[20][23] so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
 
-Do not write like that. Nothing in it is false, but its blog-post register makes it hard to use as reference. An aside holds the most important rule. The final state gets a flourish where its name should be. The first sentence announces the section. A question delays a fact the reader came for.
+Do not write like that. Its blog-post register makes true facts hard to look up. The key rule is in an aside. A flourish replaces the final state's name. The opening announces the section. A question delays a fact.
 
 {markers} The passages are too short to show tells 7-12, 14, 17, 22 and 24-26.
 
-1. {splices} In reference prose, a splice means the whole passage is in the wrong register. Work out from scratch what its reader needs, then write that.
+1. {tacked_on} In reference prose, a tacked-on clause means the whole passage is in the wrong register.
 2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Say what the system never does when a reader would be surprised by it.
 3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
 4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. STE calls this "one meaning per term".
@@ -65,9 +65,9 @@ Address the reader as "you" and use the imperative. Write "Run the tests", not "
 
 ## Doc types
 
-- Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameters and return values in docments, and do not repeat them in prose. Add a guarantee, edge case or error only when a caller needs it to use the function. Do not restate the signature.
+- Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameters and return values in docments, not prose. Add a guarantee, edge case or error only when callers need it to use the function. Do not restate the signature.
 - Code comments. Write one only to state something the code cannot show, next to the code it concerns (see coding-patterns). This is rare.
-- READMEs. Write them like docstrings, not blog posts. The first paragraph says what the package does and who it is for. Install steps come next, then a minimal example. Leave out the project's history and sales language. A README, index or module docstring describes what the package is for and its main workflows. Put parameters and return values in docments. Put edge cases and error behaviour in notebooks or other docs, and in a docstring only when a caller needs them to use the API. Do not add a README section for a new method unless it changes how people use the package.
+- READMEs. Write them like docstrings, not blog posts. The first paragraph gives the package's purpose and audience. Install steps and a minimal example follow, in that order. Omit history and sales language. A README, index or module docstring covers purpose and main workflows. Put parameters and return values in docments. Put edge cases and error behavior in notebooks or other docs, and in a docstring only when callers need them to use the API. Add a README section for a new method only if it changes how people use the package.
 - API docs and changelogs. Describe the behavior or the change, with one entry per behavior. Put reasons in design docs.
 - PR descriptions and commit messages. Start with the behavior change. Say who did what. Give reviewers what they need to judge the diff. write-summary covers choosing the content.
 - Messages to co-workers. Put the answer first and the support after. Do not open by softening the message. Do not close by offering more help.
@@ -76,27 +76,25 @@ Address the reader as "you" and use the imperative. Write "Run the tests", not "
 
 ## Rewriting high-scoring documentation
 
-A high slopometer score means the document needs explaining again from the start. Do not repair the flagged sentences one at a time. Do not split sentences, swap banned words, or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show that a document is clear, accurate, or complete.
+A high slopometer score means the document needs explaining again from the start. Do not repair flagged sentences one at a time, swap banned words or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show clarity, accuracy or completeness.
 
 Improve prose by rereading it as its reader would. Never search it for tells, even to find candidates.
 
-Change how the document explains things, and keep its information. Keep technical detail that a reader might need. A shorter document is worse if it drops a capability, condition, or explanation that the reader needs.
-
-Removing slop does not mean removing character. Keep the author's informality, conversational phrasing, contractions, and humor where they communicate clearly. Informal language is not slop. AI slop is often too clever. It uses strained metaphors, elaborate phrasing, and invented terms that make a simple point hard to follow. Judge language by what it communicates, not by how formal it sounds. Do not replace a human voice with generic reference prose. Do not invent a new persona for the author.
+Keep the author's informality, conversational phrasing, contractions and humor where they communicate clearly. Informal language is not slop. AI slop is often too clever. Its strained metaphors, elaborate phrasing and invented terms obscure simple points. Judge communication, not formality. Do not replace a human voice with generic reference prose or invent a new persona.
 
 Work through these steps in order:
 
-- Establish the facts. Read the implementation and executable examples before drafting. Decide who the readers are and what they need to understand or do. List the original's substantive points. These include capabilities, responsibilities, inputs, outputs, identifiers, defaults, guarantees, exclusions, edge cases, failure behavior, and context. Check claims against the code. Record claims that are wrong or uncertain. Do not repeat them silently.
-- Write from understanding. Put the old wording aside and draft from the facts. Choose an order that explains the system to the intended reader. Do not keep old sentences, paragraph structure, or coined terms because they are already there. Name who performs each operation. Introduce each concept before you use it. State guarantees directly.
-- Keep the context. Explain the problem the code solves and the relationships a reader needs to understand its behavior. Keep prerequisites, setup, protocol distinctions, and reasons that affect correct use. Do not turn an explanation into disconnected facts. Do not squeeze it into unexplained identifiers. Remove sales-style justification. Keep the reasoning a reader needs to use the code correctly.
-- Audit technical coverage. Find every substantive point of the original in the rewrite. Repeated facts can share one clear statement. If you move a fact, check that the reader can still find it where they need it. Keep details whose relevance is uncertain. Flag proposed omissions for review. Do not decide silently that they do not matter. Correct false claims from evidence and report the corrections.
-- Review descriptions separately. In nbdev, the first blockquoted paragraph below the title becomes the description. Module listings and generated documentation reuse it without the surrounding explanation. Keep its coverage of capabilities and its technical scope. For example, a description covers NDJSON transport, control routing, and deferred tool results. Replacing it with "Communicate through standard input and output" loses two of those responsibilities. Check the description on its own, even when the body explains all three.
-- Verify the finished document. Read the rewrite from top to bottom beside its examples. Check accuracy, readability, retained context, technical coverage, and the author's voice before scoring. For notebooks, follow `nbdev.skill`, edit the source notebook, regenerate exports, and run the affected notebook tests. Leave implementation behavior unchanged unless the user separately asks for code changes. Update stale example outputs by running the code, not by editing them.
-- Rescore independently at the end. Use a fresh scoring process after the rewrite and its coverage audit are complete. Do not use intermediate scores to choose wording or remove information. Report the final score, word count, findings, and test results. If the score is still high, reconsider the explanation as a whole. Do not dismiss the document's problems because some individual findings are false positives.
+- Establish the facts. Read the implementation and executable examples before drafting. Identify the readers and what they need to understand or do. List the original's substantive points: capabilities, responsibilities, inputs, outputs, identifiers, defaults, guarantees, exclusions, edge cases, failure behavior and context. Check claims against code and record wrong or uncertain ones rather than silently repeating them.
+- Write from understanding. Put the old wording aside and draft from facts in an order that explains the system to the intended reader. Do not retain sentences, paragraph structure or coined terms merely because they exist. Name who performs each operation, introduce concepts before use and state guarantees directly.
+- Keep the context. Explain the problem the code solves and the relationships needed to understand its behavior. Retain prerequisites, setup, protocol distinctions and reasoning needed for correct use. Remove sales-style justification. Keep a connected explanation, not disconnected facts or unexplained identifiers.
+- Audit technical coverage. Change the explanation, not its information. Find every substantive original point in the rewrite. Repeated facts can share a statement. Moved facts must remain findable where needed. Keep technical detail a reader might need, including details of uncertain relevance. Flag proposed omissions for review. Do not silently decide they do not matter. A shorter document is worse if it drops a needed capability, condition or explanation. Correct false claims from evidence and report corrections.
+- Review descriptions separately. In nbdev, the first blockquoted paragraph below the title becomes the description, reused alone in module listings and generated documentation. Preserve its capability coverage and technical scope. Check it on its own even when the body explains everything. For example, a description covers NDJSON transport, control routing, and deferred tool results. Replacing it with "Communicate through standard input and output" loses two of those responsibilities.
+- Verify the finished document. Read top-to-bottom beside the examples. Check accuracy, readability, retained context, technical coverage and the author's voice before scoring. For notebooks, follow `nbdev.skill`: edit source notebooks, regenerate exports and run affected notebook tests. Leave implementation behavior unchanged unless the user separately asks for code changes. Regenerate stale example outputs by running code, never editing them.
+- Rescore independently at the end. Use a fresh scoring process after the rewrite and coverage audit are complete. Never use intermediate scores to choose wording or remove information. Report the final score, word count, findings and test results. Reconsider the whole explanation if the score remains high. Do not dismiss its problems because some findings are false positives.
 
-When the user authorizes delegated rewrites, give each agent one bounded document scope and these instructions. Require the agent to report corrections, proposed omissions, verification results, and the final independent score. Review the rewritten document against the original's technical content and against the implementation. A score below 4 does not replace that review.
+When the user authorizes delegated rewrites, give each agent one bounded document scope and these instructions. Require each agent to report corrections, proposed omissions, verification results and the final independent score. Review against the original's technical content and the implementation. A score below 4 does not replace this review.
 
-This module also provides `check_docs`. It sends text and these rules to a separate model for review. Do not run it unless the user asks for a docs check.
+`check_docs` sends text and these rules to a separate model for review. Run it only when the user asks for a docs check.
 '''
 
 from ._writing import fill, charter

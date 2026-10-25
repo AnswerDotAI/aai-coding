@@ -219,7 +219,8 @@ def _slop_report(txt):
     if not (j['worst'] >= worst_min or j['density'] >= dens_min): return []
     def row(f):
         tl = f" (tell {f['tell']})" if f['tell'] is not None else ''
-        return f"[{f['weight']}] {f['rule']}{tl}: {f['text']!r}"
+        adv = f" {f['advice']}" if f.get('advice') else ''
+        return f"[{f['weight']}] {f['rule']}{tl}: {f['text']!r}{adv}"
     rows = '\n'.join(row(f) for f in j['findings'][:SLOP_TOP])
     return [SLOP_MSG.format(d=j['density'], t=dens_min, w=j['worst'], rows=rows)]
 

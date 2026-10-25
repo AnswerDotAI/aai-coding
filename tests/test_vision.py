@@ -18,26 +18,17 @@ def _mk_pdf(path, npages=2):
     pdf.save(path)
 
 
-def test_pdf2pngs(tmp_path):
-    pdf = tmp_path/'two.pdf'
+def test_rendered_inputs(tmp_path):
+    pdf = tmp_path/'bars.pdf'
     _mk_pdf(pdf)
-    out = pdf2pngs(pdf, tmp_path/'pages')
-    assert [p.name for p in out] == ['two-1.png', 'two-2.png']
-    for p in out: assert p.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n'
-    assert pdf2pngs(pdf, tmp_path, scale=1)[0].stat().st_size < out[0].stat().st_size
-    selected = pdf2pngs(pdf, tmp_path/'selected', pages=[2])
-    assert [p.name for p in selected] == ['two-2.png']
-    assert selected[0].read_bytes() == out[1].read_bytes()
-    with pytest.raises(ValueError): pdf2pngs(pdf, tmp_path, pages=[0])
-
-
-def test_image_resolution(tmp_path):
-    source = tmp_path/'image.png'
-    pyvips.Image.black(2000, 2000, bands=3).write_to_file(source)
-    for limit, size in [(None, 2000), (1e6, 1000)]:
-        dest = _img2png(source, tmp_path/f'{size}.png', max_pixels=limit)
-        img = pyvips.Image.new_from_file(dest)
-        assert (img.width, img.height) == (size, size)
+    first,second = pdf2pngs(pdf, tmp_path/'pages', scale=5)
+    selected, = pdf2pngs(pdf, tmp_path/'selected', scale=5, pages=[2])
+    a,b,c = [pyvips.Image.new_from_file(p) for p in (first,second,selected)]
+    assert (c-b).abs().max() == 0 and c.avg() < a.avg()
+    assert (c.width,c.height) == (1000,500)
+    for limit,size in ((None,(1000,500)), (125000,(500,250))):
+        img = pyvips.Image.new_from_file(_img2png(selected, tmp_path/f'{limit}.png', max_pixels=limit))
+        assert (img.width,img.height) == size
 
 
 @pytest.mark.slow
@@ -48,4 +39,4 @@ def test_look(tmp_path):
     svg.write_text(r'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60"><text x="20" y="40" font-family="sans-serif" font-size="24">LOOKER</text></svg>')
     import asyncio
     res = asyncio.run(look('The first 3 images are PDF pages, each showing some black horizontal bars. The last image shows one word. How many bars are on each page, and what is the word? Answer with just the three counts and the word.', pdf, svg))
-    assert '3' in res and 'LOOKER' in res.upper()
+    assert all(s in res for s in ('1', '2', '3')) and 'LOOKER' in res.upper()

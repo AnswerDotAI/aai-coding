@@ -26,20 +26,20 @@ Reuse existing workspaces. Do not run `ws-setup` on them. See the [team migratio
 
 ## Tool workflows
 
-Claude Code uses a kernel-centric setup. Codex supports both kernel-centric and hybrid setups.
+Claude Code and Codex use persistent kernels for Python, file inspection, searching, notebooks, and most edits. Pyskills provide the tools; exhash provides hash-verified editing. Use Bash for shell commands, builds, and Git. Native tools remain available where the installed skills call for them.
 
-The kernel-centric setup denies native file tools. File reading, editing, searching, and Python execution use one persistent IPython kernel through clikernel. The `persistent-python` and `pyskills` host skills bootstrap this setup. `pyskills` provides discovery and documentation for the kernel's tools.
+Run ordinary Claude Code or Codex with `clikernel-mcp` registered as an MCP server. Each agent has its own kernel and Python state. Claude's `clikernel-hook` supplies subagent identity; Codex isolates its MCP sessions without that hook.
 
-The hybrid setup uses native `apply_patch` and Bash for files and shell work. It reserves a quiet clikernel for Python-specific work. Its `clikernel-workflow` host skill defines when to use the kernel. `notebook-dialog-editing` provides CLI access to the notebook tools documented in `aidialog.dlgskill`. This adapter overrides pyskill tool preferences for local files. Use native tools within allowed editing locations.
+Claude uses the `persistent-python` and `pyskills` host skills. Codex uses `kernel-notebook-editing` from `skills/clikernel`. Its `cli-notebook-editing` skill applies only when the user explicitly requests working without a kernel. Setup links the existing skills without changing them.
 
-Task guidance lives in pyskills rather than host skills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
+Task guidance lives in pyskills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
 
 ## What is in here
 
 The repository contains:
 
 - `aai_coding/`: Python pyskills and the hook implementation, listed below.
-- `skills/`: host-level `SKILL.md` sources, symlinked into `~/.claude/skills` or `~/.codex/skills`. `persistent-python` and `pyskills` support the kernel-centric setup. `clikernel` and `notebook-dialog-editing` support the hybrid Codex setup.
+- `skills/`: host-level `SKILL.md` sources linked into each harness's skills directory. [SETUP.md](SETUP.md#5-skills-safecmd-and-prompts) lists the links.
 - `plugins/safecmd/`: a Claude Code plugin that auto-approves allowlisted Bash commands using the `safecmd` package.
 - `prompts/`: shared behavioural rules and a replacement Claude Code system prompt, described below.
 - `SETUP.md`: a setup runbook written as a prompt for an LLM session. It is not an installer script.
@@ -56,21 +56,21 @@ The repository contains:
 
 ### Prompts
 
-`prompts/core.md` contains harness-neutral behavioural rules. Codex reads it through a `~/.codex/AGENTS.md` symlink. Claude Code can append it to its system prompt.
+`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`. Setup can symlink that file to `core.md` or merge the shared rules into an existing personal file. Claude Code can append `core.md` to its system prompt.
 
-`prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Install it as a `~/.claude/sysp` symlink and launch with:
+`prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Launch with:
 
 ```bash
-claude --system-prompt-file ~/.claude/sysp --append-system-prompt-file <this repo>/prompts/core.md
+claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-file <this repo>/prompts/core.md
 ```
 
 Replacement removes the default prompt's prose. Tool schemas remain available. The default prompt's dynamic environment block and scratchpad path are lost.
 
 ## Design decisions, and why
 
-- Task skills use Python's packaging and discovery rather than a harness's skill machinery. Their instructions and executable tools can share a module. The hybrid Codex workflow remains a host skill because it must explain when to enter the kernel.
-- Hooks are subcommands of `aai-hook` in `aai_coding/harness.py`. Their implementations are versioned, unit-tested Python. Harness settings register command names instead of containing shell implementations.
-- Symlinks point configuration at the checkout. Pulling updates on a machine updates that configuration without copying files. Claude Code's `settings.json` and Codex's `config.toml` are exceptions: setup must merge them with existing settings. The runbook calls for discussing these choices with the user.
+- Task skills use Python's packaging and discovery rather than a harness's skill machinery. Their instructions and executable tools can share a module. Host skills bootstrap the kernel and explain how to use its tools with the harness.
+- This repo's hooks are subcommands of `aai-hook` in `aai_coding/harness.py`. Claude's kernel isolation hook comes from clikernel. Harness settings register the commands rather than copying their implementations.
+- Symlinks point skills and startup at the checkout. Pulling updates changes those sources without copying files. Setup merges harness settings and personal instruction files with the user's existing configuration.
 - Modules record differences between harnesses directly, using a dictionary keyed by harness or adjacent bullets. There are no generated per-harness templates.
 - This repo contains agreed team guidance. Model choice, sounds, and personal workflows such as release management belong in each person's `CLAUDE.md`, settings, and local skills. The runbook identifies which settings are shared and which are personal.
 

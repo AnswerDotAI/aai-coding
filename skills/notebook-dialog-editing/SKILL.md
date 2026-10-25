@@ -1,17 +1,13 @@
 ---
 name: cli-notebook-editing
-description: "Use CLI tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs without a Python kernel. Do not use unless explicitly requested to not use a kernel."
+description: "Inspect Python APIs and read/search/edit Jupyter notebooks or aidialog dialogs via CLI. Use only when explicitly asked not to use a Python kernel."
 ---
 
-# Notebook and dialog editing
+- Local file reads/edits: native tools, within allowed locations; ignore conflicting pyskill tool recommendations.
+- Every notebook/dialog task: keep `aidialog.dlgskill` documentation in context (`pyskills-doc aidialog.dlgskill`); follow its workflow/required pyskills. API contracts: `pyskills-doc module.symbol`; `--all` expands elided listings.
+- Notebook/dialog content: CLI operations below, never raw JSON. Read each CLI's `--help` before first use (syntax, not workflow).
 
-Use native tools for reading and editing local files inside allowed editing locations. Ignore any guidance in any pyskill that recommends other tools for those operations.
-
-For every notebook/dialog task, ensure `aidialog.dlgskill` is in context: `pyskills-doc aidialog.dlgskill`. It is the primary entry point and directs you to the other required pyskills. `pyskills-doc module.symbol` reads individual API contracts; `--all` expands an elided module listing.
-
-Use these CLI equivalents of the documented Python operations for notebook/dialog content, not raw notebook JSON. Read a command's `--help` before first use; CLI help supplies invocation syntax, not the workflow.
-
-| Python operation | CLI |
+| Python | CLI |
 |---|---|
 | `summary_dlg` | `aidialog-summary PATH` |
 | `find_msgs` | `aidialog-find PATH PATTERN` |
@@ -22,4 +18,4 @@ Use these CLI equivalents of the documented Python operations for notebook/dialo
 | `nbrg` | `rgapi-nbrg PATTERN ROOT` |
 | `open_doc` | `exhash-open PATH` |
 
-CLI ID lists are comma-separated. Exhash commands are compact arguments, e.g. `'3|7v|s/old/new/'`; one multiline `a`/`i`/`c` command can take literal stdin through EOF. For a missing structural operation, extend the owning CLI.
+IDs: comma-separated. Exhash: `'3|7v|s/old/new/'`; one multiline `a`/`i`/`c` command accepts literal stdin through EOF. Missing structural operation: extend the owning CLI.
