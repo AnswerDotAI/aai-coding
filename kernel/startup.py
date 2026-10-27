@@ -1,4 +1,10 @@
 from fastcore.utils import *
+if os.environ.get('CLAUDE_CODE_SESSION_ID'):
+    os.environ.setdefault('EXHASH_JOURNAL', f"/tmp/exhash-journal/{os.environ['CLAUDE_CODE_SESSION_ID']}")
+    os.environ.setdefault('EXHASH_AUTHOR', os.environ.get('RUSTYGATE_AGENT', 'main'))
+elif os.environ.get('RUSTYGATE_LAUNCHER') == 'mcp':
+    os.environ.setdefault('EXHASH_JOURNAL', '/tmp/exhash-journal/mcp')
+    os.environ.setdefault('EXHASH_AUTHOR', os.environ['RUSTYGATE_KERNEL_ID'])
 if Path('pyproject.toml').exists():
     from pyskills import list_pyskills, doc, xdir, info_md
     from fastcore.editskill import *

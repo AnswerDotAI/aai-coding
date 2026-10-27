@@ -1,6 +1,6 @@
 ---
 name: persistent-python
-description: The persistent clikernel Python session — Jeremy's preferred single tool for nearly ALL Python work. TRIGGER — read and bootstrap as step zero of EVERY session where clikernel is available, before the first tool call: even tasks that only read a file or search a directory, plus stateful inspection, editing code or notebooks, debugging, experiments, API probes, data transforms, pyskills discovery, notebook-style work, local tool orchestration. If it could go through Python, it goes here — never python -c, Bash heredocs, or ad hoc scripts.
+description: The persistent clikernel Python session — Jeremy's preferred single tool for nearly ALL Python work. TRIGGER — read and bootstrap as step zero of EVERY session where clikernel is available, before the first tool call other than a Skill load: even tasks that only read a file or search a directory, plus stateful inspection, editing code or notebooks, debugging, experiments, API probes, data transforms, pyskills discovery, notebook-style work, local tool orchestration. If it could go through Python, it goes here — never python -c, Bash heredocs, or ad hoc scripts.
 ---
 
 # Persistent Python
