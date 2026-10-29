@@ -3,7 +3,7 @@ name: kernel-notebook-editing
 description: "Use kernel tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs."
 ---
 
-When Python is needed, call `exec` directly. Don’t list, select, or create kernels unless it reports that no kernel is available.
+When Python is needed, call `exec` directly. Don’t list, select, or create kernels unless it reports that no kernel is available. Never delete kernels or stop them as cleanup.
 
 Use the kernel MCP tools as the primary Python workbench. Put reusable logic in clean importable project functions; call those functions directly from the persistent kernel for exploration, timings, comparisons, and artifact generation. Do not create thin scripts merely to invoke reusable functions.
 
