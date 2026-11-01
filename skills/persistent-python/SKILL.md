@@ -7,7 +7,11 @@ description: The persistent clikernel Python session — Jeremy's preferred sing
 
 ALWAYS use the `clikernel` MCP server for ALL Python work: writing code, editing code or notebooks, running or debugging anything, inspecting objects or packages, probing APIs, and transforming data. It is the workbench for every task in this environment. If the work could go through Python, it goes through clikernel. Do not fall back to `python -c`, shell heredocs, or ad hoc scripts.
 
-The server's `py` tool runs code in one persistent IPython session, so imports, variables, monkeypatches, and cached objects carry across calls. Check the clikernel MCP server instructions already in your context before the first call. The first `py` creates the kernel, and its reply opens with the startup banner: what is imported, and which cells to run next. Follow it. If the banner reports that project imports were skipped, or no banner appears, report that to the user before other work. Then run the guarded import block from `$XDG_CONFIG_HOME/clikernel/startup.py` (default `~/.config/clikernel/startup.py`) as one `py` call. That file is the single source of truth for bootstrap imports; never retype them from memory.
+For Python, `py` (ipymini) is required. Start the kernel with `create(kernel="py")`. Never request `python3` (ipykernel) or another Python kernelspec. Check the clikernel MCP server instructions already in your context before the first call.
+
+Run code with `exec(code=...)` in the selected persistent kernel. Imports, variables, monkeypatches, and cached objects carry across calls. `exec` never creates or switches kernels.
+
+The `create` reply opens with the startup banner: what is imported, and which cells to run next. Follow it. If the banner reports that project imports were skipped, or no banner appears, report that to the user before other work. Then run the guarded import block from `$XDG_CONFIG_HOME/clikernel/startup.py` (default `~/.config/clikernel/startup.py`) as one `exec` call. That file is the single source of truth for bootstrap imports; never retype them from memory.
 
 The server instructions and startup docs cover the tools, notebook magics, output shape, interaction rules, reload gotchas, and pyskills workflow, so this skill does not repeat them. `list_pyskills()` shows the available tooling. Prefer a relevant pyskill over ad hoc code.
 
