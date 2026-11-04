@@ -226,7 +226,7 @@ Model choice, UI settings, sounds, and disabled optional features are personal p
 
 Ask the user to restart each configured harness. Accept Codex's hook trust prompt when hooks changed.
 
-Start a fresh session from the workspace root or a Python project containing `pyproject.toml`. Startup uses that file to enable the documented helpers. Confirm the installed skills are available. Use clikernel's MCP tools to create a Python kernel and verify state across two execution calls:
+Start a fresh session in any directory, including your home directory. Startup loads the documented helpers without requiring a project. Confirm the installed skills are available. Use clikernel's MCP tools to create a Python kernel and verify state across two execution calls:
 
 ```python
 create(kernel="py")
