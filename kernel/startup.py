@@ -4,7 +4,7 @@ if os.environ.get('CLAUDE_CODE_SESSION_ID'):
     os.environ.setdefault('EXHASH_AUTHOR', os.environ.get('RUSTYGATE_AGENT', 'main'))
 elif os.environ.get('RUSTYGATE_LAUNCHER') == 'mcp':
     os.environ.setdefault('EXHASH_JOURNAL', '/tmp/exhash-journal/mcp')
-    os.environ.setdefault('EXHASH_AUTHOR', os.environ['RUSTYGATE_KERNEL_ID'])
+    os.environ.setdefault('EXHASH_AUTHOR', os.environ.get('RUSTYGATE_AGENT') or os.environ['RUSTYGATE_KERNEL_ID'])
 from pyskills import list_pyskills, doc, xdir, info_md
 from fastcore.editskill import *
 from aidialog.dlgskill import *
