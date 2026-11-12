@@ -69,7 +69,7 @@ Dependencies such as clikernel, pyskills, and aidialog install as packages and d
 From the activated shell:
 
 ```bash
-command -v python ws-sync aai-hook clikernel-mcp clikernel-hook pyskills-doc safecmd slopometer
+command -v python ws-sync aai-hook clikernel-mcp clikernel-hook pyskills-doc pyskills-export safecmd slopometer
 command -v aidialog-summary exhash-cell lnhashview-cell exhash-open rgapi-nbrg
 uv pip check
 pyskills-doc aai_coding.coding_patterns
@@ -145,6 +145,7 @@ Merge these into `~/.claude/settings.json` under `hooks`. Use `<venv>/bin/aai-ho
 | `PreToolUse` | `mcp__clikernel__.*` | `<venv>/bin/clikernel-hook` |
 | `UserPromptSubmit` | omitted | `aai-hook claude-prompt-submit` |
 | `SessionStart` | omitted | `aai-hook claude-session-start` |
+| `SessionStart` | omitted | `<venv>/bin/pyskills-export ~/.claude/skills` |
 | `SubagentStart` | omitted | `aai-hook claude-subagent-start` |
 | `UserPromptSubmit`, `MessageDisplay`, `PostToolBatch` | omitted | `aai-hook claude-air` |
 | `UserPromptSubmit`, `MessageDisplay` | omitted | `aai-hook claude-slop` |
@@ -154,6 +155,8 @@ For rows with several events, register the command under each event. Resolve exe
 `clikernel-hook` supplies subagent identity to clikernel. Register that command directly; its implementation belongs to clikernel. Codex already isolates its MCP sessions and needs no identity hook.
 
 The prompt hook adds notices for questions, reading requests, and approvals. The startup hook supplies bootstrap and resume guidance. The subagent-start hook tells forks to ignore Claude's injected `<fork-boilerplate>` instructions.
+
+`pyskills-export` gives each pyskill a command: `/py-ghapi` in Claude Code, `$py-ghapi` in Codex. At each session start it writes one `py-*` stub per pyskill into the harness's skills directory and removes the stubs of pyskills that are gone. It leaves the skill links from step 5 alone. Register that command directly; its implementation belongs to pyskills. The harness lists the stubs for the user and omits them from the skill list it shows the model. The model still finds pyskills through `list_pyskills()`.
 
 The air hook nudges after 8 tool-call rounds without a substantive text response, then every 5 further rounds. The slop hook buffers displayed messages and scores the previous turn's final message at the next prompt. These hooks remain Claude-only. The default slop thresholds can be overridden in the command; Jeremy uses `SLOP_DENSITY=20 SLOP_WORST=12 aai-hook claude-slop` for `UserPromptSubmit`.
 
@@ -168,6 +171,16 @@ For Codex, merge this into `~/.codex/hooks.json`:
           {
             "type": "command",
             "command": "<venv>/bin/aai-hook codex-prompt-submit"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "<venv>/bin/pyskills-export ~/.codex/skills"
           }
         ]
       }
@@ -235,6 +248,8 @@ exec(code="setup_check + 1")
 ```
 
 The last call returns `2`. In the kernel, `list_pyskills()` should include the `aai_coding.*` rows and `doc('aai_coding.coding_patterns')` should render. Check the startup helpers even when quiet mode hides the startup notice.
+
+Ask the user to type `/py-` in Claude Code or `$py-` in Codex. The list should hold one command for each pyskill.
 
 Have one fork create and use its own kernel. It must have startup helpers without the parent's `setup_check` variable. Confirm the parent's current kernel and variable are unchanged. Close kernels created only for this check. When a check fails, report the failed step and fix its wiring before continuing.
 
