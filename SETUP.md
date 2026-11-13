@@ -1,10 +1,10 @@
 # Setting up the Answer.AI harness
 
-This file is a runbook for an LLM session, not a script. It sets up our way of working without requiring an Answer.AI account or a copy of our workspace. If you are a person: start with step 0 to create a workspace and get this repo, then open Claude Code or codex in the workspace and say "follow aai-coding/SETUP.md". If you already have the checkout, you can ask a session to follow this file from there, including step 0.
+This file is a runbook for an LLM session, not a script. It sets up our way of working without requiring an Answer.AI account or a copy of our workspace. If you are a person: start with step 0 to create a workspace and get this repo, then open Claude Code, codex, or Antigravity in the workspace and say "follow aai-coding/SETUP.md". If you already have the checkout, you can ask a session to follow this file from there, including step 0.
 
 If you are the session: first read `README.md` in this repo in full, since the steps below change your user's configuration and the README's design context is what lets you merge, recommend, and answer questions in an informed way. Then work through the steps in order, checking existing setup before making changes. Make no change beyond the stated outcomes without asking. Where the user's existing configuration overlaps, merge and never replace: show them each conflict and agree a resolution.
 
-This runbook targets macOS; the workspace commands use Bash/Zsh syntax. Do not apply the macOS sound hooks on other systems. Before harness configuration, at least one harness (Claude Code or codex) must be installed and signed in. Ask which harnesses to set up and where the workspace should live. No particular workspace name is required. Below, `<workspace>` means its absolute path, `<venv>` means `<workspace>/.venv`, and `<this repo>` means `<workspace>/aai-coding`. Resolve those placeholders before writing configuration; neither `~` nor shell variables are a substitute for an absolute path in config files.
+This runbook targets macOS; the workspace commands use Bash/Zsh syntax. Do not apply the macOS sound hooks on other systems. Before harness configuration, at least one harness (Claude Code, codex, or Antigravity) must be installed and signed in. Ask which harnesses to set up and where the workspace should live. No particular workspace name is required. Below, `<workspace>` means its absolute path, `<venv>` means `<workspace>/.venv`, and `<this repo>` means `<workspace>/aai-coding`. Resolve those placeholders before writing configuration; neither `~` nor shell variables are a substitute for an absolute path in config files.
 
 ## 0. Create a fastws workspace
 
@@ -59,8 +59,8 @@ For a custom workspace, use these repositories in `repos.txt`. The public worksp
 | `AnswerDotAI/aai-coding` | Skills, prompts, plugins, and the kernel startup file linked from this checkout, plus the `aai-hook` and `claudesub` CLIs. |
 | `AnswerDotAI/exhash` | Hash-verified editing tools imported by startup and used by the notebook CLI workflow. |
 | `AnswerDotAI/rgapi` | Search tools imported by startup, including the notebook search CLI. |
-| `AnswerDotAI/safecmd` | Command approval tool used by the Claude setup; not an aai-coding package dependency. |
-| `AnswerDotAI/slopometer` | Prose scoring tool used by the Claude hooks; not an aai-coding package dependency. |
+| `AnswerDotAI/safecmd` | Command approval tool used by the Claude and Antigravity setups; not an aai-coding package dependency. |
+| `AnswerDotAI/slopometer` | Prose scoring tool used by the Claude and Antigravity hooks; not an aai-coding package dependency. |
 
 Dependencies such as clikernel, pyskills, and aidialog install as packages and do not all need source checkouts. Keep personal extras in `repos-local.txt`: `ws-add` and automatic discovery write there, leaving the baseline alone. A clone of a workspace base receives shared `repos.txt` updates through Git. A custom workspace's own list receives no updates from that base.
 
@@ -82,7 +82,7 @@ In each new shell, activate the workspace environment before launching the harne
 
 ## Working through kernels
 
-Claude Code and Codex use persistent kernels for Python, file inspection, searching, notebook work, and most edits. Discover tools through pyskills and use exhash for hash-verified edits. Use Bash for shell commands, builds, and Git. Native tools remain available where the installed skills call for them. Launch the normal `claude` or `codex` executable.
+Claude Code, Codex, and Antigravity use persistent kernels for Python, file inspection, searching, notebook work, and most edits. Discover tools through pyskills and use exhash for hash-verified edits. Use Bash for shell commands, builds, and Git. Native tools remain available where the installed skills call for them. Launch the normal `claude`, `codex`, or `agy` executable.
 
 ## 1. Kernel server
 
@@ -120,9 +120,21 @@ approval_mode = "approve"
 
 `--quiet` suppresses startup output and automatic rule notes. Ask before adding `env_vars = ["GITHUB_TOKEN"]` to the server block. It passes the user's GitHub token into local kernels for tools such as `ghapi`.
 
+For Antigravity, merge this into `~/.gemini/config/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "clikernel": {
+      "command": "<venv>/bin/clikernel-mcp"
+    }
+  }
+}
+```
+
 In the main conversation, create a Python kernel with `create(kernel="py")` before calling `exec(code=...)`. Reuse that agent's current kernel on later calls. `use_kernel` attaches to a known existing kernel. Startup runs in each newly created Python kernel.
 
-Codex gives each fork its own MCP session and current-kernel selection. Each fork creates its own kernel. Claude needs the isolation hook in step 3; with it, a subagent's first `exec` creates a separate kernel with startup helpers but none of the parent's variables.
+Codex gives each fork its own MCP session and current-kernel selection. Each fork creates its own kernel. Claude and Antigravity need the isolation hook in step 3; with it, a subagent's first `exec` creates a separate kernel with startup helpers but none of the parent's variables.
 
 Check: deferred to step 7.
 
@@ -178,6 +190,18 @@ For Codex, merge this into `~/.codex/hooks.json`:
 
 Do not install `codex-orientation`. After changing Codex hooks, tell the user to expect its hook trust prompt on restart.
 
+For Antigravity, merge these into `~/.gemini/config/hooks.json` under `"aai-coding"`. Prefix each command with `<venv>/bin/python ~/.gemini/config/`:
+
+| Event | Matcher | Command |
+|---|---|---|
+| `SessionStart` | omitted | `aai_agy_hook.py session-start` |
+| `PreInvocation` | omitted | `aai_agy_hook.py pre-invocation` |
+| `PreToolUse` | `write_file\|edit_file` | `aai_agy_hook.py block-native-edit` |
+| `PreToolUse` | `run_command` | `aai_agy_hook.py bash-guard` |
+| `PreToolUse` | `call_mcp_tool\|mcp_tool\|.*clikernel.*` | `aai_agy_hook.py clikernel-hook` |
+
+In Antigravity's `hooks.json`, `SessionStart` and `PreInvocation` take a flat array of `{"type": "command", "command": "..."}` objects. `PreToolUse` wraps each entry in `{"matcher": "...", "hooks": [{"type": "command", "command": "..."}]}`. `aai_agy_hook.py` translates Antigravity's JSON stdin/stdout payloads (`injectSteps`, `decision`, and `overwrite`) to the helpers in `aai_coding.harness` and `safecmd`. `clikernel-hook` approves `clikernel` MCP calls and sets `agent` to `conversationId` to isolate each conversation and subagent kernel.
+
 ## 4. Permissions and environment (Claude Code)
 
 In `settings.json`, set `env.BASH_DEFAULT_TIMEOUT_MS` to `"90000"`. Include `Grep`, `Glob`, and `NotebookEdit` in `permissions.deny`. Include `WebSearch`, `WebFetch`, and clikernel's `create`, `use_kernel`, `list_kernels`, `restart`, `interrupt`, and `delete_kernel` tools in `permissions.allow`, using names such as `mcp__clikernel__create`.
@@ -199,12 +223,14 @@ Create these skill symlinks into this checkout:
 | Claude Code | `~/.claude/skills/safecmd` | `plugins/safecmd` |
 | Codex | `~/.codex/skills/clikernel` | `skills/clikernel` |
 | Codex | `~/.codex/skills/notebook-dialog-editing` | `skills/notebook-dialog-editing` |
+| Antigravity | `~/.gemini/config/skills/persistent-python` | `skills/persistent-python` |
+| Antigravity | `~/.gemini/config/skills/pyskills` | `skills/pyskills` |
 
 The Codex skills appear as `kernel-notebook-editing` and `cli-notebook-editing`. Use the CLI notebook workflow only when the user explicitly requests working without a kernel. Resolve existing files or directories at the link paths with the user. Do not edit the skills as part of setup.
 
 The starter includes `safecmd` and `slopometer`. safecmd's allowlist lives at `~/.config/safecmd/config.ini`. slopometer's first score downloads a spaCy language model into `~/.cache/slopometer`; tell the user to expect that download. Without the executable, the prose hook skips scoring.
 
-Put the shared rules from `prompts/core.md` in `~/.codex/AGENTS.md`. For an uncustomized setup, symlink the file to this checkout. Merge with an existing personal file instead of replacing it.
+Put the shared rules from `prompts/core.md` in `~/.codex/AGENTS.md` for Codex and `~/.gemini/config/GEMINI.md` for Antigravity. For an uncustomized setup, symlink the file to this checkout. Merge with an existing personal file instead of replacing it.
 
 For Claude Code, append the shared rules with `--append-system-prompt-file <this repo>/prompts/core.md`. Jeremy's `ccd` alias also uses the replacement system prompt:
 
