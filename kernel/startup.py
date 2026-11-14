@@ -10,9 +10,10 @@ from fastcore.editskill import *
 from aidialog.dlgskill import *
 from exhash.skill import *
 from rgapi.skill import *
-import clikernel.skill as clik, pyskills.skill as pysk, fastcore.editskill as edsk
+import pyskills.skill as pysk, fastcore.editskill as edsk
 import aidialog.dlgskill as dsk, exhash.skill as exh, rgapi.skill as rgsk
-import aai_coding.coding_patterns as acp
+try: import clikernel.skill as clik, aai_coding.coding_patterns as acp
+except ImportError as e: print(f'Project imports were skipped: this kernel has no `{e.name}` module.')
 print(r'''Kernel imports are loaded, including rg/fd/ls from rgapi. If the doc() output for these modules isn't visible in your context, read it now, by calling these in separate cells:
 doc(clik, pysk, edsk)
 doc(dsk, exh, rgsk)
