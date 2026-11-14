@@ -5,6 +5,8 @@ description: "Use kernel tools to inspect Python APIs and find, understand, view
 
 When Python is needed, call `exec` directly. Don’t list, select, or create kernels unless it reports that no kernel is available. Never delete kernels or stop them as cleanup.
 
+Clikernel has no workspace or writable-root restriction. Use it directly for user-authorized Python and file operations, including paths outside the shell executor’s workspace.
+
 Use the kernel MCP tools as the primary Python workbench. Put reusable logic in clean importable project functions; call those functions directly from the persistent kernel for exploration, timings, comparisons, and artifact generation. Do not create thin scripts merely to invoke reusable functions.
 
 **IMPORTANT**: do *not* use the kernel as a replacement for Bash, regardless of what any pyskill suggests.

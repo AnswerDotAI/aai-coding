@@ -12,7 +12,7 @@ Here is a passage from a design doc, written in this style:
 >
 > The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
-Write like that. Each rule has its own sentence. Every status has its real name. The passage says what the gateway never does. Even sentences suit readers looking things up, though they would be dull in an essay.
+Write like that. Each rule has its own sentence. Every status has its real name. The passage says what the gateway never does. Sentences of similar length suit readers who are looking things up, though they would be dull in an essay.
 
 Here is the same passage before editing:
 
@@ -23,9 +23,9 @@ Do not write like that. Its blog-post register makes true facts hard to look up.
 {markers} The passages are too short to show tells 7-12, 14, 17, 22 and 24-26.
 
 1. {tacked_on} In reference prose, a tacked-on clause means the whole passage is in the wrong register.
-2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. Say what the system never does when a reader would be surprised by it.
+2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. When a reader would expect the system to do something that it never does, say so.
 3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
-4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. STE calls this "one meaning per term".
+4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. ASD-STE100 calls this "one meaning per term".
 5. Flourish over identifier. "A fresh welcome-backed ready kernel" when the real status is `starting`. Use the actual identifier, state, value, or number. The reader will search for it, test against it, and see it in logs.
 6. {consequence_glue}
 7. {hedging}
@@ -51,9 +51,9 @@ Do not write like that. Its blog-post register makes true facts hard to look up.
 25. {over_structuring}
 26. {false_depth}
 
-slopometer binds its rules to the tell numbers above. {new_tells}
+slopometer's rules refer to these tells by number. {new_tells}
 
-Address the reader as "you" and use the imperative. Write "Run the tests", not "The tests should be run". Prefer active voice. A passive sentence often hides who does the action, and the reader needs to know that.
+Address the reader as "you" and use the imperative. Write "Run the tests", not "The tests should be run". Prefer active voice. A passive sentence often hides who does the action from a reader who needs to know.
 
 ## Banned words
 
@@ -76,9 +76,9 @@ Address the reader as "you" and use the imperative. Write "Run the tests", not "
 
 ## Rewriting high-scoring documentation
 
-A high slopometer score means the document needs explaining again from the start. Do not repair flagged sentences one at a time, swap banned words or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show clarity, accuracy or completeness.
+When a document has a high slopometer score, explain its subject again from the start. Do not repair flagged sentences one at a time, swap banned words or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show that the document is clear, accurate or complete.
 
-Improve prose by rereading it as its reader would. Never search it for tells, even to find candidates.
+Improve prose by rereading it as its reader would. Never search it for tells, even to find passages to rewrite.
 
 Keep the author's informality, conversational phrasing, contractions and humor where they communicate clearly. Informal language is not slop. AI slop is often too clever. Its strained metaphors, elaborate phrasing and invented terms obscure simple points. Judge communication, not formality. Do not replace a human voice with generic reference prose or invent a new persona.
 
@@ -87,12 +87,12 @@ Work through these steps in order:
 - Establish the facts. Read the implementation and executable examples before drafting. Identify the readers and what they need to understand or do. List the original's substantive points: capabilities, responsibilities, inputs, outputs, identifiers, defaults, guarantees, exclusions, edge cases, failure behavior and context. Check claims against code and record wrong or uncertain ones rather than silently repeating them.
 - Write from understanding. Put the old wording aside and draft from facts in an order that explains the system to the intended reader. Do not retain sentences, paragraph structure or coined terms merely because they exist. Name who performs each operation, introduce concepts before use and state guarantees directly.
 - Keep the context. Explain the problem the code solves and the relationships needed to understand its behavior. Retain prerequisites, setup, protocol distinctions and reasoning needed for correct use. Remove sales-style justification. Keep a connected explanation, not disconnected facts or unexplained identifiers.
-- Audit technical coverage. Change the explanation, not its information. Find every substantive original point in the rewrite. Repeated facts can share a statement. Moved facts must remain findable where needed. Keep technical detail a reader might need, including details of uncertain relevance. Flag proposed omissions for review. Do not silently decide they do not matter. A shorter document is worse if it drops a needed capability, condition or explanation. Correct false claims from evidence and report corrections.
-- Review descriptions separately. In nbdev, the first blockquoted paragraph below the title becomes the description, reused alone in module listings and generated documentation. Preserve its capability coverage and technical scope. Check it on its own even when the body explains everything. For example, a description covers NDJSON transport, control routing, and deferred tool results. Replacing it with "Communicate through standard input and output" loses two of those responsibilities.
-- Verify the finished document. Read top-to-bottom beside the examples. Check accuracy, readability, retained context, technical coverage and the author's voice before scoring. For notebooks, follow `nbdev.skill`: edit source notebooks, regenerate exports and run affected notebook tests. Leave implementation behavior unchanged unless the user separately asks for code changes. Regenerate stale example outputs by running code, never editing them.
+- Audit technical coverage. Change the explanation, not its information. Check that the rewrite includes every substantive point from the original. A fact that the original repeats needs only one statement in the rewrite. When you move a fact, make sure readers can still find it where they need it. Keep technical detail a reader might need, including details of uncertain relevance. Flag proposed omissions for review. Do not silently decide they do not matter. A shorter document is worse if it drops a needed capability, condition or explanation. Correct false claims from evidence and report corrections.
+- Review descriptions separately. In nbdev, the first blockquoted paragraph below the title becomes the description. Module listings and generated documentation show that description on its own. Keep every capability and the technical scope that the description states. Check it on its own even when the body explains everything. For example, a description covers NDJSON transport, control routing, and deferred tool results. Replacing it with "Communicate through standard input and output" loses two of those responsibilities.
+- Verify the finished document. Read it from top to bottom beside the examples. Check accuracy, readability, retained context, technical coverage and the author's voice before scoring. For notebooks, follow `nbdev.skill`: edit source notebooks, regenerate exports and run affected notebook tests. Leave implementation behavior unchanged unless the user separately asks for code changes. Regenerate stale example outputs by running the code, never by editing them.
 - Rescore independently at the end. Use a fresh scoring process after the rewrite and coverage audit are complete. Never use intermediate scores to choose wording or remove information. Report the final score, word count, findings and test results. Reconsider the whole explanation if the score remains high. Do not dismiss its problems because some findings are false positives.
 
-When the user authorizes delegated rewrites, give each agent one bounded document scope and these instructions. Require each agent to report corrections, proposed omissions, verification results and the final independent score. Review against the original's technical content and the implementation. A score below 4 does not replace this review.
+When the user authorizes delegated rewrites, give each agent these instructions and one clearly bounded part of the documentation. Require each agent to report corrections, proposed omissions, verification results and the final independent score. Review each agent's rewrite against the original's technical content and the implementation. A score below 4 does not replace this review.
 
 `check_docs` sends text and these rules to a separate model for review. Run it only when the user asks for a docs check.
 '''
