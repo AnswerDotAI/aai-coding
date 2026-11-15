@@ -5,4 +5,7 @@ description: TRIGGER — read before completing ANY non-trivial task: working wi
 
 # Pyskills
 
-Run `list_pyskills()` in clikernel (after the persistent-python bootstrap). It returns the tooling catalog: one row per pyskill, each description saying when it applies. Map your task to rows, read `doc(<module>)` for each candidate before first use, and prefer a matching pyskill over ad hoc code or shell commands. If unsure whether a pyskill helps, load its docs and check.
+NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
+
+- run `list_pyskills()` (clikernel, after persistent-python bootstrap): tooling catalog, one row per pyskill saying when it applies
+- each task: match it to rows; `doc(<module>)` for every candidate, doubtful ones too, before first use; prefer matching pyskill over ad hoc code or shell

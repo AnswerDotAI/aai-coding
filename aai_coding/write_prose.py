@@ -8,7 +8,7 @@ Here is a passage from The Economist:
 
 > No form of emissions reduction, though, can quickly bend the current trajectory.[1][2] Endurance is what remains.[3][14] Making air conditioning more efficient, cheap and widespread[10] saves lives[6] and fits well with other policy goals, like making clean electricity cheap to produce and consume.[7] Ten years ago a commitment to phase out the fluorinated gases in cooling systems was reached in Kigali, the capital of Rwanda.[8][9] There is scope for extra international efforts to improve the machinery that uses them.[7][19] This could double the cooling benefit of phasing out the gases.[6]
 
-Each sentence says one thing in plain English and stops. It carries no byline and needs none. It sells nothing and does not tell readers what to take away.
+Each sentence says one thing in plain English and stops. It has no byline and needs none. It sells nothing and does not tell readers what to take away.
 
 Write like that.
 
@@ -50,7 +50,7 @@ Do **NOT** write like that.
 
     > ~~Failures are visible now too.~~ A startup failure used to print to the server log and leave a half-booted dialog that looked ready. It now raises, the user gets an error toast and a red status dot, and the dialog stays editable.
 
-    A closing sentence can repeat its paragraph or piece, as when a paragraph ends "LLMs can now use the module with far fewer tokens" after its second sentence has already said so. People are taught to end an essay this way. It is the strongest LLM habit of the lot. End on the last fact. Within a sentence, "editing needs no kernel: cards echo through the outbound queue, which is kernel-independent" repeats its opening in the final clause. The list form names a category then unpacks it in a parallel list: "it should see what you have been doing: the cells you ran, what they printed, the plots you drew, the errors you hit". Cut whichever side of the colon says less. If deleting a phrase removes no information from the document, delete it. Prefer "nothing new needs specifying" to "there is nothing new to learn and nothing new to specify".
+    A closing sentence can repeat its paragraph or piece, as when a paragraph ends "LLMs can now use the module with far fewer tokens" after its second sentence has already said so. People are taught to end an essay this way. It is the strongest LLM habit of the lot. End on the last fact. Within a sentence, "editing needs no kernel: cards echo through the outbound queue, which is kernel-independent" repeats its opening in the final clause. In the list form, a category is named and then unpacked in a parallel list: "it should see what you have been doing: the cells you ran, what they printed, the plots you drew, the errors you hit". Cut whichever side of the colon says less. If deleting a phrase removes no information from the document, delete it. Prefer "nothing new needs specifying" to "there is nothing new to learn and nothing new to specify".
 15. {decoration} Decorative bold and italics count too. Use them VERY sparingly in the body of a paragraph.
 16. {tacked_on} Avoid em dashes entirely. Colons and semicolons should be rare in normal prose.
 17. Monotone rhythm. Repeating the pattern of topic sentence, elaboration, example and wrap-up makes readers glaze over. Mix it up. Real writing is lumpy. Some sections need length. Others need only two sentences.

@@ -1,8 +1,17 @@
+# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 """Describe and transcribe images and PDFs using vision models, keeping visual content out of the caller's context.
 
-`look` answers questions about screenshots, diagrams and rendered documents. `transcribe` saves a Markdown transcription of scanned papers, code, mathematical notation and diagrams. Both send images through fastllm in a single request with no tools. Models receive the images and instructions, without filesystem access. Transcription uses context to resolve ambiguous readings; visual checking reports what is visible.
+| |`look`|`transcribe`
+-|-|-
+does|answers questions|saves Markdown transcription
+for|screenshots, diagrams, rendered docs|scanned papers, code, math notation, diagrams
+reading|what's visible|context resolves ambiguous readings
+images|downscaled to ≤1 MP|full resolution
 
-Images are converted to PNG on a white background using libvips, including SVG, TIFF, WebP, HEIC and GIF. PDFs are rendered with pypdfium2. `look` limits images to one megapixel; `transcribe` preserves their resolution. Read `doc(look)` or `doc(transcribe)` before calling. Set the chosen provider's API credentials for fastllm; `pdf2pngs` can be used independently. Review important transcriptions against the source."""
+- both: one tool-free fastllm request; model sees images + instructions only, no filesystem
+- input: images (incl. SVG TIFF WebP HEIC GIF) → PNG on white via libvips; PDFs rendered by pypdfium2
+- `look`, `transcribe` need the provider's API credentials for fastllm; `pdf2pngs` doesn't
+- important transcription: check against source"""
 import base64
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -41,8 +50,13 @@ def _img2png(path, dest, max_pixels=1e6):
     return dest
 
 
-def pdf2pngs(path, dest_dir=None, scale=2, pages=None):
-    "Render PDF pages as `<stem>-<n>.png` in `dest_dir` (default: alongside), returning paths. `pages`: 1-based numbers (default: all)."
+def pdf2pngs(
+    path,  # PDF file
+    dest_dir=None,  # Folder for the PNGs; default: the PDF's folder
+    scale=2,  # Rendering scale
+    pages=None,  # 1-based page numbers; default: all
+):
+    "Render PDF pages as `<stem>-<n>.png` in `dest_dir`, returning their paths"
     p = Path(path).expanduser().resolve()
     d = Path(dest_dir).expanduser() if dest_dir else p.parent
     d.mkdir(parents=True, exist_ok=True)
@@ -97,21 +111,19 @@ async def transcribe(
     path,  # Input image or PDF path
     output=None,  # Markdown path; defaults to the input path with its suffix replaced by .md
     pages=None,  # PDF only: iterable of 1-based page numbers, e.g. range(5, 7); default: all
-    extra_instructions='',  # Document context, specialist terminology or symbols, exclusions, and notation changes
+    extra_instructions='',  # Document context, specialist terms and symbols, exclusions, notation changes; helps resolve ambiguous readings
     model='anthropic/claude-opus-5-5',  # fastllm provider/model name
     effort='medium',  # Reasoning effort, as supported by the model
     dpi=288,  # PDF rendering resolution; image inputs retain their own resolution
     max_tokens=None,  # Output budget; None lets fastllm choose the model's limit
-    replace_prompt=False,  # Use only extra_instructions, replacing all default transcription instructions
+    replace_prompt=False,  # Use only `extra_instructions`, replacing default prompts: ask another question of the pages; reply saved to `output`
 ):
-    """Save a visual transcription, returning `path`, `model`, `usage`, `duration_ms`, and estimated USD `cost` (None if unknown).
+    """Save a Markdown transcription of the image or PDF at `path`, returning `path`, `model`, `usage`, `duration_ms` and estimated USD `cost` (None if unknown)
 
-    Sends all selected pages in one tool-free fastllm request. Use coherent sections for long documents.
-    Opus 5.5 with medium effort is probably the best cost/quality choice, based on our APL-paper comparisons. Astra medium reproduced nesting diagrams better but cost about three times as much. Gemini Flash low is a cheaper, faster option with lower accuracy.
-    Include document context and specialist words or symbols in `extra_instructions` when available to help resolve ambiguous readings.
-    Set `replace_prompt=True` to ask a different question about the pages. This removes the default system and user prompts; the response is saved to `output`.
-    Tables use Markdown. Figures get descriptive alt text and `figures/pNNN-left-top-right-bottom.png` references for later extraction, with full-page coordinates normalized to 0–1000. Image inputs use page 1. Figure files are not created.
-    Replaces an existing output file only after a complete response. `VisionError.completion` retains partial text and usage on an incomplete response. The default prompt requests only the transcription, with no added commentary or transcription notes.
+    - request: selected pages in one tool-free fastllm call; long document: one call per coherent section
+    - models: Opus 5.5 medium: likely best cost/quality (our APL-paper comparisons); Astra medium: better nesting diagrams, ~3× cost; Gemini Flash low: cheaper, faster, less accurate
+    - output: Markdown tables; figures: descriptive alt text + `figures/pNNN-left-top-right-bottom.png` refs, full-page coordinates 0–1000, for later extraction (files not created); image input = page 1; default prompt: transcription only, no commentary or notes
+    - existing `output`: replaced only after a complete response; incomplete: `VisionError.completion` keeps partial text, usage
     """
     path = Path(path).expanduser().resolve()
     output = Path(output).expanduser() if output is not None else path.with_suffix('.md')

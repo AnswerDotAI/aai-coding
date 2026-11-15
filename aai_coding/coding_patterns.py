@@ -1,36 +1,38 @@
+# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 r'''Jeremy's coding style and conventions: read before writing, reviewing, or assessing any code.
 
-From the fastai style guide and Jeremy's three decades' experience; applies to all his projects. Use his own sibling-editable fastcore/fasthtml ecosystem (`fastcore`, `fasthtml`, `fastlite`, ...), preferred over heavier alternatives.
+notation: /why
+
+- applies: all Jeremy's projects; from fastai style guide, his three decades' experience
+- libraries: his sibling-editable ecosystem (`fastcore`, `fasthtml`, `fastlite`, ...) over heavier alternatives
 
 ## Design
 
-Prioritize tool improvement over one task: it helps future tasks, sessions and the team. Ergonomics matter as much as capability. Tool-friction workarounds are the learned default; our tools are one edit away. Fix or raise friction; never quietly work around it.
-
-Improve APIs, including upstream, beyond the smallest task fix. Reaching into another package's private names, reproducing dependency logic, or helpers solely bridging another package's gap signal API workarounds. Propose the API that removes them.
-
-Omit constructs whose need you cannot explain: redundant `str(x)`/coercions, unmutated `list(x)` copies, just-in-case try/excepts, unused parameters. Readers infer necessity; useless constructs cost confusion, doubled in nbdev where tests document code. Omit weightless type hints, docstrings and boilerplate; prefer concise readable code.
-
-Useful features needn't await explicit requests. Open-source users encountering gaps assume incapability and leave. Judge features by design needs and user expectations.
-
-Comments: only what code cannot show, next to that code. Never provenance, next-line narration or change justification: those address reviewers, not future readers.
-
-Refactor continually to keep code as simple as the design allows, including encountered mess; inherited mess never excuses more. Report fixes needing design decisions rather than deciding. Give each fact/constant/logic one home. Remove all noticed duplication together, including templates/tests/docs; never fix copies individually or leave noticed duplicates. New duplication requires explicit agreement.
+- improving a tool > finishing one task    /helps future tasks, sessions, team
+- ergonomics: matter as much as capability
+- friction: fix or raise; never quietly work around    /workarounds are the learned default; our tools are one edit away
+- APIs, upstream too: improve beyond smallest fix; another package's private names, reproduced dependency logic, helpers only bridging a package's gap: workaround signs; propose the API that removes them
+- omit: constructs whose need you can't explain (redundant `str(x)` or other coercions, unmutated `list(x)` copies, just-in-case try/excepts, unused parameters); weightless type hints, docstrings, boilerplate; prefer concise readable code    /readers infer necessity: useless constructs cost confusion, doubled in nbdev where tests document code
+- useful features: needn't await request; judge by design needs, user expectations    /open-source users meeting gaps assume incapability, leave
+- comments: only what code can't show, next to that code; never provenance, next-line narration, change justification    /those address reviewers, not future readers
+- refactor continually, encountered mess too: as simple as design allows; inherited mess never excuses more
+- fix needing design decision: report, don't decide
+- one home per fact, constant or piece of logic; noticed duplication: remove all of it together, templates, tests and docs too; never fix copies singly; new duplication: explicit agreement only
 
 ## Tools
 
-Defaults target correct, readable output. Trust them (CLI flags, Python arguments, tool options) unless a specific task requirement cannot be met. Don't override habitually or for assumed improvements. Report noisy/wrong output as tool bugs.
-
-MUST run documented build/test commands exactly, without added flags unless explicitly requested.
-
-- Flags wanted every run belong in config; return to bare commands: recurring `pytest --timeout 300` becomes `timeout = 60` under `[tool.pytest.ini_options]`.
-- Don't check-then-apply when applying is the goal: `cargo fmt`, not `cargo fmt --check` followed by `cargo fmt`. `--check` is for a final no-mutation verification, e.g. CI.
-- Run bare; read output before working around expected problems. Never truncate with `| tail -20`/`| grep PASS`, or merge stderr using `2>&1`: unseen output hides problems; separated stderr makes crashes unmissable.
-- NEVER shell-redirect without explicit direct approval, separate from command approval; redirection breaks harness approvals.
-- Real one-off flag: give the reason, use once, drop next call.
+- defaults (CLI flags, Python arguments, tool options): trust unless a task requirement can't otherwise be met; never override habitually or for assumed gains; noisy or wrong output: report as tool bug    /defaults target correct, readable output
+- documented build and test commands: MUST run exactly, no added flags unless explicitly requested; read output before working around expected problems
+- flag wanted every run: into config, back to bare command (recurring `pytest --timeout 300` → `timeout = 60` under `[tool.pytest.ini_options]`)
+- applying is the goal: `cargo fmt`, not `cargo fmt --check` then `cargo fmt`; `--check`: final no-mutation verification, e.g. CI
+- never truncate (`| tail -20`, `| grep PASS`) or merge stderr (`2>&1`)    /unseen output hides problems; separate stderr makes crashes unmissable
+- shell redirect: NEVER without explicit direct approval, separate from command approval    /breaks harness approvals
+- real one-off flag: give reason; use once; drop next call
 
 ## Python
 
-Docments are fastcore's trailing parameter-comment documentation. NEVER remove them in refactors. Docmented/long signatures: `(` on def line; one parameter per line, four-space indent; `):` alone at def indent:
+- docments (fastcore trailing parameter comments): NEVER remove in refactors
+- docmented or long signature:
 
 ```python
 @delegates(start_kernel)
@@ -41,71 +43,44 @@ async def run_kernel(
 ):
 ```
 
-Known-callee `**kwargs` forwarding requires `@delegates(callee)` to expose options. Collector MUST be `kwargs`, not `kw`. Skip the decorator if callee's signature is only `**kwargs` (nothing to delegate).
-
-Use raw strings for ANY nontrivial string literal (`r"..."`/`r"""..."""`): regexes, tool text, code/markup, multiline, backslashes. Plain `\n`/`\d` can error/silently corrupt text, costing diagnosis and repair round trips; raw strings preserve intended text with no cost when escapes are absent. Make it the default, not the exception.
+- `**kwargs` forwarded to known callee: `@delegates(callee)`, exposing its options; skip if callee's signature is only `**kwargs`; collector MUST be `kwargs`, not `kw`
+- raw strings for ANY nontrivial literal: regexes, tool text, code, markup, multiline, backslashes    /plain `\n` `\d` can error or silently corrupt text; raw costs nothing when escapes absent
+- one-line bodies:
 
 ```python
-# Conditionals
 if not x: return default
-if x and y: do_thing()
-
-# Try/except
 try: return run("cmd").strip() or default
 except Exception: return default
-
-# Loops
 for i in range(n): result[i] = 0
-while len(items) < 3: items.append(0)
 ```
 
-Combine imports:
-
-```python
-import os, re, sys, shutil
-from pathlib import Path
-from fastcore.utils import *
-```
-
-`from fastcore.utils import *` already supplies `os`, `Path`, much of the stdlib; don't re-import alongside it.
+- imports combined: `import os, re, sys, shutil`; `from fastcore.utils import *` supplies `os`, `Path`, much of stdlib: don't re-import them
 
 ## Projects
 
-Run `chkstyle {path}`; path only if needed. Hint, not gospel. For nbdev, check notebooks (`chkstyle nbs/00_core.ipynb`), not exported `.py`, to include unexported examples/tests.
-
-Read standard config, don't duplicate: `.github/release.yml` for release notes; `pyproject.toml`'s `[tool.yourpkg]` for project config. Infer values when possible, e.g. package name from `[project].name`. Bundle data inside the package; read using `importlib.resources`.
-
-Python: Jeremy bumps versions immediately AFTER release, as part of releasing, never during changes; tree holds next release version. Sibling floors may name unreleased local versions (`foo>=<foo's local version>`). A downstream pin is part of the change that creates the dependency. Changes consuming new, unreleased dependency behavior/API must update consumers' pins in the SAME SESSION, never defer to release. Other artifacts version at change time.
-
-Prefer flat layout over src/:
-
-```
-myproject/
-├── mypkg/
-│   └── __init__.py
-├── tests/
-├── pyproject.toml
-└── README.md
-```
+- `chkstyle {path}` (path only if needed): hint, not gospel; nbdev: on notebooks (`chkstyle nbs/00_core.ipynb`), not exported `.py`    /notebooks include unexported examples, tests
+- standard config: read, don't duplicate (`.github/release.yml` release notes; `pyproject.toml` `[tool.yourpkg]`); infer values when possible, e.g. package name from `[project].name`
+- bundled data: inside package, read via `importlib.resources`
+- layout: prefer flat (`myproject/mypkg/`, `tests/`, `pyproject.toml`) over `src/`
+- Python versions: Jeremy bumps right AFTER release, as part of it, never during changes    /tree holds next release version
+- sibling floors may name unreleased local versions (`foo>=<foo's local version>`)
+- new dependency: its downstream pin is part of the change; consuming unreleased dependency behavior or API: update consumers' pins SAME SESSION, never at release
+- other artifacts: version at change time
 
 ## Testing
 
-Most projects use nbdev: no test cells; tests ARE documentation; revise lesson cells. Use red-green only for assertions actually added/revised (`doc(nbdev.skill)`), to check the test works. Coverage is never a goal. Many changes, especially trivial logic, need no new/changed tests.
-
-Add tests only for meaningful uncertainty or substantive logic. Justifications:
-- Documents an idea.
-- Logic required careful thought: edge cases, parsing, arithmetic, tricky conditionals vulnerable to silent future breakage.
-- Somewhat-likely-to-break external assumption: file format, API response shape, another tool's behavior. Exercise the REAL system; mocks merely restate assumptions. Usually slow-marked.
-
-Zero tests for wiring/orchestration: re-exports, delegation, one-line glue, functions ONLY sequencing tool calls. These assert Python works and constrain changeable internals. Needing recording fakes/mock collaborators to reach code strongly suggests testing implementation transcripts, not logic. Extract/test a small pure function, or don't test.
-
-Pytest: checks that don't fit a readable notebook lesson AND are too complex/distracting even for `#|hide`. When a change needs a new test, use red-green to check the test works. Prefer as few tests as possible, combining checks into readable, faster stories. If a test exceeds implementation changes in length, think carefully about removing, simplifying or merging it.
-
-Keep useful checks in real tests/notebook cells, never ad-hoc commands. Notebook explorations often ARE narrative: retain example cells documenting what we needed to know and guarding it. Pytest explorations survive only under the criteria above.
-
-Assert logic/guarantees, not incidental exact renderings/reprs/field order: check content appears in a Markdown display block, not exact text. NEVER lock in behavior unless that exact behavior is essential logic/contract guaranteed forever.
-
-Run `pytest -q`, not permission-prompting `python -m pytest`; nbdev: `nbdev-test` on changed notebook. Ask first only if runs (including `eval: false` cells) may take >~2min or reach authenticated external services. Slow-marked tests only at session finish or after changes likely to affect them directly.
+- nbdev (most projects): no test cells; tests ARE documentation; revise lesson cells
+- many changes, especially trivial logic, need no new or changed tests
+- add tests only for meaningful uncertainty or substantive logic, never for coverage: documents an idea; logic needing careful thought (edge cases, parsing, arithmetic, tricky conditionals open to silent breakage); somewhat-likely-to-break external assumption (file format, API response shape, another tool's behavior): exercise REAL system, usually slow-marked    /mocks merely restate assumptions
+- wiring and orchestration (re-exports, delegation, one-line glue, functions ONLY sequencing tool calls): zero tests    /they assert Python works, constrain changeable internals
+- reaching code needs recording fakes or mock collaborators: strongly suggests testing implementation transcripts, not logic; extract and test a small pure function, or don't test
+- red-green: only for assertions actually added or revised, to check the test works (`doc(nbdev.skill)`)
+- pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories; longer than the implementation change: think hard about removing, simplifying or merging
+- useful checks: in real tests or notebook cells, never ad-hoc commands; notebook explorations often ARE narrative: keep example cells documenting what we needed to know and guarding it; pytest explorations: only under criteria above
+- assert logic and guarantees, not incidental renderings, reprs or field order (content in Markdown display block, not exact text); NEVER lock in behavior unless essential logic or contract guaranteed forever
+- run: `pytest -q`, not `python -m pytest` (prompts for permission); nbdev: `nbdev-test` on changed notebook
+- ask first only if runs (`eval: false` cells too) may take >~2min or reach authenticated external services
+- slow-marked tests: only at session finish or after changes likely to affect them directly
 '''
 
 __all__ = []

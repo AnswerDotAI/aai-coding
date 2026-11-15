@@ -4,9 +4,9 @@ r"""How to write summaries that stand alone: read before summarizing a conversat
 
 Use these guidelines for any long source: a meeting transcript, chat thread, review discussion, diff or paper. The summary is the only thing the reader will read. Use write-docs for its sentences and this skill for its content.
 
-A source records what was said and in what order. Build a picture of the situation from it, then write what is now true: what was decided, what is open, who is doing what and why. Merely shortening the source does not do that.
+A source contains what was said, in the order it was said. Build a picture of the situation from it, then write what is now true: what was decided, what is open, who is doing what and why. Merely shortening the source does not do that.
 
-Here is a passage from the minutes of a Federal Open Market Committee meeting. The minutes compress a day of committee discussion into a few pages. They set the standard that your summaries should meet by default:
+Here is a passage from the minutes of a Federal Open Market Committee meeting. In the minutes, a day of committee discussion is compressed into a few pages. They set the standard that your summaries should meet by default:
 
 > The manager turned first to an overview of broad market developments during the intermeeting period.[1] Respondents to the Open Market Desk Survey of Market Expectations (Desk survey) continued to see the economy as resilient[4] and again marked up their forecasts for real gross domestic product (GDP) growth in 2026, while their expectations for headline personal consumption expenditures (PCE) inflation and the unemployment rate were little changed. Market- and survey-based policy rate expectations were likewise little changed. Market-based measures of policy rate expectations indicated one to two 25 basis point rate cuts this year, and the median modal path of the federal funds rate, as given in the Desk survey, continued to indicate expectations of two 25 basis point rate cuts this year.
 >
@@ -32,7 +32,7 @@ The numbered tells below match the [bracketed] markers in both passages. Where a
 
 1. Walking the source: following its order, turn by turn through a conversation, file by file through a diff, section by section through a paper. Order by subject, not by when things were said. The minutes' "turned first to" is fine, because the briefing's agenda was itself ordered by subject. "The briefing opened with" and "toward the end of the briefing" record timing the reader never needed.
 
-2. Topics without content: "we discussed the migration", "this PR refactors the auth module", "the paper explores tradeoffs in caching". Each names what the source is about and shares nothing it says. A sentence you could have written before reading the source tells the reader nothing about it. Give the specifics of each topic or drop it.
+2. Topics without content: "we discussed the migration", "this PR refactors the auth module", "the paper explores tradeoffs in caching". Each says what the source is about and nothing that the source says. A sentence you could have written before reading the source tells the reader nothing about it. Give the specifics of each topic or drop it.
 
 3. Pointers to nowhere: a reference that resolved during the conversation resolves to nothing in the summary. "The approach discussed earlier", "the second reviewer's concern", "the drivers mentioned earlier" and "see Section 3" all do this. Name the thing instead. Every reference must resolve inside the summary itself.
 
@@ -42,7 +42,7 @@ The numbered tells below match the [bracketed] markers in both passages. Where a
 
 6. The why dropped: a conclusion reported without its reason. "Refinancing is not expected to increase materially" omits the reason that the minutes keep: current mortgage rates are well above the average rate on outstanding mortgages. Reasons let readers check the logic and notice when it stops applying. They are scattered across conversation turns, PR review comments, and a paper's introduction and discussion. A lazy summarizer loses reasons first, because gathering them is most of the work of summarizing.
 
-7. Space by bulk: giving each item space in proportion to its size in the source, not to how much it matters. The twenty-minute methodology digression that changed nothing gets the longest stretch. The two-line exchange that changed everything gets half a clause. In a PR summary, the thousand-line mechanical rename dominates while the one-line behavior change is buried at the bottom. Weight each item by how much it changed the situation.
+7. Space by bulk: giving each item space in proportion to its size in the source, not to how much it matters. The summary spends longest on the twenty-minute methodology digression that changed nothing, and half a clause on the two-line exchange that changed everything. In a PR summary, the thousand-line mechanical rename dominates while the one-line behavior change is buried at the bottom. Weight each item by how much it changed the situation.
 
 8. Assumes you read it: the summary needs its source beside it. "The recent announcement" works only for readers who know what happened that week. Readers may never open the source. Even one who did has probably forgotten it. A summary must still work a week later with the source gone. Standing alone means naming what the source introduced, not reciting background the reader already knows.
 
@@ -52,11 +52,11 @@ The tells form three families. In 1-3, the summarizer writes from the source rat
 
 The first family has fifty years of science behind it. Kintsch and van Dijk (1978) showed that readers build a text's gist by deleting what does not matter, generalizing lists into a covering statement and constructing statements absent from the text. As details fade, the gist is what readers remember. This is one of the field's most replicated results.
 
-Brown and Day (1983) found that novices use only deletion. They called the novices' method copy-delete. It is tell 1: following source order, keeping or dropping bits, copying them in roughly the original words. Every summarizer does this by default, human or LLM. Generalizing and constructing, which make a summary worth reading, are hard. Even college students in their study usually failed to construct a covering statement absent from the source. The reason the minutes give about mortgage rates is such a constructed statement. No transcript contains it.
+Brown and Day (1983) found that novices rely on deletion. They called the novices' method copy-delete. It is tell 1: following source order, keeping or dropping bits, copying them in roughly the original words. Every summarizer does this by default, human or LLM. Generalizing and constructing, which make a summary worth reading, are hard. Even college students in their study constructed a covering statement absent from the source only about half the time. The reason the minutes give about mortgage rates is such a constructed statement. No transcript contains it.
 
 Van Dijk and Kintsch's later work explains the other two families. Readers retain a situation model: their picture of what a text describes, joined to what they already knew. Exact words fade within minutes, sentences within days (van Dijk and Kintsch, 1983). A transcript contains no such model. The participants had the situation in their heads and never wrote it down. That is why raw transcripts are hard work to read. Rebuild that situation from the source, then write what is true, who wants what and why, what is decided and what is open.
 
-Readers already have their own situation model: the project, people and running argument. A summary updates that model rather than describing the situation for a stranger. Each tell makes the update fail. Readers can neither trust an ownerless claim nor follow a pointer to nowhere. Background they already know tells them nothing new.
+Readers already have their own situation model: the project, people and running argument. A summary updates that model rather than describing the situation for a stranger. Each tell is one way the update fails. Readers can neither trust an ownerless claim nor follow a pointer to nowhere. Background they already know tells them nothing new.
 
 Before sending, read the draft once against the four evaluation dimensions that the summarization literature has settled on (SummEval; Fabbri et al., 2021):
 

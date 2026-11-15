@@ -50,6 +50,8 @@ The repository contains:
 - `nbreview` guides notebook style reviews, including chkstyle findings, method extraction, lessons, and testing judgment. It builds on `nbdev.skill` and `coding_patterns`.
 - `write_prose` covers anti-slop rules for narrative prose.
 - `write_docs` covers plain reference prose for docstrings, READMEs, and PRs.
+- `write_summary` covers summaries that a reader can use without the source.
+- `write_llms` covers files that an LLM reads: `llms.txt` files, pyskill docstrings, setup runbooks, and prompts.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.
 - `vision` describes and transcribes images and PDFs through fastllm, without tools. `look` answers questions; `transcribe` saves Markdown and returns usage, timing and cost.
 - `harness` implements both harnesses' hooks through the `aai-hook` CLI. It is not a pyskill.
