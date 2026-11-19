@@ -1,6 +1,6 @@
 """Short model names and one-shot completion helpers for aai-coding's LLM agents, over fastllm.
 
-`models` maps short names to full `'vendor/model'` specs (copied from solveit's model options).
+`models` maps short names to full `'vendor/model'` specs (built from `fastllm.types`).
 `ask` runs a one-shot completion: pass a short name or any full spec, and get the response text back.
 """
 
@@ -8,16 +8,16 @@ __all__ = ['models', 'response_text', 'ask']
 
 from fastllm.acomplete import acomplete
 from fastllm.chat import contents, mk_msgs
+from fastllm.types import (haik, sonn, opus, fable, luna, terra, sol, astra, flashlite, flash, hydrogen, neon, carbon, argon,
+    muse, muse_contrib, qwenplus, qwen, minimax, kimi, glmflash, glm, dsflash)
 
-models = dict(sonnet='anthropic/claude-sonnet-5', sonnet46='anthropic/claude-sonnet-4-6', fable='anthropic/claude-fable-5',
-    opus='anthropic/claude-opus-4-8', opus46='anthropic/claude-opus-4-6',
-    luna='openai/gpt-5.6-luna', terra='openai/gpt-5.6-terra', sol='openai/gpt-5.6-sol',
-    flashlite='gemini/models/gemini-3.1-flash-lite', flash='gemini/models/gemini-3.5-flash', gemini='gemini/models/gemini-3.1-pro-preview',
-    qwen='fireworks_ai/accounts/fireworks/models/qwen3p7-plus', minimax='minimax/MiniMax-M3',
-    kimi='moonshot/kimi-k2.6', kimicode='moonshot/kimi-k2.7-code',
-    glm='fireworks_ai/accounts/fireworks/models/glm-5p2', glmfast='fireworks_ai/accounts/fireworks/routers/glm-5p2-fast',
-    dsflash='deepseek/deepseek-v4-flash', dspro='deepseek/deepseek-v4-pro',
-    codexluna='codex/gpt-5.6-luna', codexterra='codex/gpt-5.6-terra', codexsol='codex/gpt-5.6-sol')
+models = dict(haiku=f'anthropic/{haik}', sonnet=f'anthropic/{sonn}', opus=f'anthropic/{opus}', fable=f'anthropic/{fable}',
+    luna=f'openai/{luna}', terra=f'openai/{terra}', sol=f'openai/{sol}', astra=f'openai/{astra}',
+    flashlite=f'gemini/{flashlite}', flash=f'gemini/{flash}', hydrogen=f'gemini/{hydrogen}', neon=f'gemini/{neon}',
+    carbon=f'gemini/{carbon}', argon=f'gemini/{argon}', muse=f'meta/{muse}', musecontrib=f'meta/{muse_contrib}',
+    qwenplus=f'fireworks_ai/{qwenplus}', qwen=f'fireworks_ai/{qwen}', minimax=f'fireworks_ai/{minimax}', kimi=f'fireworks_ai/{kimi}',
+    glmflash=f'fireworks_ai/{glmflash}', glm=f'fireworks_ai/{glm}', dsflash=f'fireworks_ai/{dsflash}',
+    codexluna=f'codex/{luna}', codexterra=f'codex/{terra}', codexsol=f'codex/{sol}', codexastra=f'codex/{astra}')
 
 
 def response_text(res):

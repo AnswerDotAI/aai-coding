@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""Claude Code PreToolUse hook that auto-approves safe bash commands using safecmd."""
+'Claude Code PreToolUse hook that auto-approves safe bash commands using safecmd.'
 import sys,json
 
 def respond(decision, reason):
-    print(json.dumps({"hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": decision,
-        "permissionDecisionReason": reason
-    }}), flush=True)
+    print(json.dumps({"hookSpecificOutput": dict(hookEventName="PreToolUse", permissionDecision=decision, permissionDecisionReason=reason)}), flush=True)
     sys.exit(0)
 
 try: from safecmd import validate, DisallowedError
@@ -23,7 +19,6 @@ def main():
     try:
         validate(cmd)
         respond("allow", "safecmd: validated")
-    except DisallowedError:
-        respond("defer", "Not on safecmd allowlist")
+    except DisallowedError: respond("defer", "Not on safecmd allowlist")
 
 if __name__ == "__main__": main()

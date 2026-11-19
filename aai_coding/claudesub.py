@@ -1,4 +1,4 @@
-"""The `claudesub` command: run a headless Claude child from the current session's compacted history, in its own kernel. It needs llmsurgery and fastclaude, which aai-coding doesn't install."""
+"The `claudesub` command: run a headless Claude child from the current session's compacted history, in its own kernel. It needs llmsurgery and fastclaude, which aai-coding doesn't install."
 from fastcore.script import call_parse
 
 PROTOCOL = """You are a subagent spawned by another Claude Code session with `claudesub`. The history above is that session's compacted transcript: you hold its decisions and evidence, but none of its kernel state. Your clikernel kernel is your own; no other session shares it. No person is watching, so never wait for an answer or ask a question mid-task: if you are blocked, stop and report exactly what you need, and the parent can resume you with `claudesub -r <your session id> '<answer>'`, which restarts your kernel, so finish whatever does not depend on the answer before you stop. Do the directive, and end with a report the parent can act on without reading your transcript: what you did, what you found, and anything left undone."""

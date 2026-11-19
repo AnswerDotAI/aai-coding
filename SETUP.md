@@ -5,14 +5,14 @@ NB: this file is designed for an LLM reader, not a human. Add it to your LLM's c
 notation: /why; `<workspace>`: workspace's absolute path; `<venv>`: `<workspace>/.venv`; `<this repo>`: `<workspace>/aai-coding`
 
 - runbook, not script; no Answer.AI account needed
-- person: step 0, then Claude Code or codex in workspace: "follow aai-coding/SETUP.md"; from an existing aai-coding checkout, session can do step 0 too
+- person: step 0, then Claude Code, Codex, or Antigravity in workspace: "follow aai-coding/SETUP.md"; from an existing aai-coding checkout, session can do step 0 too
 - session first: this repo's `README.md`, in full    /explains design: needed to merge settings, recommend, answer questions
 - steps in order; check existing setup first; nothing beyond a step's outcome without asking
 - user's config overlaps, or something already at a path: merge, never replace; agree each conflict with user
 - macOS; Bash or Zsh
 - ask: which harnesses (≥1, each installed and signed in before configuring); workspace location
 - config files: absolute paths, never `~`, variables or bare command names    /GUI-launched harness, hook subprocesses may not inherit shell's PATH
-- result: Python, files, search, notebooks, most edits through clikernel kernels (skills explain); native tools where skills call for them; Bash: shell, builds, Git; `claude` or `codex` launched as usual
+- result: Python, files, search, notebooks, most edits through clikernel kernels (skills explain); native tools where skills call for them; Bash: shell, builds, Git; each harness launched as usual
 
 ## 0. Create a fastws workspace
 
@@ -70,7 +70,21 @@ tools.interrupt.approval_mode = "approve"
 
 - `--quiet`: no startup output, automatic rule notes
 - `env_vars = ["GITHUB_TOKEN"]` in that block: ask first    /passes user's GitHub token into kernels, e.g. for `ghapi`
-- forks: Claude's get own kernel only with `clikernel-hook` (step 3); Codex's have own MCP session
+- Antigravity: global plugin at `~/.gemini/config/plugins/aai-coding/` (`plugin.json` with `{"name": "aai-coding"}`, plus `mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "clikernel": {
+      "command": "<venv>/bin/clikernel-mcp",
+      "args": ["--quiet"]
+    }
+  }
+}
+```
+
+- Antigravity names plugin servers `<plugin>_<server>` (`aai-coding_clikernel`), starts them with `cwd` = plugin dir, and shares one `clikernel-mcp` process across all conversations and subagents
+- isolation: Claude subagents and all Antigravity conversations/subagents need `clikernel-hook` (step 3); Codex isolates its MCP sessions without it
 
 ## 2. Kernel startup file
 
@@ -114,6 +128,26 @@ Event|Matcher|Command
 ```
 
 - `aai-hook codex-orientation`: don't install
+- Antigravity, `~/.gemini/config/plugins/aai-coding/hooks.json` (plugin root; reloads next turn):
+
+```json
+{
+  "clikernel-isolate": {
+    "PreToolUse": [
+      {
+        "matcher": "call_mcp_tool",
+        "hooks": [{"type": "command", "command": "<venv>/bin/clikernel-hook"}]
+      }
+    ]
+  },
+  "aai-coding": {
+    "SessionStart": [{"type": "command", "command": "<venv>/bin/aai-hook agy-session-start"}],
+    "PreInvocation": [{"type": "command", "command": "<venv>/bin/aai-hook agy-prompt-submit"}]
+  }
+}
+```
+
+- `clikernel-hook` on Antigravity: injects `agent` = `conversationId` and returns `decision: "allow"` for `clikernel` or `*_clikernel`; returns `decision: "ask"` for other MCP servers
 
 ## 4. Permissions and environment (Claude Code)
 
@@ -132,10 +166,11 @@ skill symlinks; setup edits no skill:
 - `~/.claude/skills/{persistent-python,pyskills}` → `<this repo>/skills/<same name>`
 - `~/.claude/skills/safecmd` → `<this repo>/plugins/safecmd`
 - `~/.codex/skills/{clikernel,notebook-dialog-editing}` → `<this repo>/skills/<same name>`; listed as `kernel-notebook-editing`, `cli-notebook-editing`
+- `~/.gemini/config/plugins/aai-coding/skills/{kernel-notebook-editing,cli-notebook-editing}` → `<this repo>/skills/{clikernel,notebook-dialog-editing}`    /folder name must match frontmatter `name`
 
 - safecmd allowlist: `~/.config/safecmd/config.ini`
 - slopometer: first score downloads a spaCy model into `~/.cache/slopometer`: tell user; executable missing: hook skips scoring
-- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`
+- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` symlink (no system-prompt replacement flag)
 - replacement system prompt, Claude Code (Jeremy's `ccd` alias): ask first    /replaces Claude's default instructions, incl. environment block, scratchpad path; tool schemas, executable unchanged
 
 ```bash
@@ -155,7 +190,7 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 - restart each configured harness (ask user); Codex with changed hooks: tell user to expect and accept its hook trust prompt
 - fresh session, any directory, home too    /startup loads helpers without a project
 - installed skills available
-- kernel: state persists; `list_pyskills()` has `aai_coding.*` rows; `doc('aai_coding.coding_patterns')` renders; check helpers even if `--quiet` hid startup notice:
+- kernel: state persists; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
 
 ```python
 create(kernel="py")

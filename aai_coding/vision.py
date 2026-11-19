@@ -20,6 +20,7 @@ import pypdfium2 as pdfium, pyvips
 from fastllm.acomplete import acomplete
 from fastllm.types import get_model_info
 from aidialog.msg_parts import Msg, Text, InputImage
+from .llms import models
 
 __all__ = ['pdf2pngs', 'look', 'transcribe', 'VisionError']
 
@@ -72,9 +73,8 @@ def pdf2pngs(
 
 async def _ask(prompt, imgs, charter, model, effort, max_tokens):
     content = [Text(prompt)]
-    for p in imgs:
-        content += [Text(p.name), InputImage('data:image/png;base64,' + base64.b64encode(p.read_bytes()).decode())]
-    res = await acomplete([Msg('user', content)], model, system=charter, reasoning_effort=effort, max_tokens=max_tokens)
+    for p in imgs: content += [Text(p.name), InputImage('data:image/png;base64,' + base64.b64encode(p.read_bytes()).decode())]
+    res = await acomplete([Msg('user', content)], models.get(model, model), system=charter, reasoning_effort=effort, max_tokens=max_tokens)
     if res.finish_reason != 'stop' or not res.message.text: raise VisionError(res)
     return res
 
@@ -82,7 +82,7 @@ async def _ask(prompt, imgs, charter, model, effort, max_tokens):
 async def look(
     question,  # What to check; be specific, and say what the images are
     *paths,  # Image, SVG, and/or PDF files (PDFs are rasterized per page)
-    model='openai/gpt-6-sol',  # fastllm provider/model name
+    model='sol',  # An `llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort, as supported by the model
     scale=2,  # Rasterization scale for PDF pages
     max_tokens=None,  # Output budget; None lets fastllm choose the model's limit
@@ -112,7 +112,7 @@ async def transcribe(
     output=None,  # Markdown path; defaults to the input path with its suffix replaced by .md
     pages=None,  # PDF only: iterable of 1-based page numbers, e.g. range(5, 7); default: all
     extra_instructions='',  # Document context, specialist terms and symbols, exclusions, notation changes; helps resolve ambiguous readings
-    model='anthropic/claude-opus-5-5',  # fastllm provider/model name
+    model='opus',  # An `llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort, as supported by the model
     dpi=288,  # PDF rendering resolution; image inputs retain their own resolution
     max_tokens=None,  # Output budget; None lets fastllm choose the model's limit
@@ -144,4 +144,4 @@ async def transcribe(
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(res.message.text.rstrip()+'\n')
     priced = 'cost' in res.usage.raw or get_model_info(res.model, res.vendor_name)
-    return dict(path=output, model=model, usage=res.usage, duration_ms=duration_ms, cost=res.cost if priced else None)
+    return dict(path=output, model=models.get(model, model), usage=res.usage, duration_ms=duration_ms, cost=res.cost if priced else None)

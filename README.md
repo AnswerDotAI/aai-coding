@@ -1,6 +1,6 @@
 # aai-coding
 
-`aai-coding` contains Answer.AI's shared configuration, skills, and tools for Claude Code and Codex. It defines the team's coding and writing guidance, tool permissions, and Python workflows. An LLM setting up the harness should read this README before following `SETUP.md`. The design decisions below also help you advise users who already have a setup.
+`aai-coding` contains Answer.AI's shared configuration, skills, and tools for Claude Code, Codex, and Antigravity. It defines the team's coding and writing guidance, tool permissions, and Python workflows. An LLM setting up the harness should read this README before following `SETUP.md`. The design decisions below also help you advise users who already have a setup.
 
 ## Getting started
 
@@ -26,11 +26,11 @@ Reuse existing workspaces. Do not run `ws-setup` on them. See the [team migratio
 
 ## Tool workflows
 
-Claude Code and Codex use persistent kernels for Python, file inspection, searching, notebooks, and most edits. Pyskills provide the tools; exhash provides hash-verified editing. Use Bash for shell commands, builds, and Git. Use native tools where the installed skills call for them.
+Claude Code, Codex, and Antigravity use persistent kernels for Python, file inspection, searching, notebooks, and most edits. Pyskills provide the tools; exhash provides hash-verified editing. Use Bash for shell commands, builds, and Git. Use native tools where the installed skills call for them.
 
-Run ordinary Claude Code or Codex with `clikernel-mcp` registered as an MCP server. Each agent has its own kernel and Python state. Claude's `clikernel-hook` supplies subagent identity; Codex isolates its MCP sessions without that hook.
+Run ordinary Claude Code, Codex, or Antigravity with `clikernel-mcp` registered as an MCP server. Each agent has its own kernel and Python state. Claude Code and Antigravity use `clikernel-hook` to isolate callers on a shared MCP connection (subagents in Claude Code; all conversations and subagents in Antigravity). Codex isolates its MCP sessions without that hook.
 
-Claude uses the `persistent-python` and `pyskills` host skills. Codex uses `kernel-notebook-editing` from `skills/clikernel`. Codex's `cli-notebook-editing` skill applies only when the user explicitly requests working without a kernel. The setup steps link the existing skills without changing them.
+Claude Code uses the `persistent-python` and `pyskills` host skills. Codex and Antigravity use `kernel-notebook-editing` from `skills/clikernel`, and `cli-notebook-editing` only when the user explicitly requests working without a kernel. Antigravity packages its MCP server, hooks, skills, and `core.md` as one global plugin at `~/.gemini/config/plugins/aai-coding/`. The setup steps link the existing skills without changing them.
 
 Task guidance is in pyskills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
 
@@ -54,11 +54,11 @@ The repository contains:
 - `write_llms` covers files that an LLM reads: `llms.txt` files, pyskill docstrings, setup runbooks, and prompts.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.
 - `vision` describes and transcribes images and PDFs through fastllm, without tools. `look` answers questions; `transcribe` saves Markdown and returns usage, timing and cost.
-- `harness` implements both harnesses' hooks through the `aai-hook` CLI. It is not a pyskill.
+- `harness` implements hooks for Claude Code, Codex, and Antigravity through the `aai-hook` CLI. It is not a pyskill.
 
 ### Prompts
 
-`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`. The setup steps can symlink that file to `core.md` or merge the shared rules into an existing personal file. Claude Code can append `core.md` to its system prompt.
+`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`, symlinked to `core.md` or merged into an existing personal file. Claude Code appends `core.md` to its system prompt. Antigravity loads it from `rules/AGENTS.md` inside its global plugin and has no flag to replace its built-in system prompt.
 
 `prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Launch with:
 
@@ -71,7 +71,7 @@ Replacing the default prompt removes its prose, its dynamic environment block an
 ## Design decisions, and why
 
 - Task skills use Python's packaging and discovery rather than a harness's skill machinery. Their instructions and executable tools can share a module. Host skills bootstrap the kernel and explain how to use its tools with the harness.
-- This repo's hooks are subcommands of `aai-hook` in `aai_coding/harness.py`. Claude's kernel isolation hook comes from clikernel. Harness settings register the commands rather than copying their implementations.
+- This repo's hooks are subcommands of `aai-hook` in `aai_coding/harness.py`. The kernel isolation hook for Claude Code and Antigravity comes from `clikernel`. Harness settings register the commands rather than copying their implementations.
 - Each harness's skills and the kernel startup file are symlinks into this checkout. Pulling updates them without copying files. The setup steps merge harness settings and personal instruction files with the user's existing configuration.
 - Where the harnesses differ, a module gives each version in the same place, in a dictionary keyed by harness or in neighbouring bullets. There are no generated per-harness templates.
 - This repo contains agreed team guidance. Model choice, sounds, and personal workflows such as release management belong in each person's `CLAUDE.md`, settings, and local skills. `SETUP.md` identifies which settings are shared and which are personal.
@@ -80,7 +80,7 @@ Replacing the default prompt removes its prose, its dynamic environment block an
 
 Activate the workspace's `.venv`, then work in a project checkout. Use `ws-status` to inspect local changes, `ws-sync` to pull and install updates, and `ws-add owner/repo` to add a project. See [the workspace workflow](SETUP.md#using-the-workspace) for details, including what syncing changes.
 
-You do not need to start the harness manually each day. Sessions use the skills described in [Tool workflows](#tool-workflows). In both Claude Code and Codex, agents find Python tools in the pyskills catalog and read their documentation with `doc()` or `pyskills-doc`.
+You do not need to start the harness manually each day. Sessions use the skills described in [Tool workflows](#tool-workflows). Agents find Python tools in the pyskills catalog and read their documentation with `doc()` or `pyskills-doc`.
 
 To change a skill, edit its source in this checkout. Others receive the changes by pulling. Release with the standard fastship command, `ship-release`. Bump the version in `aai_coding/__init__.py` after each release.
 
