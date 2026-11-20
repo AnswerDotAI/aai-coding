@@ -76,13 +76,13 @@ tools.interrupt.approval_mode = "approve"
 {
   "mcpServers": {
     "clikernel": {
-      "command": "<venv>/bin/clikernel-mcp",
-      "args": ["--quiet"]
+      "command": "<venv>/bin/clikernel-mcp"
     }
   }
 }
 ```
 
+- omit `--quiet` on Antigravity    /lets `create(kernel="py")` print the `startup.py` parallel `doc()` banner
 - Antigravity names plugin servers `<plugin>_<server>` (`aai-coding_clikernel`), starts them with `cwd` = plugin dir, and shares one `clikernel-mcp` process across all conversations and subagents
 - isolation: Claude subagents and all Antigravity conversations/subagents need `clikernel-hook` (step 3); Codex isolates its MCP sessions without it
 
@@ -170,7 +170,7 @@ skill symlinks; setup edits no skill:
 
 - safecmd allowlist: `~/.config/safecmd/config.ini`
 - slopometer: first score downloads a spaCy model into `~/.cache/slopometer`: tell user; executable missing: hook skips scoring
-- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` symlink (no system-prompt replacement flag)
+- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md` and `rules/kernel.md` → `prompts/agy-kernel.md`    /no system-prompt replacement flag; `agy-kernel.md` sets the always-on kernel-first workflow, parallel <10 KB `doc()` bootstrap, and cross-repo nbdev rule
 - replacement system prompt, Claude Code (Jeremy's `ccd` alias): ask first    /replaces Claude's default instructions, incl. environment block, scratchpad path; tool schemas, executable unchanged
 
 ```bash
@@ -189,8 +189,8 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 
 - restart each configured harness (ask user); Codex with changed hooks: tell user to expect and accept its hook trust prompt
 - fresh session, any directory, home too    /startup loads helpers without a project
-- installed skills available
-- kernel: state persists; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
+- installed skills available; Antigravity: both plugin rules (`AGENTS.md`, `kernel.md`) loaded
+- kernel: state persists; Antigravity prints `startup.py` banner on `create(kernel="py")`; parallel `doc()` calls stay inline; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
 
 ```python
 create(kernel="py")

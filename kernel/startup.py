@@ -15,8 +15,11 @@ import clikernel.skill as clik, pyskills.skill as pysk, fastcore.editskill as ed
 import aidialog.dlgskill as dsk, exhash.skill as exh, rgapi.skill as rgsk
 import aai_coding.coding_patterns as acp
 # chkstyle: on
-print(r'''Kernel imports are loaded, including rg/fd/ls from rgapi. If the doc() output for these modules isn't visible in your context, read it now, by calling these in separate cells:
-doc(clik, pysk, edsk)
-doc(dsk, exh, rgsk)
+print(r'''Kernel imports are loaded, including rg/fd/ls from rgapi. If the doc() output for these modules isn't visible in your context, read it now in parallel (separate cells):
+doc(clik, pysk)
+doc(edsk)
+doc(dsk)
+doc(exh)
+doc(rgsk)
 doc(acp)
 list_pyskills()''')

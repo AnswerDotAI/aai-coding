@@ -18,7 +18,7 @@ notation: /why
 ## Bootstrap
 
 - kernel this session creates: `~/.config/clikernel/startup.py` already ran: skill modules under short aliases, `doc`, `list_pyskills` loaded; no import cell; follow any banner; `restart` reruns startup only in these kernels
-- before first kernel use in a context, and after compaction: `doc(pysk, dsk, exh)`, then `list_pyskills()`, each a bare expression    /compaction drops docs; `--quiet` hides the banner
+- before first kernel use in a context, and after compaction: read the startup docs in parallel (`doc(clik, pysk)`, `doc(edsk)`, `doc(dsk)`, `doc(exh)`, `doc(rgsk)`, `doc(acp)`, `list_pyskills()`), each a bare expression    /compaction drops docs; `--quiet` hides the banner; single-module calls stay under 10 KB
 - kernel restart or reconnect, Codex or MCP restart, user saying so included: runtime state lost, context kept: no bootstrap; restore only imports, state task needs; ≠ compaction: check visible context
 - inspector feedback: follow, don't bypass
 

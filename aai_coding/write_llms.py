@@ -70,7 +70,7 @@ verb|dyad|monad
 
 ## Mechanics
 
-- line 1, required: "NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain." Markdown: under `# Name`. pyskill: `#` comment above docstring
+- line 1, required (skip in skills: for LLMs by definition): "NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain." Markdown: under `# Name`. pyskill: `#` comment above docstring
 - rows: `- label: fact`; several facts: `;`
 - lists: `- ` on every line    /rendered Markdown joins unmarked lines into one paragraph
 - 3+ columns or a header: table, as Shakti example; empty corner cell: `| |a|b`
