@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Kernel workflow
 
 NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
