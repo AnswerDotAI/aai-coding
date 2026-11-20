@@ -22,12 +22,6 @@ notation: /why
 ## Tools
 
 - defaults (CLI flags, Python arguments, tool options): trust unless a task requirement can't otherwise be met; never override habitually or for assumed gains; noisy or wrong output: report as tool bug    /defaults target correct, readable output
-- documented build and test commands: MUST run exactly, no added flags unless explicitly requested; read output before working around expected problems
-- flag wanted every run: into config, back to bare command (recurring `pytest --timeout 300` → `timeout = 60` under `[tool.pytest.ini_options]`)
-- applying is the goal: `cargo fmt`, not `cargo fmt --check` then `cargo fmt`; `--check`: final no-mutation verification, e.g. CI
-- never truncate (`| tail -20`, `| grep PASS`) or merge stderr (`2>&1`)    /unseen output hides problems; separate stderr makes crashes unmissable
-- shell redirect: NEVER without explicit direct approval, separate from command approval    /breaks harness approvals
-- real one-off flag: give reason; use once; drop next call
 
 ## Python
 
@@ -78,6 +72,15 @@ for i in range(n): result[i] = 0
 - pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories; longer than the implementation change: think hard about removing, simplifying or merging
 - useful checks: in real tests or notebook cells, never ad-hoc commands; notebook explorations often ARE narrative: keep example cells documenting what we needed to know and guarding it; pytest explorations: only under criteria above
 - assert logic and guarantees, not incidental renderings, reprs or field order (content in Markdown display block, not exact text); NEVER lock in behavior unless essential logic or contract guaranteed forever
+## CLI harness
+
+- **IMPORTANT**: this section applies to CLI coding harnesses only; inside an interactive dialog, follow the dialog skills instead
+- documented build and test commands: MUST run exactly, no added flags unless explicitly requested; read output before working around expected problems
+- flag wanted every run: into config, back to bare command (recurring `pytest --timeout 300` → `timeout = 60` under `[tool.pytest.ini_options]`)
+- applying is the goal: `cargo fmt`, not `cargo fmt --check` then `cargo fmt`; `--check`: final no-mutation verification, e.g. CI
+- never truncate (`| tail -20`, `| grep PASS`) or merge stderr (`2>&1`)    /unseen output hides problems; separate stderr makes crashes unmissable
+- shell redirect: NEVER without explicit direct approval, separate from command approval    /breaks harness approvals
+- real one-off flag: give reason; use once; drop next call
 - run: `pytest -q`, not `python -m pytest` (prompts for permission); nbdev: `nbdev-test` on changed notebook
 - ask first only if runs (`eval: false` cells too) may take >~2min or reach authenticated external services
 - slow-marked tests: only at session finish or after changes likely to affect them directly
