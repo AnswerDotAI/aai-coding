@@ -58,7 +58,7 @@ The repository contains:
 
 ### Prompts
 
-`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`, symlinked to `core.md` or merged into an existing personal file. Claude Code appends `core.md` to its system prompt. Antigravity loads `core.md` from `rules/AGENTS.md` and `prompts/agy-kernel.md` (its always-on kernel-first workflow rule) from `rules/kernel.md` inside its global plugin, and has no flag to replace its built-in system prompt.
+`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`, symlinked to `core.md` or merged into an existing personal file. Claude Code appends `core.md` to its system prompt. Antigravity loads `core.md` from `rules/AGENTS.md` and `prompts/agy-kernel.md` (its always-on kernel-first and swarm-forking workflow rule) from `rules/GEMINI.md` inside its global plugin, and has no flag to replace its built-in system prompt.
 
 `prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Launch with:
 

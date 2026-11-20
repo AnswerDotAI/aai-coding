@@ -309,6 +309,20 @@ def agy_prompt_submit(o):
     _agy_inject(*(['\n'.join(ns)] if (ns := prompt_notices(prompt, Q_NOTICE_CODEX)) else []))
 
 
+SWARM_FORK_MSG = (
+    'Spawning an unforked swarm worker (no `fork` parameter): workers without `fork="coordinator"` '
+    'start blank with no bootstrapped pyskills or conversation context. '
+    'Pass `fork="coordinator"` unless a blank context is explicitly wanted.')
+
+
+def agy_swarm_guard(o):
+    "Antigravity PreToolUse(swarm): require confirmation when adding an unforked worker"
+    args = (o.get('toolCall') or {}).get('args') or {}
+    if args.get('action') == 'add' and not args.get('fork'):
+        print(json.dumps(dict(decision='force_ask', reason=SWARM_FORK_MSG)))
+    else: print(json.dumps(dict(decision='allow')))
+
+
 def main():
     "Dispatch `aai-hook <subcommand>` to its handler with the stdin JSON payload"
     globals()[sys.argv[1].replace('-', '_')](json.load(sys.stdin))

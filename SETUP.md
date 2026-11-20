@@ -141,6 +141,7 @@ Event|Matcher|Command
     ]
   },
   "aai-coding": {
+    "PreToolUse": [{"matcher": "swarm", "hooks": [{"type": "command", "command": "<venv>/bin/aai-hook agy-swarm-guard"}]}],
     "SessionStart": [{"type": "command", "command": "<venv>/bin/aai-hook agy-session-start"}],
     "PreInvocation": [{"type": "command", "command": "<venv>/bin/aai-hook agy-prompt-submit"}]
   }
@@ -170,7 +171,7 @@ skill symlinks; setup edits no skill:
 
 - safecmd allowlist: `~/.config/safecmd/config.ini`
 - slopometer: first score downloads a spaCy model into `~/.cache/slopometer`: tell user; executable missing: hook skips scoring
-- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md` and `rules/kernel.md` → `prompts/agy-kernel.md`    /no system-prompt replacement flag; `agy-kernel.md` sets the always-on kernel-first workflow, parallel <10 KB `doc()` bootstrap, and cross-repo nbdev rule
+- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md` and `rules/GEMINI.md` → `prompts/agy-kernel.md`    /no system-prompt replacement flag; `GEMINI.md` is loaded always-on without frontmatter and sets the kernel-first workflow, parallel <10 KB `doc()` bootstrap, cross-repo nbdev rule, and swarm-forking rules
 - replacement system prompt, Claude Code (Jeremy's `ccd` alias): ask first    /replaces Claude's default instructions, incl. environment block, scratchpad path; tool schemas, executable unchanged
 
 ```bash
@@ -189,7 +190,7 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 
 - restart each configured harness (ask user); Codex with changed hooks: tell user to expect and accept its hook trust prompt
 - fresh session, any directory, home too    /startup loads helpers without a project
-- installed skills available; Antigravity: both plugin rules (`AGENTS.md`, `kernel.md`) loaded
+- installed skills available; Antigravity: both plugin rules (`AGENTS.md`, `GEMINI.md`) loaded
 - kernel: state persists; Antigravity prints `startup.py` banner on `create(kernel="py")`; parallel `doc()` calls stay inline; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
 
 ```python
