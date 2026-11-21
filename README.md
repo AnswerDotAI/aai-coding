@@ -54,6 +54,7 @@ The repository contains:
 - `write_llms` covers files that an LLM reads: `llms.txt` files, pyskill docstrings, setup runbooks, and prompts.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.
 - `vision` describes and transcribes images and PDFs through fastllm, without tools. `look` answers questions; `transcribe` saves Markdown and returns usage, timing and cost.
+- `understand` covers building and holding a Theory (Naur, Socrates, Knoblich et al., Lakatos) before proposing, changing, or reviewing code or designs.
 - `harness` implements hooks for Claude Code, Codex, and Antigravity through the `aai-hook` CLI. It is not a pyskill.
 
 ### Prompts

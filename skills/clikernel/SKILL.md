@@ -3,8 +3,6 @@ name: kernel-notebook-editing
 description: "Use kernel tools to inspect Python APIs and find, understand, view, and safely edit Jupyter notebooks and aidialog dialogs."
 ---
 
-NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
-
 notation: /why
 
 - kernel MCP tools: main Python workbench; call `exec` directly; lifecycle tools only when it reports no kernel, or for explicit kernel management

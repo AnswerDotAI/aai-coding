@@ -7,7 +7,7 @@ name = "aai-coding"
 dynamic = ["version"]
 description = "Pyskills for Answer.AI coding sessions"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [{ name = "aai-coding contributors" }]
 classifiers = [
@@ -26,7 +26,7 @@ write_summary = "aai_coding.write_summary"
 write_llms = "aai_coding.write_llms"
 harness_docs = "aai_coding.harness_docs"
 vision = "aai_coding.vision"
-theory = "aai_coding.theory"
+understand = "aai_coding.understand"
 
 [project.scripts]
 aai-hook = "aai_coding.harness:main"

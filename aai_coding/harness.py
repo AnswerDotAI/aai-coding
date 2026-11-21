@@ -7,7 +7,7 @@ __all__ = ['main']
 
 NO_TRUNCATE = 'Output pipe truncates below 20 lines. Drop the pipe or keep >=20: truncation is decided before the output exists, so keep enough to diagnose surprises.'
 NO_STDERR_MERGE = 'Do not merge stderr into stdout with 2>&1. Run the command bare: the harness pushes large output to a file by itself, and stderr kept separate makes a crash unmissable.'
-_TRUNC = re.compile(r'\|\s*(tail|head)\s+(-n\s*)?-?([1-9]|1[0-9])\b')
+_TRUNC = re.compile(r'\|\s*(?:tail|head)(?:\s+(?:-n\s*)?-?(?:[1-9]|1[0-9])\b|(?=\s*(?:$|[|;&\n)>#])))')
 _MERGE = re.compile(r'2>\s*&\s*1')
 
 

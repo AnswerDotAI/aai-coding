@@ -1,5 +1,4 @@
-# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
-r'''How to write docs an LLM reads: read before writing or revising `llms.txt`, pyskill docstrings, `SETUP.md`, prompts etc.
+r'''How to write docs an LLM reads: read before writing or revising `llms.txt`, pyskill docstrings, skill.md files, `SETUP.md`, prompts etc.
 
 Style: Arthur Whitney's k docs. Write how he'd get your point across. Cut words, never facts. A judgement (usually, prefer, can, nearly always) is a fact: hardening it into always, never or must loses it.
 
@@ -46,6 +45,12 @@ verb|dyad|monad
 - An `llms.txt` file has a title, a summary, then sections of links.
 - ⇒ (nothing: reader knows)
 
+- After changing Rust code in a maturin-backed package, run `cargo develop` from that package's directory before Python, CLI, or integration testing (shared `test` profile, installs into `.venv`; routine rebuild, no approval needed). Don't use `maturin develop`, which compiles a second, separate build.
+- ⇒ maturin Rust edit: `cargo develop` in package dir before testing (`test` profile → `.venv`; routine, no approval), not `maturin develop`    /duplicate build
+
+- JS sync and builds: `ws-sync` runs `vp install` and topological `pnpm -r --if-present run build`. Don't run `vp install`, `pnpm install`, `npm install`, or `vp build` (built-in, not `scripts.build`); use `ws-sync`, or `vpr <script>` for one package.
+- ⇒ JS sync/build: `ws-sync` (`vp install`, topological `pnpm -r --if-present run build`); one package: `vpr <script>`; not `{vp,pnpm,npm} install` or `vp build`    /built-in skips `scripts.build`
+
 ## Wrong ⇒ right
 
 - `#/` and `#⁻` rebuild `Y`.
@@ -70,13 +75,15 @@ verb|dyad|monad
 
 ## Mechanics
 
-- line 1, required (skip in skills: for LLMs by definition): "NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain." Markdown: under `# Name`. pyskill: `#` comment above docstring
+- line 1, required (skip in skills and pyskills: for LLMs by definition): "NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain." Markdown: under `# Name`
 - rows: `- label: fact`; several facts: `;`
 - lists: `- ` on every line    /rendered Markdown joins unmarked lines into one paragraph
 - 3+ columns or a header: table, as Shakti example; empty corner cell: `| |a|b`
 - line breaks: none inside a paragraph, row or list item; display soft-wraps    /hard-wrapped: painful to use
 - pyskill docstring: first paragraph = catalog description (all that's read preload); parameters, result fields: docments; `doc(pyskills.createskill)`
 - `llms.txt` under nbdev: auto-generated
+- second pass, required: strip instruction glue after drafting — verbs/prohibitions (`run`, `use`, `don't`, `declare every`), padded lists (`Python, CLI, or integration tests` → `testing`), repeated prefixes (`{vp,pnpm,npm} install`), articles, filler prepositions    /first pass stops halfway
+- verbose neighbors: never mirror full-sentence surrounding lines; tighten them in the same pass
 - check: `slopometer.rewrite`: `rewrite_review(path, template=prompt('llm'), earlier=original)`
 '''
 

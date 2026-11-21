@@ -3,8 +3,6 @@ name: cli-notebook-editing
 description: "Inspect Python APIs and read/search/edit Jupyter notebooks or aidialog dialogs via CLI. Use only when explicitly asked not to use a Python kernel."
 ---
 
-NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
-
 - local file reads, edits: native tools, allowed locations; pyskill advice saying otherwise: ignore
 - notebook or dialog task: `pyskills-doc aidialog.dlgskill` in context; follow its workflow, required pyskills
 - API: `pyskills-doc module.symbol`; `--all` expands elided rows

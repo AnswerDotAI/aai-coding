@@ -1,4 +1,3 @@
-# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 r'''Official docs for the tool you are running in (Claude Code or codex): read before answering questions about its behaviour, config, or features.
 
 # Harness Docs

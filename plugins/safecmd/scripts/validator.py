@@ -7,7 +7,7 @@ def respond(decision, reason):
     sys.exit(0)
 
 try: from safecmd import validate, DisallowedError
-except ImportError as e: respond("defer", f"safecmd import failed: {e}")
+except ImportError: sys.exit(0)
 
 def main():
     try: hook_input = json.load(sys.stdin)
@@ -19,6 +19,6 @@ def main():
     try:
         validate(cmd)
         respond("allow", "safecmd: validated")
-    except DisallowedError: respond("defer", "Not on safecmd allowlist")
+    except DisallowedError: sys.exit(0)
 
 if __name__ == "__main__": main()

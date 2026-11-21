@@ -1,4 +1,3 @@
-# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 r'''Review and improve nbdev notebooks using chkstyle findings. Read before a notebook style review. Start with `chkstyle --fix path/to/notebook.ipynb` on notebooks without substantial intentionally formatted code, such as aligned matrices or tables. Inspect the notebook and existing changes before applying it.
 
 notation: /why

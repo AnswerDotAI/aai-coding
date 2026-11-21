@@ -1,4 +1,3 @@
-# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 """Describe and transcribe images and PDFs using vision models, keeping visual content out of the caller's context.
 
 | |`look`|`transcribe`

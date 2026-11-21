@@ -1,4 +1,3 @@
-# NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
 r'''Jeremy's coding style and conventions: read before writing, reviewing, or assessing any code.
 
 notation: /why
@@ -63,13 +62,14 @@ for i in range(n): result[i] = 0
 
 ## Testing
 
+- MUST read `testing` skill before writing, editing, or requesting any test
 - nbdev (most projects): no test cells; tests ARE documentation; revise lesson cells
-- many changes, especially trivial logic, need no new or changed tests
+- MUST NOT add tests for trivial logic or tests longer than the implementation without explicit agreement
 - add tests only for meaningful uncertainty or substantive logic, never for coverage: documents an idea; logic needing careful thought (edge cases, parsing, arithmetic, tricky conditionals open to silent breakage); somewhat-likely-to-break external assumption (file format, API response shape, another tool's behavior): exercise REAL system, usually slow-marked    /mocks merely restate assumptions
 - wiring and orchestration (re-exports, delegation, one-line glue, functions ONLY sequencing tool calls): zero tests    /they assert Python works, constrain changeable internals
 - reaching code needs recording fakes or mock collaborators: strongly suggests testing implementation transcripts, not logic; extract and test a small pure function, or don't test
 - red-green: only for assertions actually added or revised, to check the test works (`doc(nbdev.skill)`)
-- pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories; longer than the implementation change: think hard about removing, simplifying or merging
+- pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories
 - useful checks: in real tests or notebook cells, never ad-hoc commands; notebook explorations often ARE narrative: keep example cells documenting what we needed to know and guarding it; pytest explorations: only under criteria above
 - assert logic and guarantees, not incidental renderings, reprs or field order (content in Markdown display block, not exact text); NEVER lock in behavior unless essential logic or contract guaranteed forever
 ## CLI harness

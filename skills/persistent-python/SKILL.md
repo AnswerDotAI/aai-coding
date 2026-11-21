@@ -5,8 +5,6 @@ description: The persistent clikernel Python session — Jeremy's preferred sing
 
 # Persistent Python
 
-NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
-
 notation: /why
 
 - `create(kernel="py")`: `py` (ipymini) only; never `python3` or another kernelspec

@@ -1,100 +1,76 @@
-r'''How to write reference prose. Read this before writing docstrings, READMEs, API docs, PR descriptions, commit messages, or messages to co-workers.
+r'''How to write reference prose. Read this before writing docstrings, READMEs, API docs, PR descriptions, or commit messages. Use write-prose for messages to users or colleagues.
 
-Every edit with this guide MUST improve the prose for its reader. The numbered tells are symptoms of unclear writing, not lint rules. NEVER fix a tell mechanically by splitting a sentence, swapping punctuation or deleting a flagged word. When a passage shows tells, establish its reader's needs and explain it again from the start, following "Rewriting high-scoring documentation" below.
+Every edit MUST improve prose for readers. Tells=symptoms, not lint rules: NEVER patch mechanically; rebuild from reader needs (see Rewriting).
 
 # Writing Reference Prose
 
-Reference prose accompanies code: docstrings, code comments, READMEs, API and reference docs, changelogs, PR descriptions, commit messages and messages to co-workers. Readers scan for a fact, then leave. Write plainly and directly in the author's own voice, following GOV.UK/GDS and ASD-STE100. Start with what the code does. Use write-prose for blog posts, essays and announcements, and write-summary for choosing a summary's content.
+Scope: docstrings, comments, READMEs, API/reference docs, changelogs, PRs, commits (GOV.UK/GDS + ASD-STE100; plain, direct, author's voice, lead with what code does). Narrative/messages: `write_prose`; summaries: `write_summary`.
 
-Here is a passage from a design doc, written in this style:
+Good:
 
 > `GatewayKernel` ties the three lower layers together. The ready-wait runs once per kernel, in `start`.[1][3] `watch` polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status.[1] After three missed heartbeats,[4] the gateway marks the kernel `unresponsive` in its model. It clears the mark when the next echo arrives.
 >
 > The gateway never kills an unresponsive kernel.[2] A kernel becomes `dead` only when its process exits.[2] `restart` terminates and respawns with fresh ports in a new process. Clients see `restarting`, then `starting` once the new kernel is ready.[5]
 
-Write like that. Each rule has its own sentence. Every status has its real name. The passage says what the gateway never does. Sentences of similar length suit readers who are looking things up, though they would be dull in an essay.
+Bad:
 
-Here is the same passage before editing:
+> This section describes how `GatewayKernel` manages the kernel lifecycle.[12] `GatewayKernel` ties the three lower layers together. Its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[13] It isn't just a poller - it's the liveness authority.[14] Furthermore,[7] it polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status, which every client receives.[1] Three missed beats[4] mark the kernel `unresponsive` in its model. The distinction is worth being precise about.[13] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[15] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[16][17] so the channel set is rebuilt[1] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
 
-> This section describes how `GatewayKernel` manages the kernel lifecycle.[13] `GatewayKernel` ties the three lower layers together. Its `start` is the only place the ready-wait runs: once per kernel, ever.[1][3] The core mechanism: `watch`.[15] It isn't just a poller - it's the liveness authority.[16] Furthermore,[19] it polls the process and the heartbeat. A process that dies unexpectedly broadcasts the synthesized `dead` status, which every client receives.[1] Three missed beats[4] mark the kernel `unresponsive` in its model. The distinction is worth being precise about.[21] That marking is observational only - only process exit means dead -[2] and it clears itself on the next echo. So what does `restart` actually do?[18] It terminates and respawns; the kernel gains fresh ports, fresh channels, and a fresh interpreter via the new process,[20][23] so the channel set is rebuilt[6] and clients simply[3] see `restarting` then a fresh welcome-backed ready kernel.[5]
+{markers} Unshown: 6, 8-11, 18, 19.
 
-Do not write like that. Its blog-post register makes true facts hard to look up. The key rule is in an aside. A flourish replaces the final state's name. The opening announces the section. A question delays a fact.
+1. {tacked_on} Wrong register.
+2. Key rule in aside: hidden in aside/contrast/parenthetical ("observational only" vs "never kills"). Own sentence/rule; state what system never does.
+3. Emphasis devices: "ever/simply/just/the only place", bold/italics. Position key fact/sentence first; cut intensifiers.
+4. Elegant variation: "heartbeat"->"beats". One name/concept, one meaning/term (ASD-STE100).
+5. Flourish over identifier: "welcome-backed ready kernel" vs `starting`. Use real identifiers/states/values.
+6. {hedging}
+7. {filler}
+8. {restatement}
+9. Justification rider: fact+benefit ("kind-sorted so collector stays legal"). Say what code does; reasons go in design/narrative docs.
+10. {decorative_verbs}
+11. {audience}
+12. {throat_clearing} README subject=package purpose.
+13. {advertising}
+14. {not_x_but_y}
+15. Rhetorical questions: never in headings/prose (GDS bans FAQs); state fact.
+16. {symmetry}
+17. {agent_defocusing}
+18. {decoration}
+19. {false_depth}
 
-{markers} The passages are too short to show tells 7-12, 14, 17, 22 and 24-26.
-
-1. {tacked_on} In reference prose, a tacked-on clause means the whole passage is in the wrong register.
-2. Key rule in an aside. The rule the reader most needs appears only in an aside, a contrast, or a parenthetical. "That marking is observational only" hints at the rule. "The gateway never kills an unresponsive kernel" states it. Give every rule its own sentence. When a reader would expect the system to do something that it never does, say so.
-3. Emphasis devices. "ever", "simply", "just", "the only place", bold, italics. Use position for emphasis. Put the key fact first in its sentence. Put the key sentence first in its paragraph. Delete the intensifiers.
-4. Elegant variation. "The heartbeat" becomes "beats" a sentence later. Use one name for one thing every time, even when it feels repetitive. Do not use one word for two things either. ASD-STE100 calls this "one meaning per term".
-5. Flourish over identifier. "A fresh welcome-backed ready kernel" when the real status is `starting`. Use the actual identifier, state, value, or number. The reader will search for it, test against it, and see it in logs.
-6. {consequence_glue}
-7. {hedging}
-8. {noting_fillers}
-9. {restatement}
-10. Justification rider. A fact with a benefit attached, such as "kind-sorted so a collector stays legal wherever it came from" or "parses bools so flag values test correctly". The extra clause argues for the fact. Reference prose says what the code does. Reasons belong in design docs and narrative prose.
-11. {decorative_verbs}
-12. Audience misjudged. Writing for the wrong reader takes two forms, explaining the known and undefined jargon. {audience_judgment}
-    - {explaining_known}
-    - {undefined_jargon}
-13. {throat_clearing}
-14. {todays_world} In a README, the subject is what the package does.
-15. {announce_deliver}
-16. {not_x_but_y}
-17. {teaser_pivot}
-18. Rhetorical questions. "So what does `restart` actually do?". Do not ask the reader questions, in headings or in prose. Write the statement that the question delays. GDS bans FAQ pages for the same reason.
-19. {filler_transitions}
-20. {forced_symmetry}
-21. {appraisal_preamble}
-22. {artifact_agent}
-23. {recipient_subject}
-24. {decoration}
-25. {over_structuring}
-26. {false_depth}
-
-slopometer's rules refer to these tells by number. {new_tells}
-
-Address the reader as "you" and use the imperative. Write "Run the tests", not "The tests should be run". Prefer active voice. A passive sentence often hides who does the action from a reader who needs to know.
+slopometer numbers tells as above. {new_tells} Use "you", imperative ("Run the tests"), active voice.
 
 ## Banned words
 
 {plain_words}
-
 {banned_words}
-
 {hidden_words}
 
 ## Doc types
 
-- Docstrings. The first line says what the function does. For most functions that line is the whole docstring. Put parameters and return values in docments, not prose. Add a guarantee, edge case or error only when callers need it to use the function. Do not restate the signature.
-- Code comments. Write one only to state something the code cannot show, next to the code it concerns (see coding-patterns). This is rare.
-- READMEs. Write them like docstrings, not blog posts. The first paragraph gives the package's purpose and audience. Install steps and a minimal example follow, in that order. Omit history and sales language. A README, index or module docstring covers purpose and main workflows. Put parameters and return values in docments. Put edge cases and error behavior in notebooks or other docs, and in a docstring only when callers need them to use the API. Add a README section for a new method only if it changes how people use the package.
-- API docs and changelogs. Describe the behavior or the change, with one entry per behavior. Put reasons in design docs.
-- PR descriptions and commit messages. Start with the behavior change. Say who did what. Give reviewers what they need to judge the diff. write-summary covers choosing the content.
-- Messages to co-workers. Put the answer first and the support after. Do not open by softening the message. Do not close by offering more help.
+- Docstrings: line 1=what fn does (usually all); params/returns in docments; guarantees/edges/errors only if callers need; no signature echo.
+- Comments: rare; only what code can't show, beside it (`coding_patterns`).
+- READMEs: docstring style; p1 (purpose+audience), install, minimal example; no history/sales; README/index/module=purpose+workflows, edges/errors in notebooks/docs; new section only if usage changes.
+- API/changelogs: 1 entry/behavior; reasons in design docs.
+- PRs/commits: behavior change first, who did what, reviewer needs (`write_summary`).
 
 {formatting}
 
 ## Rewriting high-scoring documentation
 
-When a document has a high slopometer score, explain its subject again from the start. Do not repair flagged sentences one at a time, swap banned words or delete clauses until the score falls. Short sentences can still be unreadable. Aim for a score below 4. A low score does not show that the document is clear, accurate or complete.
+High slopometer score: re-explain from scratch, never patch words to game score. Aim <4 (<4 != clear/accurate/complete). Reread as reader; never search for tells. Keep clear informality/contractions/humor (slop=strained metaphors/coinages); don't flatten voice or invent persona.
 
-Improve prose by rereading it as its reader would. Never search it for tells, even to find passages to rewrite.
+Order:
+- Facts: read code+examples; audience/goals; list substantive points (capabilities, responsibilities, I/O, identifiers, defaults, guarantees, exclusions, edges, failures, context); verify against code, flag wrong/uncertain claims.
+- Draft: drop old wording/coinages; write from facts in reader order; name actors, introduce before use, state guarantees directly.
+- Context: keep problem, relationships, prerequisites, setup, protocol distinctions, usage reasoning; cut sales.
+- Coverage: keep every substantive point (dedupe repeats, keep moved facts findable, keep uncertain detail); flag omissions; correct/report false claims.
+- Descriptions: nbdev first blockquote renders standalone; keep full scope (don't collapse NDJSON transport, control routing, deferred tool results into "Communicate through stdin/stdout").
+- Verify: reread beside examples before scoring; notebooks follow `nbdev.skill` (edit `nbs/`, export, test; leave code unchanged unless asked; rerun stale outputs).
+- Rescore: fresh pass after audit; never edit from intermediate scores; report score, words, findings, tests; reconsider if high; don't dismiss as false positives.
+- Delegated: give rules+bounded slice; require corrections, omissions, verification, final score; review against original+code (<4 != review).
 
-Keep the author's informality, conversational phrasing, contractions and humor where they communicate clearly. Informal language is not slop. AI slop is often too clever. Its strained metaphors, elaborate phrasing and invented terms obscure simple points. Judge communication, not formality. Do not replace a human voice with generic reference prose or invent a new persona.
-
-Work through these steps in order:
-
-- Establish the facts. Read the implementation and executable examples before drafting. Identify the readers and what they need to understand or do. List the original's substantive points: capabilities, responsibilities, inputs, outputs, identifiers, defaults, guarantees, exclusions, edge cases, failure behavior and context. Check claims against code and record wrong or uncertain ones rather than silently repeating them.
-- Write from understanding. Put the old wording aside and draft from facts in an order that explains the system to the intended reader. Do not retain sentences, paragraph structure or coined terms merely because they exist. Name who performs each operation, introduce concepts before use and state guarantees directly.
-- Keep the context. Explain the problem the code solves and the relationships needed to understand its behavior. Retain prerequisites, setup, protocol distinctions and reasoning needed for correct use. Remove sales-style justification. Keep a connected explanation, not disconnected facts or unexplained identifiers.
-- Audit technical coverage. Change the explanation, not its information. Check that the rewrite includes every substantive point from the original. A fact that the original repeats needs only one statement in the rewrite. When you move a fact, make sure readers can still find it where they need it. Keep technical detail a reader might need, including details of uncertain relevance. Flag proposed omissions for review. Do not silently decide they do not matter. A shorter document is worse if it drops a needed capability, condition or explanation. Correct false claims from evidence and report corrections.
-- Review descriptions separately. In nbdev, the first blockquoted paragraph below the title becomes the description. Module listings and generated documentation show that description on its own. Keep every capability and the technical scope that the description states. Check it on its own even when the body explains everything. For example, a description covers NDJSON transport, control routing, and deferred tool results. Replacing it with "Communicate through standard input and output" loses two of those responsibilities.
-- Verify the finished document. Read it from top to bottom beside the examples. Check accuracy, readability, retained context, technical coverage and the author's voice before scoring. For notebooks, follow `nbdev.skill`: edit source notebooks, regenerate exports and run affected notebook tests. Leave implementation behavior unchanged unless the user separately asks for code changes. Regenerate stale example outputs by running the code, never by editing them.
-- Rescore independently at the end. Use a fresh scoring process after the rewrite and coverage audit are complete. Never use intermediate scores to choose wording or remove information. Report the final score, word count, findings and test results. Reconsider the whole explanation if the score remains high. Do not dismiss its problems because some findings are false positives.
-
-When the user authorizes delegated rewrites, give each agent these instructions and one clearly bounded part of the documentation. Require each agent to report corrections, proposed omissions, verification results and the final independent score. Review each agent's rewrite against the original's technical content and the implementation. A score below 4 does not replace this review.
-
-`check_docs` sends text and these rules to a separate model for review. Run it only when the user asks for a docs check.
+`check_docs` checks text via separate model; run only if asked.
 '''
 
 from ._writing import fill, charter
@@ -102,12 +78,12 @@ __doc__ = fill(__doc__)
 
 __all__ = ['check_docs']
 
-_CHARTER = charter('reference-prose', '11 and 22', 'tell 12')
+_CHARTER = charter('reference-prose', '10 and 17', 'tell 11')
 
 
 async def check_docs(
     text,  # The prose to review
-    audience,  # Who the text is for, e.g. "users of fastcore"; tell 12 is judged against this
+    audience,  # Who the text is for, e.g. "users of fastcore"; tell 11 is judged against this
     model='sol',  # An `llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort where the model supports it: 'low'/'medium'/'high'
 ):
