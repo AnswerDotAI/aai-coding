@@ -1,5 +1,32 @@
 <!-- do not remove -->
 
+## 0.1.1
+
+### New Features
+
+- Replace theory with understand skill, tighten skills and prompts, fix harness truncation regex, and exit 0 on safecmd defer ([#47](https://github.com/AnswerDotAI/aai-coding/issues/47))
+- Add Antigravity swarm guard hook requiring fork=coordinator for workers, rename kernel rule to GEMINI.md, extend writing rules ([#46](https://github.com/AnswerDotAI/aai-coding/issues/46))
+- agy ([#43](https://github.com/AnswerDotAI/aai-coding/issues/43))
+- Rewrite prompts and writing guides in plain active imperative voice; note clikernel has no workspace or writable-root restriction ([#42](https://github.com/AnswerDotAI/aai-coding/issues/42))
+- Set exhash journal/author env defaults for Claude Code and MCP sessions ([#39](https://github.com/AnswerDotAI/aai-coding/issues/39))
+- Unify Claude and Codex on per-agent clikernel exec/create workflow, show slopometer advice in slop hook ([#38](https://github.com/AnswerDotAI/aai-coding/issues/38))
+- Add SubagentStart fork hook, quote last request in air nudge, share writing-guide text via `_writing`, fix slopometer JSON unpacking ([#37](https://github.com/AnswerDotAI/aai-coding/issues/37))
+- Replace Codex vision agents with single tool-free fastllm requests, adding model/effort/`max_tokens` options and cost reporting ([#36](https://github.com/AnswerDotAI/aai-coding/issues/36))
+- Replace looker with vision skill providing look and transcribe agents ([#35](https://github.com/AnswerDotAI/aai-coding/issues/35))
+- Add claudesub command to run headless Claude child sessions from a compacted parent transcript ([#34](https://github.com/AnswerDotAI/aai-coding/issues/34))
+- Drop llmdojo dependency: remove dojo bootstrap and drop-sentinel hook, add own kernel/startup.py ([#33](https://github.com/AnswerDotAI/aai-coding/issues/33))
+- Replace dojo bootstrap gate with skill startup steps, port looker to pypdfium2/pyvips with SVG support, add prompt shortcuts . ; , ([#32](https://github.com/AnswerDotAI/aai-coding/issues/32))
+- Update clikernel tool names in setup docs and harness messages ([#29](https://github.com/AnswerDotAI/aai-coding/pull/29)), thanks to [@ncoop57](https://github.com/ncoop57)
+- Document public and team workspace setup ([#26](https://github.com/AnswerDotAI/aai-coding/pull/26)), thanks to [@jph00](https://github.com/jph00)
+- Add starter workspace setup and use aidialog for notebook workflows ([#25](https://github.com/AnswerDotAI/aai-coding/pull/25)), thanks to [@jph00](https://github.com/jph00)
+- Add `problem_finding` pyskill and bare-backtick prompt notice ([#17](https://github.com/AnswerDotAI/aai-coding/pull/17)), thanks to [@ncoop57](https://github.com/ncoop57)
+
+### Bugs Squashed
+
+- Load kernel startup tools in every directory ([#40](https://github.com/AnswerDotAI/aai-coding/pull/40)), thanks to [@jph00](https://github.com/jph00)
+- Fixed macscript path in looker.py ([#30](https://github.com/AnswerDotAI/aai-coding/pull/30)), thanks to [@kafkasl](https://github.com/kafkasl)
+
+
 ## 0.1.0
 
 ### New Features
