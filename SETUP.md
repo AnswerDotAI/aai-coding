@@ -76,13 +76,15 @@ tools.interrupt.approval_mode = "approve"
 {
   "mcpServers": {
     "clikernel": {
-      "command": "<venv>/bin/clikernel-mcp"
+      "command": "<venv>/bin/clikernel-mcp",
+      "args": ["--maxout", "10000"]
     }
   }
 }
 ```
 
 - omit `--quiet` on Antigravity    /lets `create(kernel="py")` print the `startup.py` parallel `doc()` banner
+- `--maxout 10000` on Antigravity    /stays under its 10,240-byte MCP spill and 78-byte timestamp header
 - Antigravity names plugin servers `<plugin>_<server>` (`aai-coding_clikernel`), starts them with `cwd` = plugin dir, and shares one `clikernel-mcp` process across all conversations and subagents
 - isolation: Claude subagents and all Antigravity conversations/subagents need `clikernel-hook` (step 3); Codex isolates its MCP sessions without it
 
