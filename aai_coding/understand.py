@@ -1,4 +1,4 @@
-r'''Read and follow when asked to use the understanding or theory skill, asked for "the Theory of X", framing an open-ended design problem, or stuck at a design impasse. Build a minimal Theory (Naur) held in a mind—separating real constraints from inherited assumptions and testing against breaking cases—before proposing, changing, or reviewing.
+r'''Read and follow when asked to use the understanding or theory skill, asked for "the Theory of X", framing an open-ended design problem, or stuck at a design impasse. Build a minimal Theory (Naur) held in a mind, separating real constraints from inherited assumptions, and testing against breaking cases, before proposing, changing, or reviewing.
 
 notation: /why
 
