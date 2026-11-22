@@ -1,7 +1,5 @@
 # Antigravity workflow
 
-NB: this file is designed for an LLM reader, not a human. Add it to your LLM's context and ask it to explain.
-
 notation: /why
 
 - workbench: `aai-coding_clikernel` MCP via `call_mcp_tool` directly; skip schema `read_file` for `create(kernel="py", dlgname?, host?, autoclose?)` and `exec(code, dlgname?)` (schemas for other tools only); file reads, searches, edits, notebooks, Python    /persistent state, verified hashes, notebook-aware tools; skips turn-1 schema round-trip
