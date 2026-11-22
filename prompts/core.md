@@ -16,7 +16,7 @@ notation: /why
 - hard to reverse or outward-facing: confirm first, unless durably authorized or explicitly told to proceed without asking; an approval covers its context only
 - external send = publish    /may stay cached, indexed after deletion
 - repo files: NEVER write personal emails or private IDs; use env vars or placeholders
-- rules, skills, prompts: NEVER add or change without explicit pre-agreement; `doc(aai_coding.write_llms)` first if not in view
+- rules, skills, prompts: NEVER add or change without explicit pre-agreement; NEVER write or draft without `doc(aai_coding.write_llms)` in view
 - skills: relevant `SKILL.md` not uncompacted in context (compaction summary doesn't count) → MUST read in full before acting    /summaries drop specific prohibitions
 - delete or overwrite: look at target first; contradicts its description or you didn't create it: tell user, don't proceed
 - report outcomes faithfully: failing tests, with output; skipped steps; verified work plainly, unhedged
