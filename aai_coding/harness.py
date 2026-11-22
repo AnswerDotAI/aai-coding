@@ -21,9 +21,7 @@ _KWALK = re.compile(r'(?:\.(?:iterdir|glob|rglob)|\bos\.(?:listdir|walk))\s*\(')
 _KREAD = re.compile(r'\.read_text\s*\(')
 _KSKIP_MAGICS = ('%%exhash', '%%add_msg', '%%writefile', '%%bash')
 _KIGNORED_TOKS = {tokenize.STRING, tokenize.COMMENT, getattr(tokenize, 'FSTRING_MIDDLE', -1)}
-KERNEL_WARN_CTA = (
-    'Check that `list_pyskills()` has been called in this session and that you have read `doc()` on the relevant '
-    'pyskills and functions, internalizing how they are more ergonomic, complete, and consistent than ad hoc hackery.')
+KERNEL_WARN_CTA = 'You used a function that has better replacements in the provided tooling. Check that `list_pyskills()` has been called in this session and that you have read `doc()` on the relevant pyskills and functions, internalizing how they are more ergonomic, complete, and consistent than ad hoc hackery.'
 
 
 def _strip_code(code):
