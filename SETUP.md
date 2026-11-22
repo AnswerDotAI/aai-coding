@@ -124,12 +124,22 @@ Event|Matcher|Command
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "^compact$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "<venv>/bin/aai-hook codex-orientation"
+          }
+        ]
+      }
     ]
   }
 }
 ```
 
-- `aai-hook codex-orientation`: don't install
 - Antigravity, `~/.gemini/config/plugins/aai-coding/hooks.json` (plugin root; reloads next turn):
 
 ```json
@@ -170,12 +180,13 @@ skill symlinks; setup edits no skill:
 
 - `~/.claude/skills/{persistent-python,pyskills}` → `<this repo>/skills/<same name>`
 - `~/.claude/skills/safecmd` → `<this repo>/plugins/safecmd`
-- `~/.codex/skills/{clikernel,notebook-dialog-editing}` → `<this repo>/skills/<same name>`; listed as `kernel-notebook-editing`, `cli-notebook-editing`
+- `~/.codex/skills/{clikernel,notebook-dialog-editing,pyskills}` → `<this repo>/skills/<same name>`; listed as `kernel-notebook-editing`, `cli-notebook-editing`, `pyskills`
 - `~/.gemini/config/plugins/aai-coding/skills/{kernel-notebook-editing,cli-notebook-editing}` → `<this repo>/skills/{clikernel,notebook-dialog-editing}`    /folder name must match frontmatter `name`
 
 - safecmd allowlist: `~/.config/safecmd/config.ini`
 - slopometer: first score downloads a spaCy model into `~/.cache/slopometer`: tell user; executable missing: hook skips scoring
-- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md` and `rules/GEMINI.md` → `prompts/agy-kernel.md`    /no system-prompt replacement flag; `GEMINI.md` is loaded always-on without frontmatter and sets the kernel-first workflow, parallel <10 KB `doc()` bootstrap, cross-repo nbdev rule, and swarm-forking rules
+- shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md`
+- shared kernel/pyskills bootstrap, `prompts/kernel.md` (`trigger: always_on`): Claude Code: `~/.claude/rules/kernel.md` → `prompts/kernel.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/kernel.md` → `prompts/kernel.md` and `rules/GEMINI.md` → `prompts/agy-kernel.md`    /stays in context across compaction in both harnesses; `agy-kernel.md` holds Antigravity-only tool and swarm rules
 - replacement system prompt, Claude Code (Jeremy's `ccd` alias): ask first    /replaces Claude's default instructions, incl. environment block, scratchpad path; tool schemas, executable unchanged
 
 ```bash
@@ -194,7 +205,7 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 
 - restart each configured harness (ask user); Codex with changed hooks: tell user to expect and accept its hook trust prompt
 - fresh session, any directory, home too    /startup loads helpers without a project
-- installed skills available; Antigravity: both plugin rules (`AGENTS.md`, `GEMINI.md`) loaded
+- installed skills available; Antigravity: plugin rules (`AGENTS.md`, `GEMINI.md`, `kernel.md`) loaded; Claude Code: `~/.claude/rules/kernel.md` loaded
 - kernel: state persists; Antigravity prints `startup.py` banner on `create(kernel="py")`; parallel `doc()` calls stay inline; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
 
 ```python

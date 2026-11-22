@@ -291,24 +291,15 @@ def claude_slop(o):
         if notes: print(json.dumps(dict(hookSpecificOutput=dict(
             hookEventName='UserPromptSubmit', additionalContext='\n'.join(notes)))))
     except Exception as e: print(f'[slop] fail-open: {e!r}', file=sys.stderr)
+
+
+CODEX_COMPACT_MSG = "Context was compacted, so doc() outputs and the pyskill catalog are no longer in context (a compaction summary mentioning them does not count). Before any local file read, search, edit, notebook work, or Python execution, run `doc(clik, pysk)`, `doc(edsk)`, `doc(dsk)`, `doc(exh)`, `doc(rgsk)`, `doc(acp)`, and `list_pyskills()` in one parallel batch of bare calls, follow their instructions, and think hard about each tool's capabilities before acting. Read `doc()` for any matching task pyskill or `…`-truncated function before first use."
+
+
 def codex_orientation(o):
-    "codex PostCompact/SessionStart/PreToolUse: one-shot post-compaction reorientation"
-    state = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))
-    markers = state/'compact'
-    marker = markers/f"{o['session_id']}.json"
-    event = o['hook_event_name']
-    message = 'Context was compacted, so the clikernel documentation is no longer in context. Read the startup documentation in two separate calls: first `doc(clik,pysk,edsk)`, then `doc(dsk,exh,rgsk)`. Run `doc()` for anything else you need as you continue. After running the two `doc()` calls, retry your last tool call; it should now work. Then continue your existing task if it is not complete.'
-    if event == 'PostCompact':
-        markers.mkdir(parents=True, exist_ok=True)
-        marker.write_text(json.dumps(dict(turn_id=o.get('turn_id'))))
-    elif event == 'PreToolUse':
-        try: marker.unlink()
-        except FileNotFoundError: pass
-        else: print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='PreToolUse', permissionDecision='deny', permissionDecisionReason=message))))
-    elif event == 'SessionStart':
-        try: marker.unlink()
-        except FileNotFoundError: pass
-        else: print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='SessionStart', additionalContext=message))))
+    "codex SessionStart(compact): inject post-compaction kernel/pyskills bootstrap notice"
+    if o.get('source') == 'compact':
+        print(json.dumps(dict(hookSpecificOutput=dict(hookEventName='SessionStart', additionalContext=CODEX_COMPACT_MSG))))
 
 
 def _agy_inject(*msgs): print(json.dumps(dict(injectSteps=[dict(systemMessage=dict(systemMessage=m)) for m in msgs]) if msgs else {}))
