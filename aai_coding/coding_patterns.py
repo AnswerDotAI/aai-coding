@@ -72,6 +72,7 @@ for i in range(n): result[i] = 0
 - pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories
 - useful checks: in real tests or notebook cells, never ad-hoc commands; notebook explorations often ARE narrative: keep example cells documenting what we needed to know and guarding it; pytest explorations: only under criteria above
 - assert logic and guarantees, not incidental renderings, reprs or field order (content in Markdown display block, not exact text); NEVER lock in behavior unless essential logic or contract guaranteed forever
+- Rust: no inline `#[cfg(test)]` tests; set `test = false` (and `doctest = false` on libs) on `[lib]`/`[[bin]]`, put Rust tests in `tests/`    /inline tests push testing internals over real external behavior, hide useful APIs instead of making them public, and don't play well with fastws
 ## CLI harness
 
 - **IMPORTANT**: this section applies to CLI coding harnesses only; inside an interactive dialog, follow the dialog skills instead

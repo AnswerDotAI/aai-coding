@@ -52,6 +52,74 @@ def kernel_warn_msg(code):
     return '\n'.join([*hints, KERNEL_WARN_CTA]) if hints else None
 
 
+LARGE_WRITE_LINES = 150
+_KWRITE = re.compile(r'(?:\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|msg_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)|\.write_text)\s*\(')
+_KWRITE_MAGIC = ('%%exhash', '%%writefile')
+_DOC_EXTS = {'.md', '.txt', '.json', '.toml', '.yaml', '.yml', '.csv', '.svg', '.lock'}
+_WRITE_TARGET = re.compile(
+    r'''(?:^%%(?:exhash|writefile)\s+(?:-\w+\s+)*['"]?([^\s'"]+)|'''
+    r'''\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)\s*\(\s*['"]([^'"]+)['"]|'''
+    r'''Path\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\.write_text\s*\()''',
+    re.M,
+)
+LARGE_WRITE_WARN = (
+    'Large code write ({n} non-blank lines) in clikernel exec. '
+    'STOP and check before continuing: does this reproduce a dependency or sibling package, '
+    'bridge a missing upstream API, or work around a missing install, tool, permission, or slice boundary? '
+    'If so, stop and ask the user (or @coordinator) for the upstream fix or permission instead of shipping a workaround. '
+    'Otherwise check for bloat and duplication (`code-review` skill).'
+)
+
+
+def _write_targets(code):
+    return [next(g for g in m.groups() if g) for m in _WRITE_TARGET.finditer(code)]
+
+
+def _all_doc_targets(code):
+    targets = _write_targets(code)
+    return bool(targets) and all(Path(p).suffix.lower() in _DOC_EXTS for p in targets)
+
+
+def large_write_warn_msg(code, limit=None):
+    "Advisory tripwire when a clikernel `exec` cell writes a large block of code, else None"
+    lines = [l for l in code.splitlines() if l.strip()]
+    thresh = int(os.environ.get('AAI_LARGE_WRITE_LINES', LARGE_WRITE_LINES)) if limit is None else limit
+    if len(lines) < thresh: return None
+    is_magic = lines[0].lstrip().startswith(_KWRITE_MAGIC)
+    if not is_magic and not _KWRITE.search(_strip_code(code)): return None
+    if _all_doc_targets(code): return None
+    return LARGE_WRITE_WARN.format(n=len(lines))
+
+
+_LLM_DOC_NAMES = {'CLAUDE.md', 'GEMINI.md', 'AGENTS.md', 'SKILL.md', 'llms.txt', 'SETUP.md'}
+_LLM_DOC_DIRS = {'prompts', 'rules'}
+LLM_DOC_WARN = (
+    'LLM-facing doc edit ({targets}). '
+    'If the full uncompacted output of `doc(aai_coding.write_llms)` is not already in context, read it now (skip if already in view). '
+    'Do a second pass to strip prose glue, filler, and repeated rules before finishing.'
+)
+
+
+_AAI_NON_SKILLS = {'__init__.py', '_writing.py', 'claudesub.py', 'harness.py', 'llms.py'}
+
+
+def _is_llm_doc(path):
+    p = Path(path)
+    if p.name in _LLM_DOC_NAMES or p.name.endswith('skill.py') or '_pyskills' in p.parts: return True
+    if p.parent.name == 'aai_coding' and p.suffix == '.py' and p.name not in _AAI_NON_SKILLS: return True
+    return p.suffix.lower() == '.md' and bool(_LLM_DOC_DIRS & set(p.parts))
+
+
+def llm_doc_warn_msg(code):
+    "Advisory reminder when a clikernel `exec` cell writes to an LLM-facing doc, else None"
+    first = next((l.lstrip() for l in code.splitlines() if l.strip()), '')
+    if not first.startswith(_KWRITE_MAGIC) and not _KWRITE.search(_strip_code(code)): return None
+    targets = [t for t in _write_targets(code) if _is_llm_doc(t)]
+    if not targets: return None
+    seen = list(dict.fromkeys(targets))
+    return LLM_DOC_WARN.format(targets=', '.join(seen))
+
+
 Q_NOTICE = 'This looks like a question. Claude Code bug: a tool call after answer text hides the answer. End the turn with the answer. Most questions need no tool call.'
 READ_NOTICE = 'This prompt appears to contain a request to read something. If it could reasonably be interpreted that way, read the target in full NOW, before composing any response: a notebook via summary_dlg then view_dlg/find_msgs as needed; a .py or other text file in full. Never respond from assumed or remembered contents.'
 APPROVAL_NOTICE = 'This bare approval covers exactly what was explicitly agreed, nothing more. Before acting, check that each thing you are about to do was confirmed by the user - not merely proposed, listed, or summarized by you. If approval of any item is uncertain, it is not approved: ask.'
@@ -355,7 +423,7 @@ def agy_swarm_guard(o):
 
 
 def agy_kernel_warn(o):
-    "Antigravity PostToolUse(call_mcp_tool)/PostInvocation: warn on ad hoc directory walks or text reads in clikernel exec"
+    "Antigravity PostToolUse(call_mcp_tool)/PostInvocation: warn on ad hoc reads/walks, large code writes, or LLM-doc edits in clikernel exec"
     ev, cid = o.get('hookEventName'), o.get('conversationId') or ''
     if ev == 'PostToolUse':
         tc = o.get('toolCall') or {}
@@ -363,11 +431,11 @@ def agy_kernel_warn(o):
         srv = args.get('ServerName') or ''
         if tc.get('name') == 'call_mcp_tool' and (srv == 'clikernel' or srv.endswith('_clikernel')) and args.get('ToolName') == 'exec':
             code = (args.get('Arguments') or {}).get('code') or ''
-            if cid and (m := kernel_warn_msg(code)):
+            if cid and (ms := [m for m in (kernel_warn_msg(code), large_write_warn_msg(code), llm_doc_warn_msg(code)) if m]):
                 tid = re.sub(r'[^a-zA-Z0-9_-]', '_', str(tc.get('id') or os.getpid()))
                 f = _state_file('agy-kwarn', f'{cid}__{tid}')
                 tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-                tmp.write_text(json.dumps(m))
+                tmp.write_text(json.dumps('\n\n'.join(ms)))
                 tmp.replace(f)
         print('{}')
     elif ev in ('PostInvocation', 'PreInvocation'):
