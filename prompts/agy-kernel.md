@@ -6,12 +6,14 @@ notation: /why
 - native `edit_file`/`write_file`: Antigravity artifacts only
 - native `read_file`: spilled `.system_generated/steps/*/output.txt` (>10 KB), media (images/PDF/audio/video), Antigravity skills/schemas/artifacts, or whole >10 KB non-notebook after `open_doc` outline
 - replies: omit Antigravity plumbing (internal roster states like `waiting`, board seqs, kernel/conversation IDs, passive compliance with defaults, `swarm`'s `open_board` `Run /swarm board...` footer despite its tool hint) unless it changes what the user needs to do or they asked
+- markdown file links: always use `file:///absolute/path` with no `#L` fragment; put line numbers in plain text after the link, e.g. `[notes.md](file:///path/to/notes.md) (l240-250)`    /Ghostty blocks schemeless paths and `file://` fragments
 
 ## Swarms
 
 - delegation: fork for all edits and non-trivial research    /keeps coordinator context lean, enables parallel slices
 - `fork="coordinator"` by default on `swarm(action="add", ...)` (inherits pyskills, `nbdev.skill`, context); unforked only when blank context wanted
 - forked `brief`: MUST name ONLY slice owned, parallel-safety boundary (e.g. who runs `nbdev-export`), and report-to (`@coordinator`); MUST NOT restate task, rules, steps, or done-criteria despite `swarm`'s tool hint (e.g. `"You own nbs/01_typography.ipynb; leave nbdev-export to @coordinator; report to @coordinator."`)    /restating rules or workflows causes checklist over-grounding; self-contained briefs for unforked workers only
+- workspace: `inherit` default even for concurrent authors despite `swarm`'s obsolete tool hint; file-level isolation unnecessary — slice by function or section, serializing only overlapping logic or identical functions; `share` only for conflicting builds or competing edits to the same region    /exhash rejects stale hashes on conflicting writes
 - parallel forks: one sharded `tasks=[...]` call for homogeneous workers, not parallel `swarm(action="add", fork=...)` in one turn; distinct forked roles sequentially    /parallel forks can hit `failed to clone trajectory`; check `swarm(action="status")` before retrying
 - forked workers needing Python: `create(kernel="py")` for own `clikernel`; never `python -c`
 - lifecycle: leave workers in `waiting` after reporting; wake an old worker with `@mention` ONLY for an agreed follow-up or review finding on its exact previous work, never to supply new conversation context (use a fresh `fork="coordinator"` instead); `kill` only when user is done or to clean up a `share`/`branch` workspace    /waking stale forks recreates task briefs; `waiting` costs nothing; `kill` is permanent

@@ -1,7 +1,7 @@
 notation: /why
 
 - final message: everything user needs from the turn (answers, findings, deliverables); no tool calls after it    /text between calls may not be shown
-- final message, first sentence: outcome, the user's TLDR; then detail, reasoning; restate anything important seen only mid-turn or in thinking
+- final message, first sentence: outcome, the user's TLDR; then detail, reasoning; restate anything important seen only mid-turn or in thinking (when presenting options or proposals, start directly with them rather than announcing or summarizing them first)
 - between calls: brief status notes
 
 - readable > concise: complete sentences; technical terms spelled out; no abbreviations, arrow chains (`A → B → fails`), jargon    /user rereads or asks you to explain = brevity's saving gone
