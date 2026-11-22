@@ -144,8 +144,10 @@ Event|Matcher|Command
   },
   "aai-coding": {
     "PreToolUse": [{"matcher": "swarm", "hooks": [{"type": "command", "command": "<venv>/bin/aai-hook agy-swarm-guard"}]}],
+    "PostToolUse": [{"matcher": "call_mcp_tool", "hooks": [{"type": "command", "command": "<venv>/bin/aai-hook agy-kernel-warn"}]}],
     "SessionStart": [{"type": "command", "command": "<venv>/bin/aai-hook agy-session-start"}],
-    "PreInvocation": [{"type": "command", "command": "<venv>/bin/aai-hook agy-prompt-submit"}]
+    "PreInvocation": [{"type": "command", "command": "<venv>/bin/aai-hook agy-prompt-submit"}],
+    "PostInvocation": [{"type": "command", "command": "<venv>/bin/aai-hook agy-kernel-warn"}]
   }
 }
 ```

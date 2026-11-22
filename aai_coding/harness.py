@@ -1,5 +1,5 @@
 "Hook implementations for the team harness, installed as the `aai-hook` CLI. Each subcommand is registered in a harness's hook config (Claude Code settings.json, codex hooks.json, or Antigravity hooks.json) and reads the hook event's JSON payload from stdin. See SETUP.md for the wiring."
-import json, os, re, sys
+import io, json, os, re, sys, tokenize
 from datetime import datetime
 from pathlib import Path
 
@@ -15,6 +15,43 @@ def bash_guard_msg(cmd):
     "The objection `cmd` earns - a sub-20-line head/tail pipe, or a 2>&1 stderr merge - else None"
     if _MERGE.search(cmd): return NO_STDERR_MERGE
     return NO_TRUNCATE if _TRUNC.search(cmd) else None
+
+
+_KWALK = re.compile(r'(?:\.(?:iterdir|glob|rglob)|\bos\.(?:listdir|walk))\s*\(')
+_KREAD = re.compile(r'\.read_text\s*\(')
+_KSKIP_MAGICS = ('%%exhash', '%%add_msg', '%%writefile', '%%bash')
+_KIGNORED_TOKS = {tokenize.STRING, tokenize.COMMENT, getattr(tokenize, 'FSTRING_MIDDLE', -1)}
+KERNEL_WARN_CTA = (
+    'Check that `list_pyskills()` has been called in this session and that you have read `doc()` on the relevant '
+    'pyskills and functions, internalizing how they are more ergonomic, complete, and consistent than ad hoc hackery.')
+
+
+def _strip_code(code):
+    "Drop string literals and comments from `code` so edits, searches, and comments do not trigger warnings"
+    out, prev = [], False
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(code).readline):
+            if tok.type in _KIGNORED_TOKS: continue
+            w = tok.type in (tokenize.NAME, tokenize.NUMBER)
+            if w and prev: out.append(' ')
+            out.append(tok.string)
+            prev = w
+    except tokenize.TokenError: pass
+    return ''.join(out)
+
+
+def kernel_warn_msg(code):
+    "Advisory warning when a clikernel `exec` cell uses ad hoc directory walks or text reads, else None"
+    lines = [l.strip() for l in code.splitlines() if l.strip()]
+    if not lines or lines[0].startswith(_KSKIP_MAGICS): return None
+    s = _strip_code(code)
+    hints = []
+    if m := _KWALK.search(s):
+        hit = re.sub(r'\s+', '', m.group(0)) + ')'
+        hints.append(f'Ad hoc directory walk (`{hit}`) in clikernel exec: use `ls()` or `fd()` from `rgapi` instead.')
+    if _KREAD.search(s):
+        hints.append('Ad hoc file read (`.read_text()`) in clikernel exec: use `open_doc()` (outline first, then `.view()`) or `lnhashview_file()` from `exhash` instead.')
+    return '\n'.join([*hints, KERNEL_WARN_CTA]) if hints else None
 
 
 Q_NOTICE = 'This looks like a question. Claude Code bug: a tool call after answer text hides the answer. End the turn with the answer. Most questions need no tool call.'
@@ -155,8 +192,8 @@ def last_request(path):
     return q
 
 
-def _state_file(kind, sid):
-    "Per-session state file of the given `kind` under the shared state root, sweeping abandoned siblings"
+def _state_dir(kind):
+    "Per-kind state directory under the shared state root, sweeping abandoned files"
     d = Path(os.environ.get('LLMDOJO_STATE_DIR', Path.home()/'.local/state/llmdojo'))/kind
     d.mkdir(parents=True, exist_ok=True)
     import time
@@ -164,7 +201,12 @@ def _state_file(kind, sid):
         try:
             if g.stat().st_mtime < time.time() - 86400: g.unlink(missing_ok=True)
         except FileNotFoundError: pass   # a concurrent sweep got it first
-    return d/f'{sid}.json'
+    return d
+
+
+def _state_file(kind, sid):
+    "Per-session state file of the given `kind` under the shared state root, sweeping abandoned siblings"
+    return _state_dir(kind)/f'{sid}.json'
 
 
 def claude_air(o):
@@ -321,6 +363,34 @@ def agy_swarm_guard(o):
     if args.get('action') == 'add' and not args.get('fork'):
         print(json.dumps(dict(decision='force_ask', reason=SWARM_FORK_MSG)))
     else: print(json.dumps(dict(decision='allow')))
+
+
+def agy_kernel_warn(o):
+    "Antigravity PostToolUse(call_mcp_tool)/PostInvocation: warn on ad hoc directory walks or text reads in clikernel exec"
+    ev, cid = o.get('hookEventName'), o.get('conversationId') or ''
+    if ev == 'PostToolUse':
+        tc = o.get('toolCall') or {}
+        args = tc.get('args') or {}
+        srv = args.get('ServerName') or ''
+        if tc.get('name') == 'call_mcp_tool' and (srv == 'clikernel' or srv.endswith('_clikernel')) and args.get('ToolName') == 'exec':
+            code = (args.get('Arguments') or {}).get('code') or ''
+            if cid and (m := kernel_warn_msg(code)):
+                tid = re.sub(r'[^a-zA-Z0-9_-]', '_', str(tc.get('id') or os.getpid()))
+                f = _state_file('agy-kwarn', f'{cid}__{tid}')
+                tmp = f.with_suffix(f'.{os.getpid()}.tmp')
+                tmp.write_text(json.dumps(m))
+                tmp.replace(f)
+        print('{}')
+    elif ev in ('PostInvocation', 'PreInvocation'):
+        if not cid: return _agy_inject()
+        msgs = []
+        for f in sorted(_state_dir('agy-kwarn').glob(f'{cid}__*.json')):
+            try:
+                m = json.loads(f.read_text())
+                f.unlink(missing_ok=True)
+                if m and m not in msgs: msgs.append(m)
+            except (OSError, ValueError): pass
+        _agy_inject(*msgs)
 
 
 def main():
