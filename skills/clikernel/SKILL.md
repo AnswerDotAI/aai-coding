@@ -45,7 +45,7 @@ cell_exhash(r'''nbs/00_core.ipynb''', r'''54276565''',
 
 ## Hosts
 
-- [rustygate](https://github.com/AnswerDotAI/rustygate): per-machine gateway that owns kernels; `clikernel`: stdio router that reaches other machines, containers by `host` name
+- [jupygate](https://github.com/AnswerDotAI/jupygate): per-machine gateway that owns kernels; `clikernel`: stdio router that reaches other machines, containers by `host` name
 - host: machine whose files and Python task needs; all execution, paths are that host's; identity matters → check hostname, cwd
-- add a machine: rustygate README, "Running as a service"; then name it in `~/.config/clikernel/gateways.toml`
+- add a machine: jupygate README, "Running as a service"; then name it in `~/.config/clikernel/gateways.toml`
 - own `[mcp_servers.<name>]` HTTP block instead: bypasses router; kernels come up bare: no startup.py, no conversation cwd or env

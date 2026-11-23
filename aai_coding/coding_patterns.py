@@ -59,18 +59,19 @@ for i in range(n): result[i] = 0
 - sibling floors may name unreleased local versions (`foo>=<foo's local version>`)
 - new dependency: its downstream pin is part of the change; consuming unreleased dependency behavior or API: update consumers' pins SAME SESSION, never at release
 - other artifacts: version at change time
+- runtime, toolchain, CI action versions: floating channels (`lts/*`, `stable`), or verify active workspace/latest; older pin (from sibling config or prior too): NEVER without explicit discussion    /stale pins propagate and break builds
 
 ## Testing
 
 - MUST read `testing` skill before writing, editing, or requesting any test
 - nbdev (most projects): no test cells; tests ARE documentation; revise lesson cells
 - MUST NOT add tests for trivial logic or tests longer than the implementation without explicit agreement
-- add tests only for meaningful uncertainty or substantive logic, never for coverage: documents an idea; logic needing careful thought (edge cases, parsing, arithmetic, tricky conditionals open to silent breakage); somewhat-likely-to-break external assumption (file format, API response shape, another tool's behavior): exercise REAL system, usually slow-marked    /mocks merely restate assumptions
+- add tests only for meaningful uncertainty or substantive logic, never for coverage: logic needing careful thought (edge cases, parsing, arithmetic, tricky conditionals open to silent breakage); somewhat-likely-to-break external assumption (file format, API response shape, another tool's behavior): exercise REAL system, usually slow-marked    /mocks merely restate assumptions
 - wiring and orchestration (re-exports, delegation, one-line glue, functions ONLY sequencing tool calls): zero tests    /they assert Python works, constrain changeable internals
 - reaching code needs recording fakes or mock collaborators: strongly suggests testing implementation transcripts, not logic; extract and test a small pure function, or don't test
 - red-green: only for assertions actually added or revised, to check the test works (`doc(nbdev.skill)`)
 - pytest: checks that fit no readable notebook lesson AND are too complex or distracting even for `#|hide`; as few as possible, combined into readable, faster stories
-- useful checks: in real tests or notebook cells, never ad-hoc commands; notebook explorations often ARE narrative: keep example cells documenting what we needed to know and guarding it; pytest explorations: only under criteria above
+- one-off checks: verify in `clikernel` and discard; permanent pytest only under criteria above (nbdev: keep exploration cells that double as readable narrative)    /smoke checks belong in the kernel, not test files
 - assert logic and guarantees, not incidental renderings, reprs or field order (content in Markdown display block, not exact text); NEVER lock in behavior unless essential logic or contract guaranteed forever
 - Rust: no inline `#[cfg(test)]` tests; set `test = false` (and `doctest = false` on libs) on `[lib]`/`[[bin]]`, put Rust tests in `tests/`    /inline tests push testing internals over real external behavior, hide useful APIs instead of making them public, and don't play well with fastws
 ## CLI harness
@@ -80,7 +81,7 @@ for i in range(n): result[i] = 0
 - flag wanted every run: into config, back to bare command (recurring `pytest --timeout 300` → `timeout = 60` under `[tool.pytest.ini_options]`)
 - applying is the goal: `cargo fmt`, not `cargo fmt --check` then `cargo fmt`; `--check`: final no-mutation verification, e.g. CI
 - never truncate (`| tail -20`, `| grep PASS`) or merge stderr (`2>&1`)    /unseen output hides problems; separate stderr makes crashes unmissable
-- shell redirect: NEVER without explicit direct approval, separate from command approval    /breaks harness approvals
+- shell output redirect (`>`, `>>`): ASK separately (stdin `<`, `<<` fine)    /breaks harness approvals
 - real one-off flag: give reason; use once; drop next call
 - run: `pytest -q`, not `python -m pytest` (prompts for permission); nbdev: `nbdev-test` on changed notebook
 - ask first only if runs (`eval: false` cells too) may take >~2min or reach authenticated external services

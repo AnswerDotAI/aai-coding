@@ -199,6 +199,8 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 
 - quiet tone when harness finishes or asks (macOS only): Notification hooks: `afplay /System/Library/Sounds/Submarine.aiff` on `permission_prompt`; `afplay /System/Library/Sounds/Pop.aiff` on `idle_prompt`
 - user's shell functions in harness shells: `env.BASH_ENV` (Codex: `[shell_environment_policy.set]`) → their aliases file
+- Antigravity compaction (`~/.gemini/antigravity-cli/settings.json`): `"contextWindow": "900K"` (`"256K"`, `"512K"`, `"900K"`; env `AGY_CLI_AUTO_COMPACT_OVERRIDE`: `1%`–`100%` or token int)
+- Antigravity status bar (same file): `"statusLine": {"type": "command", "command": "<venv>/bin/aai-hook agy-statusline", "enabled": true, "stack_with_default": true}` (`agy-statusline`: starting dir + context `%` and tokens from stdin JSON; `stack_with_default` keeps built-in bar; `/statusline` toggles)
 - model, UI, sounds, optional features: personal; never copy from another user's config without asking
 
 ## 7. Restart and verify

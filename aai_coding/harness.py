@@ -80,13 +80,17 @@ def _all_doc_targets(code):
     return bool(targets) and all(Path(p).suffix.lower() in _DOC_EXTS for p in targets)
 
 
+def _is_write_cell(code):
+    first = next((l.lstrip() for l in code.splitlines() if l.strip()), '')
+    return bool(first) and (first.startswith(_KWRITE_MAGIC) or bool(_KWRITE.search(_strip_code(code))))
+
+
 def large_write_warn_msg(code, limit=None):
     "Advisory tripwire when a clikernel `exec` cell writes a large block of code, else None"
     lines = [l for l in code.splitlines() if l.strip()]
     thresh = int(os.environ.get('AAI_LARGE_WRITE_LINES', LARGE_WRITE_LINES)) if limit is None else limit
     if len(lines) < thresh: return None
-    is_magic = lines[0].lstrip().startswith(_KWRITE_MAGIC)
-    if not is_magic and not _KWRITE.search(_strip_code(code)): return None
+    if not _is_write_cell(code): return None
     if _all_doc_targets(code): return None
     return LARGE_WRITE_WARN.format(n=len(lines))
 
@@ -112,12 +116,34 @@ def _is_llm_doc(path):
 
 def llm_doc_warn_msg(code):
     "Advisory reminder when a clikernel `exec` cell writes to an LLM-facing doc, else None"
-    first = next((l.lstrip() for l in code.splitlines() if l.strip()), '')
-    if not first.startswith(_KWRITE_MAGIC) and not _KWRITE.search(_strip_code(code)): return None
+    if not _is_write_cell(code): return None
     targets = [t for t in _write_targets(code) if _is_llm_doc(t)]
     if not targets: return None
     seen = list(dict.fromkeys(targets))
     return LLM_DOC_WARN.format(targets=', '.join(seen))
+
+
+_TEST_NAME_RE = re.compile(r'(?:^test_|_test\.|\.(?:test|spec)\.)')
+_MONKEYPATCH = re.compile(r'\bmonkeypatch\b')
+TEST_EDIT_WARN = 'Test file edit ({targets}). If `testing` skill (`SKILL.md`) is not already in context, read it now (skip if already in view). Default to no new test; reject template/config/YAML output assertions, trivial guards, wiring/orchestration, or already-covered logic.'
+MONKEYPATCH_WARN = '`monkeypatch` detected in test edit ({targets}): this is almost definitely not an acceptable test. Delete the test, or extract and test a small pure function instead of patching globals, env, attributes, or collaborators.'
+
+
+def _is_test_file(path):
+    p = Path(path)
+    if p.suffix.lower() in _DOC_EXTS: return False
+    return 'tests' in p.parts or bool(_TEST_NAME_RE.search(p.name))
+
+
+def test_edit_warn_msg(code):
+    "Advisory reminder when a clikernel `exec` cell writes to a test file, escalating on `monkeypatch`, else None"
+    if not _is_write_cell(code): return None
+    targets = [t for t in _write_targets(code) if _is_test_file(t)]
+    if not targets: return None
+    ts = ', '.join(dict.fromkeys(targets))
+    parts = [MONKEYPATCH_WARN.format(targets=ts)] if _MONKEYPATCH.search(code) else []
+    parts.append(TEST_EDIT_WARN.format(targets=ts))
+    return '\n'.join(parts)
 
 
 Q_NOTICE = 'This looks like a question. Claude Code bug: a tool call after answer text hides the answer. End the turn with the answer. Most questions need no tool call.'
@@ -423,7 +449,7 @@ def agy_swarm_guard(o):
 
 
 def agy_kernel_warn(o):
-    "Antigravity PostToolUse(call_mcp_tool)/PostInvocation: warn on ad hoc reads/walks, large code writes, or LLM-doc edits in clikernel exec"
+    "Antigravity PostToolUse(call_mcp_tool)/PostInvocation: warn on ad hoc reads/walks, large code writes, LLM-doc edits, or test edits in clikernel exec"
     ev, cid = o.get('hookEventName'), o.get('conversationId') or ''
     if ev == 'PostToolUse':
         tc = o.get('toolCall') or {}
@@ -431,7 +457,7 @@ def agy_kernel_warn(o):
         srv = args.get('ServerName') or ''
         if tc.get('name') == 'call_mcp_tool' and (srv == 'clikernel' or srv.endswith('_clikernel')) and args.get('ToolName') == 'exec':
             code = (args.get('Arguments') or {}).get('code') or ''
-            if cid and (ms := [m for m in (kernel_warn_msg(code), large_write_warn_msg(code), llm_doc_warn_msg(code)) if m]):
+            if cid and (ms := [m for m in (kernel_warn_msg(code), large_write_warn_msg(code), llm_doc_warn_msg(code), test_edit_warn_msg(code)) if m]):
                 tid = re.sub(r'[^a-zA-Z0-9_-]', '_', str(tc.get('id') or os.getpid()))
                 f = _state_file('agy-kwarn', f'{cid}__{tid}')
                 tmp = f.with_suffix(f'.{os.getpid()}.tmp')
@@ -448,6 +474,21 @@ def agy_kernel_warn(o):
                 if m and m not in msgs: msgs.append(m)
             except (OSError, ValueError): pass
         _agy_inject(*msgs)
+
+
+def agy_statusline(o):
+    "Antigravity statusLine: starting workspace directory and context usage"
+    ws = o.get('workspace') or {}
+    d = ws.get('project_dir') or ws.get('current_dir') or o.get('cwd') or ''
+    home = str(Path.home())
+    if d == home or d.startswith(home + '/'): d = '~' + d[len(home):]
+    cw = o.get('context_window') or {}
+    pct, win = cw.get('used_percentage'), cw.get('context_window_size') or 0
+    cu = cw.get('current_usage') or {}
+    toks = sum(cu.get(k) or 0 for k in ('input_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens'))
+    if not toks and pct and win: toks = round(pct * win / 100)
+    ctx = f'{round(pct)}% ({round(toks/1000)}k/{round(win/1000)}k)' if pct is not None and win else f'{round(pct)}%' if pct is not None else ''
+    print(' | '.join(filter(None, (d, ctx))))
 
 
 def main():
