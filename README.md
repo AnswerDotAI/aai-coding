@@ -30,7 +30,7 @@ Claude Code, Codex, and Antigravity use persistent kernels for Python, file insp
 
 Run ordinary Claude Code, Codex, or Antigravity with `clikernel-mcp` registered as an MCP server. Each agent has its own kernel and Python state. Claude Code and Antigravity use `clikernel-hook` to isolate callers on a shared MCP connection (subagents in Claude Code; all conversations and subagents in Antigravity). Codex isolates its MCP sessions without that hook.
 
-Claude Code uses the `persistent-python` and `pyskills` host skills. Codex and Antigravity use `kernel-notebook-editing` from `skills/clikernel`, and `cli-notebook-editing` only when the user explicitly requests working without a kernel. Antigravity packages its MCP server, hooks, skills, and `core.md` as one global plugin at `~/.gemini/config/plugins/aai-coding/`. The setup steps link the existing skills without changing them.
+Claude Code uses the `persistent-python` and `pyskills` host skills. Codex and Antigravity use `kernel-notebook-editing` from `skills/clikernel`, `cli-notebook-editing` only when the user explicitly requests working without a kernel, and `better_swarm` for Antigravity swarm orchestration. Antigravity packages its MCP server, hooks, skills, and `core.md` as one global plugin at `~/.gemini/config/plugins/aai-coding/`. The setup steps link the existing skills without changing them.
 
 Task guidance is in pyskills. A pyskill is a Python module docstring, listed by `list_pyskills()` and read with `doc()`. Pyskills are versioned, released, and installed with their Python packages.
 
@@ -59,7 +59,7 @@ The repository contains:
 
 ### Prompts
 
-`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`, symlinked to `core.md` or merged into an existing personal file. Claude Code appends `core.md` to its system prompt. Antigravity loads `core.md` from `rules/AGENTS.md` and `prompts/agy-kernel.md` (its always-on kernel-first and swarm-forking workflow rule) from `rules/GEMINI.md` inside its global plugin, and has no flag to replace its built-in system prompt.
+`prompts/core.md` contains harness-neutral behavioural rules. Codex reads shared and personal rules from `~/.codex/AGENTS.md`, symlinked to `core.md` or merged into an existing personal file. Claude Code appends `core.md` to its system prompt. Antigravity loads `core.md` from `rules/AGENTS.md` and `prompts/agy-kernel.md` (its always-on kernel-first rule and `better_swarm` trigger) from `rules/GEMINI.md` inside its global plugin, and has no flag to replace its built-in system prompt.
 
 `prompts/sysp.md` replaces Claude Code's default system prompt. It aims to reduce the default prompt's tendency to give consultant-style advice and act without sufficient justification. Launch with:
 

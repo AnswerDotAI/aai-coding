@@ -181,12 +181,12 @@ skill symlinks; setup edits no skill:
 - `~/.claude/skills/{persistent-python,pyskills}` → `<this repo>/skills/<same name>`
 - `~/.claude/skills/safecmd` → `<this repo>/plugins/safecmd`
 - `~/.codex/skills/{clikernel,notebook-dialog-editing,pyskills}` → `<this repo>/skills/<same name>`; listed as `kernel-notebook-editing`, `cli-notebook-editing`, `pyskills`
-- `~/.gemini/config/plugins/aai-coding/skills/{kernel-notebook-editing,cli-notebook-editing}` → `<this repo>/skills/{clikernel,notebook-dialog-editing}`    /folder name must match frontmatter `name`
+- `~/.gemini/config/plugins/aai-coding/skills/{kernel-notebook-editing,cli-notebook-editing,better_swarm}` → `<this repo>/skills/{clikernel,notebook-dialog-editing,better_swarm}`    /folder name must match frontmatter `name`
 
 - safecmd allowlist: `~/.config/safecmd/config.ini`
 - slopometer: first score downloads a spaCy model into `~/.cache/slopometer`: tell user; executable missing: hook skips scoring
 - shared rules, `prompts/core.md`: Codex: `~/.codex/AGENTS.md` symlinks to it if uncustomized, else merge rules in; Claude Code: `--append-system-prompt-file <this repo>/prompts/core.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/AGENTS.md` → `prompts/core.md`
-- shared kernel/pyskills bootstrap, `prompts/kernel.md` (`trigger: always_on`): Claude Code: `~/.claude/rules/kernel.md` → `prompts/kernel.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/kernel.md` → `prompts/kernel.md` and `rules/GEMINI.md` → `prompts/agy-kernel.md`    /stays in context across compaction in both harnesses; `agy-kernel.md` holds Antigravity-only tool and swarm rules
+- shared kernel/pyskills bootstrap, `prompts/kernel.md` (`trigger: always_on`): Claude Code: `~/.claude/rules/kernel.md` → `prompts/kernel.md`; Antigravity: `~/.gemini/config/plugins/aai-coding/rules/kernel.md` → `prompts/kernel.md` and `rules/GEMINI.md` → `prompts/agy-kernel.md`    /stays in context across compaction in both harnesses; `agy-kernel.md` holds Antigravity-only tool rules and `better_swarm` trigger
 - replacement system prompt, Claude Code (Jeremy's `ccd` alias): ask first    /replaces Claude's default instructions, incl. environment block, scratchpad path; tool schemas, executable unchanged
 
 ```bash
