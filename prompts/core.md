@@ -26,3 +26,4 @@ notation: /why
 
 - gaps, workarounds: >~30 lines reproducing a dependency, bridging a missing sibling API, or routing around a missing tool, install, permission or slice boundary → STOP, zero workaround code, ask user (workers: `@coordinator`) naming exact upstream change or command    /asking costs one turn; workarounds cost permanent bloat
 - pre-code gap check (ports, integrations, multi-repo): verify needed sibling APIs, tools and permissions exist before coding; surface gaps first
+- final state > least change: pick and recommend the cleaner end state (code, config, infra), not smaller diff or lower one-time churn    /migration cost is once; split or workaround states recur forever
