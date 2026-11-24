@@ -16,20 +16,21 @@ Tool|Role
 `read_board`|read posts (`since:N`, `seqs:[...]`, `channel`); `since:0` = full history
 `swarm_wait`|free sleep until post after highest seen `since` (not board head); `mentions_only:false` wakes for any post
 
-- board tools (`post_message`, `read_board`, `swarm_wait`) appear one turn after first `swarm(action="add")`
+- board tools (`post_message`, `read_board`, `swarm_wait`): upfront or one turn after first `swarm(action="add")`
 
 ## main
 
 - job: read, judge, decide, orchestrate; no inline technical work    /inline work starves orchestration, blocks user
 - pre-fork: pyskills bootstrap + repo orientation (`README.md`/`index.ipynb`, `DEV.md` outline, `nbdev.skill`, layout, relevant skills)    /forks inherit it
 - spawning: `swarm(action="add", fork="coordinator", ...)` default; unforked only for blank context; job names (`parser`, `verifier`, `docs`; lowercase; not `all`, `coordinator`, `coordinator-*`); `swarm(action="title", ...)` once scope clear
-- parallel forks: one sharded `tasks=[...]` (or `n`) call (`<name>-1`..`<name>-<k>`; `@<name>`, `kill` address group); distinct forked roles sequentially    /parallel `add(fork=...)` can hit `failed to clone trajectory`; check `status` before retry
+- parallel forks: one sharded `tasks=[...]` (or `n`) call (`<name>-1`..`<name>-<k>`; `@<name>`, `kill` address group); distinct forked roles sequentially; check `status` before retrying any `add(fork=...)` error    /`add(fork=...)` (solo or paired) can error (`failed to clone trajectory`, `executor has not processed the previous input yet`) while still spawning
 - workspace: `inherit` default even for concurrent authors (overrides `swarm` tool hint); no edit fences — full task scope, `exhash` rejects stale hashes; one build/export owner per crate (`cargo develop`, `nbdev-export`); `share`/`branch` only for conflicting builds (land work before `kill`, which deletes workspace)
 - briefs (public): forked = ONLY task owned, shared build/export owner if any, report-to (`@coordinator` or next peer); never restate task, rules, steps, done-criteria, or edit fences    /restating rules causes checklist over-grounding; fences hide cross-repo bugs; self-contained briefs for unforked only
-- 3-min cron (multi-fork): `schedule(CronExpression="*/3 * * * *", ...)` owned by `main`; each ping: `status` + `read_board`, `@mention` silent/slow workers (what changing and why), launch newly unblocked parallel work, read landed edits; `manage_task` `kill` once verified
+- 3-min check-in (multi-fork): `schedule(DurationSeconds=180, TimerCondition="any", ...)` owned by `main`, re-arm when parking with `working` workers (auto-cancels on any message); fallback (no one-shot timer or recurring pings): `CronExpression="*/3 * * * *"` (`manage_task` `kill` once verified); each ping: `status` + `read_board`, `@mention` slow or ≥3-min-silent `working` workers (`last_post_time`, or brief `time` on board) for what changing and why, launch unblocked parallel work, read landed edits
 - live audit: distrust summaries; read landed edits as forks finish: bird's-eye view, boilerplate factored out, genuine reuse (no wrappers/shims), consistency, >~80-line files (`code-review` if bloated/duplicating), edited tests (`testing` skill); >2 reads → review fork; clear issues → author fixes; real uncertainty → user decision    /summaries hide workarounds, bloat, bad tests
 - user reports: curated — outcome, surprises, deviations, risks, blockers, remaining work; omit performative test counts, timings, internal names, plumbing (`waiting`, seqs, IDs, `open_board`) unless action-changing or asked
-- turns: short; report each completed fork (or answer user) immediately, end turn without `swarm_wait` (ending turn parks `main`); `swarm_wait` only on silent board/cron turns with nothing to report
+- turns: short; report each completed fork (or answer user) immediately, end turn without `swarm_wait` (ending turn parks `main`); `swarm_wait` only on silent board/timer turns with nothing to report
+- harness idle warning: ignore `Subagent <id> went idle without reporting anything back` for swarm workers    /workers report on board (`read_board`/`status`), not `send_message`
 
 ## workers
 
