@@ -84,7 +84,7 @@ _CHARTER = charter('reference-prose', '10 and 17', 'tell 11')
 async def check_docs(
     text,  # The prose to review
     audience,  # Who the text is for, e.g. "users of fastcore"; tell 11 is judged against this
-    model='sol',  # An `llms.models` short name, or any full 'vendor/model' spec
+    model='sol',  # A `fastllm`/`llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort where the model supports it: 'low'/'medium'/'high'
 ):
     "Review `text` against the rules above (this module's docstring) using an agent, returning flagged spans or 'Clean'. Only use if specifically asked to use an agent."

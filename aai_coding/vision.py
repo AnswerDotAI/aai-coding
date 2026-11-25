@@ -78,7 +78,7 @@ async def _ask(prompt, imgs, charter, model, effort, max_tokens):
 async def look(
     question,  # What to check; be specific, and say what the images are
     *paths,  # Image, SVG, and/or PDF files (PDFs are rasterized per page)
-    model='sol',  # An `llms.models` short name, or any full 'vendor/model' spec
+    model='sol',  # A `fastllm`/`llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort, as supported by the model
     scale=2,  # Rasterization scale for PDF pages
     max_tokens=None,  # Output budget; None lets fastllm choose the model's limit
@@ -108,7 +108,7 @@ async def transcribe(
     output=None,  # Markdown path; defaults to the input path with its suffix replaced by .md
     pages=None,  # PDF only: iterable of 1-based page numbers, e.g. range(5, 7); default: all
     extra_instructions='',  # Document context, specialist terms and symbols, exclusions, notation changes; helps resolve ambiguous readings
-    model='opus',  # An `llms.models` short name, or any full 'vendor/model' spec
+    model='opus',  # A `fastllm`/`llms.models` short name, or any full 'vendor/model' spec
     effort='medium',  # Reasoning effort, as supported by the model
     dpi=288,  # PDF rendering resolution; image inputs retain their own resolution
     max_tokens=None,  # Output budget; None lets fastllm choose the model's limit
@@ -140,4 +140,4 @@ async def transcribe(
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(res.message.text.rstrip()+'\n')
     priced = 'cost' in res.usage.raw or get_model_info(res.model, res.vendor_name)
-    return dict(path=output, model=models.get(model, model), usage=res.usage, duration_ms=duration_ms, cost=res.cost if priced else None)
+    return dict(path=output, model=f'{res.vendor_name}/{res.model}', usage=res.usage, duration_ms=duration_ms, cost=res.cost if priced else None)
