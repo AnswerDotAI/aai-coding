@@ -38,7 +38,7 @@ Task guidance is in pyskills. A pyskill is a Python module docstring, listed by 
 
 The repository contains:
 
-- `aai_coding/`: Python pyskills and the hook implementation, listed below.
+- `aai_coding/`: harness-specific Python modules (`harness_docs`, `aai-hook`, and `claudesub`), listed below.
 - `skills/`: host-level `SKILL.md` sources linked into each harness's skills directory. [SETUP.md](SETUP.md#5-skills-safecmd-and-prompts) lists the links.
 - `plugins/safecmd/`: a Claude Code plugin that auto-approves allowlisted Bash commands using the `safecmd` package.
 - `prompts/`: shared behavioural rules and a replacement Claude Code system prompt, described below.
@@ -46,16 +46,11 @@ The repository contains:
 
 ### Python modules
 
-- `coding_patterns` covers coding style, testing judgment, and team policy. Kernel startup imports it and tells the agent to read it with `doc(acp)`.
-- `nbreview` guides notebook style reviews, including chkstyle findings, method extraction, lessons, and testing judgment. It builds on `nbdev.skill` and `coding_patterns`.
-- `write_prose` covers anti-slop rules for narrative prose.
-- `write_docs` covers plain reference prose for docstrings, READMEs, and PRs.
-- `write_summary` covers summaries that a reader can use without the source.
-- `write_llms` covers files that an LLM reads: `llms.txt` files, pyskill docstrings, setup runbooks, and prompts.
 - `harness_docs` explains how to find official harness documentation through `llms.txt`.
-- `vision` describes and transcribes images and PDFs through fastllm, without tools. `look` answers questions; `transcribe` saves Markdown and returns usage, timing and cost.
-- `understand` covers building and holding a Theory (Naur, Socrates, Knoblich et al., Lakatos) before proposing, changing, or reviewing code or designs.
 - `harness` implements hooks for Claude Code, Codex, and Antigravity through the `aai-hook` CLI. It is not a pyskill.
+- `claudesub` launches headless Claude child sessions from a compacted parent transcript.
+
+Reusable coding, writing, understanding, and vision pyskills (`coding_patterns`, `nbreview`, `write_prose`, `write_docs`, `write_summary`, `write_llms`, `understand`, `vision`) live in [aai-pyskills](https://github.com/AnswerDotAI/aai-pyskills).
 
 ### Prompts
 
@@ -85,4 +80,4 @@ You do not need to start the harness manually each day. Sessions use the skills 
 
 To change a skill, edit its source in this checkout. Others receive the changes by pulling. Release with the standard fastship command, `ship-release`. Bump the version in `aai_coding/__init__.py` after each release.
 
-Tests cover substantive logic where hidden errors are realistic: event ordering, accumulated state, duplicate suppression, and PDF rendering. Do not add tests for prompt wording, straightforward dispatch, or trivial configuration branches. Run the tests with `pytest`.
+Tests cover substantive logic where hidden errors are realistic: event ordering, accumulated state, and duplicate suppression. Do not add tests for prompt wording, straightforward dispatch, or trivial configuration branches. Run the tests with `pytest`.

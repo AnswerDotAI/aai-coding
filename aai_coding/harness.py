@@ -87,7 +87,7 @@ def large_write_warn_msg(code, limit=None):
 
 _LLM_DOC_NAMES = {'CLAUDE.md', 'GEMINI.md', 'AGENTS.md', 'SKILL.md', 'llms.txt', 'SETUP.md'}
 _LLM_DOC_DIRS = {'prompts', 'rules'}
-LLM_DOC_WARN = 'LLM-facing doc edit ({targets}). If the full uncompacted output of `doc(aai_coding.write_llms)` is not already in context, read it now (skip if already in view). Do a second pass to strip prose glue, filler, and repeated rules before finishing.'
+LLM_DOC_WARN = 'LLM-facing doc edit ({targets}). If the full uncompacted output of `doc(aai_pyskills.write_llms)` is not already in context, read it now (skip if already in view). Do a second pass to strip prose glue, filler, and repeated rules before finishing.'
 
 
 _AAI_NON_SKILLS = {'__init__.py', '_writing.py', 'claudesub.py', 'harness.py', 'llms.py'}
@@ -96,7 +96,7 @@ _AAI_NON_SKILLS = {'__init__.py', '_writing.py', 'claudesub.py', 'harness.py', '
 def _is_llm_doc(path):
     p = Path(path)
     if p.name in _LLM_DOC_NAMES or p.name.endswith('skill.py') or '_pyskills' in p.parts: return True
-    if p.parent.name == 'aai_coding' and p.suffix == '.py' and p.name not in _AAI_NON_SKILLS: return True
+    if p.parent.name in ('aai_coding', 'aai_pyskills') and p.suffix == '.py' and p.name not in _AAI_NON_SKILLS: return True
     return p.suffix.lower() == '.md' and bool(_LLM_DOC_DIRS & set(p.parts))
 
 

@@ -40,7 +40,7 @@ check, activated shell, workspace root:
 command -v python ws-sync aai-hook clikernel-mcp clikernel-hook pyskills-doc safecmd slopometer
 command -v aidialog-summary exhash-cell lnhashview-cell exhash-open rgapi-nbrg
 uv pip check
-pyskills-doc aai_coding.coding_patterns
+pyskills-doc aai_pyskills.coding_patterns
 python aai-coding/kernel/startup.py
 ```
 
@@ -199,8 +199,8 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 
 - quiet tone when harness finishes or asks (macOS only): Notification hooks: `afplay /System/Library/Sounds/Submarine.aiff` on `permission_prompt`; `afplay /System/Library/Sounds/Pop.aiff` on `idle_prompt`
 - user's shell functions in harness shells: `env.BASH_ENV` (Codex: `[shell_environment_policy.set]`) → their aliases file
-- Antigravity compaction (`~/.gemini/antigravity-cli/settings.json`): `"contextWindow": "900K"` (`"256K"`, `"512K"`, `"900K"`; env `AGY_CLI_AUTO_COMPACT_OVERRIDE`: `1%`–`100%` or token int)
-- Antigravity status bar (same file): `"statusLine": {"type": "command", "command": "<venv>/bin/aai-hook agy-statusline", "enabled": true, "stack_with_default": true}` (`agy-statusline`: starting dir + context `%` and tokens from stdin JSON; `stack_with_default` keeps built-in bar; `/statusline` toggles)
+- Antigravity compaction: shell env `AGY_CLI_AUTO_COMPACT_OVERRIDE=900K` (token int, `K`/`M`, or `1%`–`100%`; `/context` and `/model` show override; `settings.json` `"contextWindow"` ignored)
+- Antigravity status bar (`~/.gemini/antigravity-cli/settings.json`): `"statusLine": {"type": "command", "command": "<venv>/bin/aai-hook agy-statusline", "enabled": true, "stack_with_default": true}` (`agy-statusline`: starting dir + context `%` and tokens from stdin JSON; `stack_with_default` keeps built-in bar; `/statusline` toggles)
 - model, UI, sounds, optional features: personal; never copy from another user's config without asking
 
 ## 7. Restart and verify
@@ -208,7 +208,7 @@ claude --system-prompt-file <this repo>/prompts/sysp.md --append-system-prompt-f
 - restart each configured harness (ask user); Codex with changed hooks: tell user to expect and accept its hook trust prompt
 - fresh session, any directory, home too    /startup loads helpers without a project
 - installed skills available; Antigravity: plugin rules (`AGENTS.md`, `GEMINI.md`, `kernel.md`) loaded; Claude Code: `~/.claude/rules/kernel.md` loaded
-- kernel: state persists; Antigravity prints `startup.py` banner on `create(kernel="py")`; parallel `doc()` calls stay inline; `list_pyskills()` has `aai_coding.*` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
+- kernel: state persists; Antigravity prints `startup.py` banner on `create(kernel="py")`; parallel `doc()` calls stay inline; `list_pyskills()` has `aai_pyskills.*` and `aai_coding.harness_docs` rows; `doc(acp)` renders; check helpers even if `--quiet` hid startup notice:
 
 ```python
 create(kernel="py")
