@@ -29,15 +29,12 @@ class VisionError(RuntimeError):
         super().__init__(f'Vision request failed: {completion.finish_reason}')
         self.completion = completion
 
-_LOOK_CHARTER = ('You are a visual checker. The turn contains questions followed by one or more images; '
-    'PDF pages arrive as one image per page, in order.\n'
-    '- Answer exactly the questions asked. Nothing else.\n'
-    '- Be concise and factual: report what is visible, not what you infer or expect. '
-    'If asked about text, quote it verbatim.\n'
-    '- If something asked about is not visible, absent, or illegible, say so plainly.\n'
-    '- Mention anything clearly anomalous (error dialogs, repair banners, blank pages) '
-    'even if not asked, in one sentence.\n'
-    '- Never guess. If an image is unreadable, report that as your answer.')
+_LOOK_CHARTER = '''You are a visual checker. The turn contains questions followed by one or more images; PDF pages arrive as one image per page, in order.
+- Answer exactly the questions asked. Nothing else.
+- Be concise and factual: report what is visible, not what you infer or expect. If asked about text, quote it verbatim.
+- If something asked about is not visible, absent, or illegible, say so plainly.
+- Mention anything clearly anomalous (error dialogs, repair banners, blank pages) even if not asked, in one sentence.
+- Never guess. If an image is unreadable, report that as your answer.'''
 
 
 def _img2png(path, dest, max_pixels=1e6):

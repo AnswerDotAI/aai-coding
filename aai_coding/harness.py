@@ -57,22 +57,12 @@ _KWRITE = re.compile(r'(?:\b(?:create_file|file_exhash|cell_exhash|msg_exhash|fi
 _KWRITE_MAGIC = ('%%exhash', '%%writefile')
 _DOC_EXTS = {'.md', '.txt', '.json', '.toml', '.yaml', '.yml', '.csv', '.svg', '.lock'}
 _WRITE_TARGET = re.compile(
-    r'''(?:^%%(?:exhash|writefile)\s+(?:-\w+\s+)*['"]?([^\s'"]+)|'''
-    r'''\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)\s*\(\s*['"]([^'"]+)['"]|'''
-    r'''Path\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\.write_text\s*\()''',
-    re.M,
-)
-LARGE_WRITE_WARN = (
-    'Large code write ({n} non-blank lines) in clikernel exec. '
-    'STOP and check before continuing: does this reproduce a dependency or sibling package, '
-    'bridge a missing upstream API, or work around a missing install, tool, permission, or slice boundary? '
-    'If so, stop and ask the user (or @coordinator) for the upstream fix or permission instead of shipping a workaround. '
-    'Otherwise check for bloat and duplication (`code-review` skill).'
-)
+    r'''(?:^%%(?:exhash|writefile)\s+(?:-\w+\s+)*['"]?([^\s'"]+)|\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)\s*\(\s*['"]([^'"]+)['"]|Path\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\.write_text\s*\()''',
+    re.M)
+LARGE_WRITE_WARN = 'Large code write ({n} non-blank lines) in clikernel exec. STOP and check before continuing: does this reproduce a dependency or sibling package, bridge a missing upstream API, or work around a missing install, tool, permission, or slice boundary? If so, stop and ask the user (or @coordinator) for the upstream fix or permission instead of shipping a workaround. Otherwise check for bloat and duplication (`code-review` skill).'
 
 
-def _write_targets(code):
-    return [next(g for g in m.groups() if g) for m in _WRITE_TARGET.finditer(code)]
+def _write_targets(code): return [next(g for g in m.groups() if g) for m in _WRITE_TARGET.finditer(code)]
 
 
 def _all_doc_targets(code):
@@ -97,11 +87,7 @@ def large_write_warn_msg(code, limit=None):
 
 _LLM_DOC_NAMES = {'CLAUDE.md', 'GEMINI.md', 'AGENTS.md', 'SKILL.md', 'llms.txt', 'SETUP.md'}
 _LLM_DOC_DIRS = {'prompts', 'rules'}
-LLM_DOC_WARN = (
-    'LLM-facing doc edit ({targets}). '
-    'If the full uncompacted output of `doc(aai_coding.write_llms)` is not already in context, read it now (skip if already in view). '
-    'Do a second pass to strip prose glue, filler, and repeated rules before finishing.'
-)
+LLM_DOC_WARN = 'LLM-facing doc edit ({targets}). If the full uncompacted output of `doc(aai_coding.write_llms)` is not already in context, read it now (skip if already in view). Do a second pass to strip prose glue, filler, and repeated rules before finishing.'
 
 
 _AAI_NON_SKILLS = {'__init__.py', '_writing.py', 'claudesub.py', 'harness.py', 'llms.py'}
@@ -399,15 +385,20 @@ def codex_orientation(o):
 def _agy_inject(*msgs): print(json.dumps(dict(injectSteps=[dict(systemMessage=dict(systemMessage=m)) for m in msgs]) if msgs else {}))
 
 
-def _agy_last_user_step(path):
+AGY_COMPACT_MSG = 'Post-compaction: prior doc() outputs and skill reads are gone (compaction summary does not count). Before replying, judging, or spawning any fork: read active/required skills (`better_swarm`, user-required skills) and run `doc(clik, pysk)`, `doc(edsk)`, `doc(dsk)`, `doc(exh)`, `doc(rgsk)`, `doc(acp)`, `list_pyskills()` in one parallel clikernel batch (create `py` kernel first if none active).'
+
+
+def _agy_last_steps(path):
     p = Path(path)
-    if not p.is_file(): return None
-    idx = None
+    if not p.is_file(): return None, None
+    user = cp = None
     for line in p.open():
         try: r = json.loads(line)
         except json.JSONDecodeError: continue
-        if r.get('type') == 'USER_INPUT': idx = r.get('step_index')
-    return idx
+        t = r.get('type')
+        if t == 'USER_INPUT': user = r.get('step_index')
+        elif t == 'CHECKPOINT': cp = r.get('step_index')
+    return user, cp
 
 
 def agy_session_start(o):
@@ -417,34 +408,34 @@ def agy_session_start(o):
 
 
 def agy_prompt_submit(o):
-    "Antigravity PreInvocation: emit prompt notices once per user turn"
+    "Antigravity PreInvocation: emit prompt notices once per user turn and a reload notice after compaction"
     prompt = o.get('lastUserInput') or ''
-    if not prompt.strip(): return _agy_inject()
     cid = o.get('conversationId') or ''
-    step = _agy_last_user_step(o.get('transcriptPath') or '')
+    step, cp = _agy_last_steps(o.get('transcriptPath') or '')
     key = step if step is not None else o.get('initialNumSteps')
+    st = {}
     if cid:
         f = _state_file('agy-prompt', cid)
-        try: seen = json.loads(f.read_text()).get('seen')
-        except (OSError, ValueError): seen = None
-        if seen == key: return _agy_inject()
+        try: st = json.loads(f.read_text())
+        except (OSError, ValueError): st = {}
+    new_turn = bool(prompt.strip()) and (not cid or st.get('seen') != key)
+    compact = bool(cid) and cp is not None and st.get('cp') != cp
+    if not new_turn and not compact: return _agy_inject()
+    if cid:
         tmp = f.with_suffix(f'.{os.getpid()}.tmp')
-        tmp.write_text(json.dumps(dict(seen=key)))
+        tmp.write_text(json.dumps(dict(seen=key if new_turn else st.get('seen'), cp=cp if compact else st.get('cp'))))
         tmp.replace(f)
-    _agy_inject(*(['\n'.join(ns)] if (ns := prompt_notices(prompt, Q_NOTICE_CODEX)) else []))
+    msgs = ([AGY_COMPACT_MSG] if compact else []) + (['\n'.join(ns)] if new_turn and (ns := prompt_notices(prompt, Q_NOTICE_CODEX)) else [])
+    _agy_inject(*msgs)
 
 
-SWARM_FORK_MSG = (
-    'Spawning an unforked swarm worker (no `fork` parameter): workers without `fork="coordinator"` '
-    'start blank with no bootstrapped pyskills or conversation context. '
-    'Pass `fork="coordinator"` unless a blank context is explicitly wanted.')
+SWARM_FORK_MSG = 'Spawning an unforked swarm worker (no `fork` parameter): workers without `fork="coordinator"` start blank with no bootstrapped pyskills or conversation context. Pass `fork="coordinator"` unless a blank context is explicitly wanted.'
 
 
 def agy_swarm_guard(o):
     "Antigravity PreToolUse(swarm): require confirmation when adding an unforked worker"
     args = (o.get('toolCall') or {}).get('args') or {}
-    if args.get('action') == 'add' and not args.get('fork'):
-        print(json.dumps(dict(decision='force_ask', reason=SWARM_FORK_MSG)))
+    if args.get('action') == 'add' and not args.get('fork'): print(json.dumps(dict(decision='force_ask', reason=SWARM_FORK_MSG)))
     else: print(json.dumps(dict(decision='allow')))
 
 

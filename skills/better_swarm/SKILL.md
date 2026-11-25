@@ -7,7 +7,7 @@ notation: /why
 
 - obsoletes: `native_swarm` (`/swarm`), `swarm_monitor`, `swarm_narrator`, `swarm_pane`; never read or spawn them (no `monitor` or `narrator` workers)
 - roles: `main` = user-facing session (`swarm` tool roster name: `coordinator` → `fork="coordinator"`, `@coordinator`); workers = agents on shared board
-- scope: edits, >2-call research, builds, tests, reviews — every conversation, even without `/swarm` (overrides `swarm` tool hint; over `invoke_subagent`); quick read-only user lookup: inline fine; post-compaction: re-read before new forks
+- scope: edits, bug diagnosis, multi-file tracing, builds, tests, reviews — every conversation, even without `/swarm` (overrides `swarm` tool hint and question-hook "investigate"; over `invoke_subagent`); inline lookup: max 1 turn, ≤2 reads on known files (unanswered → fork, never a second inline turn; batched calls count); post-compaction: re-read before new forks
 
 Tool|Role
 -|-
@@ -20,16 +20,16 @@ Tool|Role
 
 ## main
 
-- job: read, judge, decide, orchestrate; no inline technical work    /inline work starves orchestration, blocks user
+- job: read, judge, steer, orchestrate; no inline technical work; stay skeptical of every fork's direction and output    /tool-calling momentum makes workers chase rabbit holes, invent constraints, and overcomplicate; only a clean main keeps the forest in view
 - pre-fork: pyskills bootstrap + repo orientation (`README.md`/`index.ipynb`, `DEV.md` outline, `nbdev.skill`, layout, relevant skills)    /forks inherit it
 - spawning: `swarm(action="add", fork="coordinator", ...)` default; unforked only for blank context; job names (`parser`, `verifier`, `docs`; lowercase; not `all`, `coordinator`, `coordinator-*`); `swarm(action="title", ...)` once scope clear
 - parallel forks: one sharded `tasks=[...]` (or `n`) call (`<name>-1`..`<name>-<k>`; `@<name>`, `kill` address group); distinct forked roles sequentially; check `status` before retrying any `add(fork=...)` error    /`add(fork=...)` (solo or paired) can error (`failed to clone trajectory`, `executor has not processed the previous input yet`) while still spawning
 - workspace: `inherit` default even for concurrent authors (overrides `swarm` tool hint); no edit fences — full task scope, `exhash` rejects stale hashes; one build/export owner per crate (`cargo develop`, `nbdev-export`); `share`/`branch` only for conflicting builds (land work before `kill`, which deletes workspace)
 - briefs (public): forked = ONLY task owned, shared build/export owner if any, report-to (`@coordinator` or next peer); never restate task, rules, steps, done-criteria, or edit fences    /restating rules causes checklist over-grounding; fences hide cross-repo bugs; self-contained briefs for unforked only
-- 3-min check-in (multi-fork): `schedule(DurationSeconds=180, ...)` (default `TimerCondition="never"`, not `"any"` /other traffic resets it); on ping: `status` + `read_board`, `@mention` slow or ≥3-min-silent `working` workers (`last_post_time`, or brief `time` on board) for what changing and why, launch unblocked work, read landed edits, re-arm while `working` remains; `manage_task` `kill` when none remain (fallback: `CronExpression="*/3 * * * *"`)
+- 3-min check-in (any working fork): `schedule(DurationSeconds=180, Prompt=...)` (default `TimerCondition="never"`, not `"any"` /other traffic resets it); `Prompt` MUST carry the full ping checklist (survives compaction): `status` + `read_board`, `@mention` slow or ≥3-min-silent `working` workers (`last_post_time` or brief `time`) for what changing/proving and why, probe for rabbit holes, assumed constraints, or overcomplication and steer early, spot cross-fork simplifications or unblocked parallel work, read landed edits, brief user on progress and course, re-arm while `working` remains; `manage_task` `kill` when none remain (fallback: `CronExpression="*/3 * * * *"`)
 - live audit: distrust summaries; read landed edits as forks finish: bird's-eye view, boilerplate factored out, genuine reuse (no wrappers/shims), consistency, >~80-line files (`code-review` if bloated/duplicating), edited tests (`testing` skill); >2 reads → review fork; clear issues → author fixes; real uncertainty → user decision    /summaries hide workarounds, bloat, bad tests
 - user reports: curated — outcome, surprises, deviations, risks, blockers, remaining work; omit performative test counts, timings, internal names, plumbing (`waiting`, seqs, IDs, `open_board`) unless action-changing or asked
-- turns: short; report each completed fork (or answer user) immediately, end turn without `swarm_wait` (ending turn parks `main`); `swarm_wait` only on silent board/timer turns with nothing to report
+- turns: short; report completed forks, check-in progress/course, or user answers immediately, then end turn without `swarm_wait` (ending turn parks `main`); `swarm_wait` only on silent internal board chatter with nothing new for user
 - harness idle warning: ignore `Subagent <id> went idle without reporting anything back` for swarm workers    /workers report on board (`read_board`/`status`), not `send_message`
 
 ## workers
