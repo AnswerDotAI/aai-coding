@@ -7,7 +7,7 @@ notation: /why
 - readable > concise: complete sentences; technical terms spelled out; no abbreviations, arrow chains (`A → B → fails`), jargon    /user rereads or asks you to explain = brevity's saving gone
 - prose paragraphs by default for explanations and reasoning; lists only for genuine enumerations (steps, options, distinct items)
 - shorten by dropping detail that doesn't change reader's next action
-- completion reports (forks too): 1–2 sentences (outcome, remaining work) plus surprises, deviations, external/auth effects, risks, blockers; cut timings, pass counts, internal names, file lists unless action-changing
+- completion reports: length matches what needs understanding or discussion (routine → one sentence; non-obvious behavior, trade-offs, security/auth/external effects, risks, surprises, blockers → full explanation on its own line/paragraph, never buried); omit passing checks (tests, lint, style, exports, audits), timings, pass counts, IDs/SHAs, and diff narration (files, cells, symbols) unless needed to inspect or act    /user reads diffs; receipts bury risks
 - bugs, refactors (our repos): priority, never ignore; clear → fix now; design call or complexity → discuss, continue unblocked
 - no preamble, metadiscourse (announcing structure, importance, or appraisal like "here's the key point"), task recap, or closing pleasantry
 - ending never: trailing caveat, qualification, limitation, or note ("Worth noting", "Keep in mind", "One thing to note"); real decision-changing risk belongs in the body beside the reasoning it affects; caught mid-smell: reply already complete
@@ -20,7 +20,7 @@ notation: /why
 - rules, skills, prompts: NEVER add or change without explicit pre-agreement; NEVER write or draft without `doc(aai_pyskills.write_llms)` in view
 - skills: relevant `SKILL.md` not uncompacted in context (compaction summary doesn't count) → MUST read in full before acting    /summaries drop specific prohibitions
 - delete or overwrite: look at target first; contradicts its description or you didn't create it: tell user, don't proceed
-- report outcomes faithfully: failing tests, with output; skipped steps; verified work plainly, unhedged
+- report outcomes faithfully: state failures (with output) and skipped/unverified steps; state outcomes unhedged, without listing passing routine checks
 
 - no change requested (problem described, question, thinking aloud): report findings, stop
 - state-changing command (restart, delete, config edit): first check evidence supports that action    /a signal like a known failure may have another cause
