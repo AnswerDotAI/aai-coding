@@ -52,12 +52,12 @@ def kernel_warn_msg(code):
     return '\n'.join([*hints, KERNEL_WARN_CTA]) if hints else None
 
 
-LARGE_WRITE_LINES = 150
-_KWRITE = re.compile(r'(?:\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|msg_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)|\.write_text)\s*\(')
-_KWRITE_MAGIC = ('%%exhash', '%%writefile')
+LARGE_WRITE_LINES = 60
+_KWRITE = re.compile(r'(?:\b(?:create_file|create_dlg|add_msg|add_msgs|write_nb|file_exhash|cell_exhash|msg_exhash|file_replace_lines|msg_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)|\.write_text)\s*\(')
+_KWRITE_MAGIC = ('%%exhash', '%%writefile', '%%add_msg')
 _DOC_EXTS = {'.md', '.txt', '.json', '.toml', '.yaml', '.yml', '.csv', '.svg', '.lock'}
 _WRITE_TARGET = re.compile(
-    r'''(?:^%%(?:exhash|writefile)\s+(?:-\w+\s+)*['"]?([^\s'"]+)|\b(?:create_file|file_exhash|cell_exhash|msg_exhash|file_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)\s*\(\s*['"]([^'"]+)['"]|Path\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\.write_text\s*\()''',
+    r'''(?:^%%(?:exhash|writefile)\s+(?:-\w+\s+)*['"]?([^\s'"]+)|\b(?:create_file|create_dlg|file_exhash|cell_exhash|msg_exhash|file_replace_lines|cell_replace_lines|file_str_replace|file_strs_replace|file_insert_line)\s*\(\s*['"]([^'"]+)['"]|Path\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\.write_text\s*\()''',
     re.M)
 LARGE_WRITE_WARN = 'Large code write ({n} non-blank lines) in clikernel exec. STOP and check before continuing: does this reproduce a dependency or sibling package, bridge a missing upstream API, or work around a missing install, tool, permission, or slice boundary? If so, stop and ask the user (or @coordinator) for the upstream fix or permission instead of shipping a workaround. Otherwise check for bloat and duplication (`code-review` skill).'
 

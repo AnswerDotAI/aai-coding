@@ -32,6 +32,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/AnswerDotAI/aai-coding"
 
+Documentation = "https://AnswerDotAI.github.io/aai-coding/"
 [tool.setuptools.dynamic]
 version = { attr = "aai_coding.__version__" }
 
